@@ -296,3 +296,40 @@ def test_login_with_db_admin_user(client):
     )
     assert r.status_code == 302
     assert "weplayer_session" in client.cookies
+
+
+# ── Video Status API ──────────────────────────────────────────────────────────
+
+def test_video_status_api(auth_client):
+    db = TestingSessionLocal()
+    v = make_video(db, status=VideoStatus.processing)
+    vid_id = v.id
+    db.close()
+
+    r = auth_client.get(f"/admin/videos/{vid_id}/status")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["id"] == vid_id
+    assert data["status"] == "processing"
+    assert data["title"] == "Test Video"
+
+
+def test_video_status_api_ready(auth_client):
+    db = TestingSessionLocal()
+    v = make_video(db, status=VideoStatus.ready, title="Ready Vid")
+    vid_id = v.id
+    db.close()
+
+    r = auth_client.get(f"/admin/videos/{vid_id}/status")
+    assert r.status_code == 200
+    assert r.json()["status"] == "ready"
+
+
+def test_video_status_api_not_found(auth_client):
+    r = auth_client.get("/admin/videos/nonexistent-id/status")
+    assert r.status_code == 404
+
+
+def test_video_status_api_requires_auth(client):
+    r = client.get("/admin/videos/some-id/status", follow_redirects=False)
+    assert r.status_code == 401

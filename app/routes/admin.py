@@ -186,7 +186,7 @@ async def create_video(
         subtitle_input=subtitle_path,
     )
 
-    return RedirectResponse(url=f"/admin/videos/{video_id}", status_code=302)
+    return RedirectResponse(url="/admin/dashboard?uploaded=1", status_code=302)
 
 
 def _add_asset(db: Session, video_id: str, asset_type: AssetType, path: Path) -> VideoAsset:
@@ -198,6 +198,26 @@ def _add_asset(db: Session, video_id: str, asset_type: AssetType, path: Path) ->
     )
     db.add(asset)
     return asset
+
+
+# ─── Video Status JSON ────────────────────────────────────────────────────────
+
+@router.get("/videos/{video_id}/status")
+def video_status_api(
+    video_id: str,
+    db: Session = Depends(get_db),
+    _admin: str = Depends(get_current_admin),
+):
+    from fastapi.responses import JSONResponse
+    v = db.query(Video).filter(Video.id == video_id).first()
+    if not v:
+        raise HTTPException(status_code=404, detail="Not found")
+    return JSONResponse({
+        "id": v.id,
+        "status": v.status.value,
+        "title": v.title,
+        "updated_at": v.updated_at.isoformat() if v.updated_at else None,
+    })
 
 
 # ─── Video Detail ─────────────────────────────────────────────────────────────

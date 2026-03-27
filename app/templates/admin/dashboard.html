@@ -89,6 +89,41 @@
   /* Row highlight on focus-within para acessibilidade */
   .data-table tbody tr:focus-within { background: rgba(34,211,238,0.03); }
 
+  /* Upload banner */
+  .upload-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(52,211,153,0.07);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .upload-banner-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.25);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: #34D399;
+  }
+
+  /* Processing progress bar inside table row */
+  .proc-bar-wrap {
+    margin-top: 6px; height: 3px; border-radius: 2px;
+    background: rgba(34,211,238,0.12); overflow: hidden; width: 120px;
+  }
+  .proc-bar-fill {
+    height: 100%; border-radius: 2px; width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    animation: proc-shimmer 2s linear infinite;
+    background-size: 200% 100%;
+  }
+  @keyframes proc-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .elapsed-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
   /* ── Mobile ─────────────────────────────────────────── */
   @media (max-width: 640px) {
     /* Scrollable table container */
@@ -132,6 +167,20 @@
 
 {% block content %}
 <main id="main-content">
+
+  <!-- Upload success banner -->
+  <div id="upload-banner" class="upload-banner" style="display:none;" role="status" aria-live="polite">
+    <div class="upload-banner-icon" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <div style="flex:1;">
+      <p style="font-size:14px; font-weight:600; color:#34D399; margin-bottom:2px;">Upload concluído com sucesso!</p>
+      <p style="font-size:12px; color:var(--muted);">O vídeo está sendo processado em background. O status atualiza automaticamente.</p>
+    </div>
+    <button onclick="this.closest('.upload-banner').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;" aria-label="Fechar aviso">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
 
   <!-- Page header -->
   <div class="animate-fade-up" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; gap: 16px; flex-wrap: wrap;">
@@ -179,7 +228,7 @@
       </thead>
       <tbody>
         {% for v in videos %}
-        <tr role="row">
+        <tr role="row" data-video-id="{{ v.id }}" data-status="{{ v.status.value }}" data-created="{{ v.created_at.strftime('%Y-%m-%dT%H:%M:%S') }}">
 
           <!-- Título -->
           <td role="cell">
@@ -205,13 +254,14 @@
                 Pronto
               </span>
             {% elif v.status.value == 'processing' %}
-              <span
-                class="badge badge-processing"
-                aria-label="Status: Processando vídeo"
-              >
-                <span class="spinner" aria-hidden="true"></span>
-                Processando
-              </span>
+              <div>
+                <span class="badge badge-processing" aria-label="Status: Processando vídeo">
+                  <span class="spinner" aria-hidden="true"></span>
+                  Processando
+                </span>
+                <div class="proc-bar-wrap" aria-hidden="true"><div class="proc-bar-fill"></div></div>
+                <div class="elapsed-time" aria-live="polite">calculando…</div>
+              </div>
             {% elif v.status.value == 'error' %}
               <span
                 class="badge badge-error"
@@ -320,4 +370,65 @@
   {% endif %}
 
 </main>
+
+<script>
+// ── Upload banner ─────────────────────────────────────────────────────
+if (new URLSearchParams(location.search).get('uploaded') === '1') {
+  document.getElementById('upload-banner').style.display = 'flex';
+  history.replaceState({}, '', '/admin/dashboard');
+}
+
+// ── Elapsed time display ──────────────────────────────────────────────
+function fmtElapsed(seconds) {
+  if (seconds < 60)  return 'há ' + Math.floor(seconds) + 's';
+  if (seconds < 3600) return 'há ' + Math.floor(seconds/60) + 'm ' + Math.floor(seconds%60) + 's';
+  return 'há ' + Math.floor(seconds/3600) + 'h ' + Math.floor((seconds%3600)/60) + 'm';
+}
+
+function updateElapsed() {
+  const now = Date.now();
+  document.querySelectorAll('tr[data-status="processing"]').forEach(row => {
+    const created = new Date(row.dataset.created).getTime();
+    const secs = (now - created) / 1000;
+    const el = row.querySelector('.elapsed-time');
+    if (el) el.textContent = 'Processando ' + fmtElapsed(secs);
+  });
+}
+updateElapsed();
+setInterval(updateElapsed, 5000);
+
+// ── Status polling ────────────────────────────────────────────────────
+function getProcessingRows() {
+  return [...document.querySelectorAll('tr[data-status="processing"], tr[data-status="pending"]')];
+}
+
+async function pollStatuses() {
+  const rows = getProcessingRows();
+  if (!rows.length) return;
+
+  let anyChanged = false;
+  await Promise.all(rows.map(async row => {
+    try {
+      const res = await fetch('/admin/videos/' + row.dataset.videoId + '/status');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.status !== row.dataset.status) {
+        row.dataset.status = data.status;
+        anyChanged = true;
+      }
+    } catch (_) {}
+  }));
+
+  if (anyChanged) {
+    // Reload page to reflect new statuses cleanly
+    location.reload();
+  }
+}
+
+// Poll every 8s while there are processing/pending videos
+const processingRows = getProcessingRows();
+if (processingRows.length) {
+  setInterval(pollStatuses, 8000);
+}
+</script>
 {% endblock %}

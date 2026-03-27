@@ -152,6 +152,59 @@
     line-height: 1.5;
   }
 
+  /* File selected state */
+  .file-drop.file-selected {
+    border-color: rgba(52,211,153,0.4);
+    background: rgba(52,211,153,0.04);
+  }
+  .file-drop.file-selected .file-drop-icon {
+    background: rgba(52,211,153,0.12);
+    border-color: rgba(52,211,153,0.25);
+    color: #34D399;
+  }
+  .file-drop.file-selected .file-drop-text strong { color: var(--text); }
+  .file-drop.file-selected .file-drop-text span { color: var(--muted-2); }
+  .file-thumb {
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    object-fit: cover; flex-shrink: 0;
+    border: 1px solid rgba(52,211,153,0.25);
+  }
+
+  /* Upload overlay */
+  #upload-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(7,8,13,0.92);
+    backdrop-filter: blur(16px);
+    display: none; align-items: center; justify-content: center;
+  }
+  #upload-overlay.active { display: flex; }
+  .upload-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 40px;
+    max-width: 460px; width: 92%;
+    text-align: center;
+  }
+  .upload-icon-ring {
+    width: 64px; height: 64px; border-radius: 50%;
+    margin: 0 auto 24px;
+    background: var(--cyan-dim);
+    border: 2px solid rgba(34,211,238,0.3);
+    display: flex; align-items: center; justify-content: center;
+    animation: pulse-glow 2s infinite;
+  }
+  .upload-progress-track {
+    height: 6px; border-radius: 100px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden; margin: 20px 0 10px;
+  }
+  .upload-progress-fill {
+    height: 100%; border-radius: 100px; width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    transition: width 0.4s ease;
+  }
+
   /* ── Mobile ─────────────────────────────────────────── */
   @media (max-width: 640px) {
     /* Accessibility grid: 1 column */
@@ -498,4 +551,168 @@
   </form>
 </div>
 </main>
+
+<!-- ── Upload Overlay ──────────────────────────────────────────── -->
+<div id="upload-overlay" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+  <div class="upload-card">
+
+    <!-- Uploading state -->
+    <div id="state-upload">
+      <div class="upload-icon-ring">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+        </svg>
+      </div>
+      <h2 id="overlay-title" style="font-size:18px; font-weight:700; margin-bottom:6px;">Enviando arquivos…</h2>
+      <p id="ov-filename" style="font-size:13px; color:var(--muted); margin-bottom:4px; word-break:break-all;"></p>
+      <div class="upload-progress-track">
+        <div id="ov-bar" class="upload-progress-fill"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:20px;">
+        <span id="ov-bytes">0 MB</span>
+        <span id="ov-pct">0%</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted-2);">
+        <span>Velocidade: <strong id="ov-speed" style="color:var(--text);">—</strong></span>
+        <span>Restante: <strong id="ov-eta" style="color:var(--text);">—</strong></span>
+      </div>
+    </div>
+
+    <!-- Done state -->
+    <div id="state-done" style="display:none;">
+      <div class="upload-icon-ring" style="background:rgba(52,211,153,0.1); border-color:rgba(52,211,153,0.3);">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      <h2 style="font-size:18px; font-weight:700; margin-bottom:8px;">Upload concluído!</h2>
+      <p style="font-size:13px; color:var(--muted);">Redirecionando para o dashboard…</p>
+    </div>
+
+    <!-- Error state -->
+    <div id="state-error" style="display:none;">
+      <div class="upload-icon-ring" style="background:rgba(248,113,113,0.1); border-color:rgba(248,113,113,0.3); animation:none;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <h2 style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--red);">Erro no envio</h2>
+      <p id="ov-error-msg" style="font-size:13px; color:var(--muted); margin-bottom:20px;"></p>
+      <button onclick="document.getElementById('upload-overlay').classList.remove('active')" class="btn btn-secondary">Tentar novamente</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── File preview ────────────────────────────────────────────────────────
+function fmtBytes(b) {
+  if (b >= 1073741824) return (b/1073741824).toFixed(1)+' GB';
+  if (b >= 1048576)    return (b/1048576).toFixed(1)+' MB';
+  if (b >= 1024)       return (b/1024).toFixed(0)+' KB';
+  return b+' B';
+}
+function fmtTime(s) {
+  if (!isFinite(s) || s < 0) return '—';
+  if (s < 60) return Math.ceil(s)+'s';
+  return Math.floor(s/60)+'m '+Math.ceil(s%60)+'s';
+}
+
+function setupPicker(inputId, nameKey) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const drop = this.closest('.file-drop');
+    const nameEl = drop.querySelector('.file-drop-text strong');
+    const hintEl = drop.querySelector('.file-drop-text span');
+    const iconEl = drop.querySelector('.file-drop-icon');
+    drop.classList.add('file-selected');
+    nameEl.textContent = file.name;
+    hintEl.textContent = fmtBytes(file.size);
+    // Thumbnail for images
+    if (file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      iconEl.innerHTML = '<img src="'+url+'" class="file-thumb" alt="" aria-hidden="true"/>';
+    } else {
+      // Checkmark icon
+      iconEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    }
+  });
+}
+
+['video_file','cover_file','libras_file','ad_file','subtitle_file'].forEach(setupPicker);
+
+// ── XHR Upload with progress ────────────────────────────────────────────
+const form = document.querySelector('form[action="/admin/videos/new"]');
+const overlay = document.getElementById('upload-overlay');
+
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const mainFile = document.getElementById('video_file').files[0];
+  if (!mainFile) { form.reportValidity(); return; }
+
+  // Reset overlay states
+  document.getElementById('state-upload').style.display = '';
+  document.getElementById('state-done').style.display   = 'none';
+  document.getElementById('state-error').style.display  = 'none';
+  document.getElementById('ov-filename').textContent = mainFile.name;
+  document.getElementById('ov-bar').style.width = '0%';
+  document.getElementById('ov-pct').textContent  = '0%';
+  document.getElementById('ov-bytes').textContent = '0 B';
+  document.getElementById('ov-speed').textContent = '—';
+  document.getElementById('ov-eta').textContent   = '—';
+  overlay.classList.add('active');
+
+  const xhr = new XMLHttpRequest();
+  const startTime = Date.now();
+
+  xhr.upload.addEventListener('progress', function(e) {
+    if (!e.lengthComputable) return;
+    const pct = Math.round((e.loaded / e.total) * 100);
+    document.getElementById('ov-bar').style.width  = pct+'%';
+    document.getElementById('ov-pct').textContent  = pct+'%';
+    document.getElementById('ov-bytes').textContent = fmtBytes(e.loaded)+' / '+fmtBytes(e.total);
+    const elapsed = (Date.now() - startTime) / 1000;
+    const speed   = elapsed > 0 ? e.loaded / elapsed : 0;
+    const eta     = speed > 0 ? (e.total - e.loaded) / speed : 0;
+    document.getElementById('ov-speed').textContent = fmtBytes(speed)+'/s';
+    document.getElementById('ov-eta').textContent   = fmtTime(eta);
+  });
+
+  xhr.addEventListener('load', function() {
+    if (xhr.status === 422) {
+      // Validation error — extract message from response HTML
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xhr.responseText, 'text/html');
+      const errEl = doc.querySelector('[role="alert"] span');
+      showOverlayError(errEl ? errEl.textContent : 'Arquivo inválido. Verifique os formatos aceitos.');
+    } else if (xhr.status >= 500) {
+      showOverlayError('Erro interno no servidor. Tente novamente.');
+    } else {
+      // Success — show done state and redirect
+      document.getElementById('state-upload').style.display = 'none';
+      document.getElementById('state-done').style.display   = '';
+      setTimeout(() => { window.location.href = '/admin/dashboard?uploaded=1'; }, 900);
+    }
+  });
+
+  xhr.addEventListener('error', function() {
+    showOverlayError('Falha na conexão. Verifique sua internet e tente novamente.');
+  });
+
+  xhr.open('POST', form.action);
+  xhr.send(new FormData(form));
+});
+
+function showOverlayError(msg) {
+  document.getElementById('state-upload').style.display = 'none';
+  document.getElementById('state-done').style.display   = 'none';
+  document.getElementById('state-error').style.display  = '';
+  document.getElementById('ov-error-msg').textContent   = msg;
+}
+</script>
 {% endblock %}
