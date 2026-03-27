@@ -1,3 +1,4 @@
+import threading
 import uuid
 from pathlib import Path
 
@@ -17,6 +18,9 @@ BASE_DIR = Path(__file__).parent.parent
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 router = APIRouter()
+
+# Max 1 FFmpeg job at a time — protects the server under concurrent uploads
+_encode_semaphore = threading.Semaphore(1)
 
 
 # ─── Auth ────────────────────────────────────────────────────────────────────
@@ -212,11 +216,30 @@ def video_status_api(
     v = db.query(Video).filter(Video.id == video_id).first()
     if not v:
         raise HTTPException(status_code=404, detail="Not found")
+    # Count stages: each input asset corresponds to one output stage
+    input_types = {AssetType.original_input, AssetType.libras_input, AssetType.ad_input, AssetType.subtitle_input}
+    output_types = {AssetType.hls_original, AssetType.hls_libras, AssetType.hls_ad, AssetType.subtitle_vtt}
+    stages_total = sum(1 for a in v.assets if a.asset_type in input_types)
+    stages_done = sum(1 for a in v.assets if a.asset_type in output_types and a.status.value == "ready")
+
+    # Queue position: how many pending/processing videos were created before this one
+    queue_position = None
+    if v.status == VideoStatus.pending:
+        queue_position = (
+            db.query(Video)
+            .filter(Video.status.in_([VideoStatus.pending, VideoStatus.processing]))
+            .filter(Video.created_at < v.created_at)
+            .count()
+        ) + 1
+
     return JSONResponse({
         "id": v.id,
         "status": v.status.value,
         "title": v.title,
         "updated_at": v.updated_at.isoformat() if v.updated_at else None,
+        "stages_done": stages_done,
+        "stages_total": max(stages_total, 1),
+        "queue_position": queue_position,
     })
 
 
@@ -300,66 +323,69 @@ def _process_video(
     from app.services import ffmpeg_service as ffmpeg
 
     session_factory = _session_factory or SessionLocal
-    db = session_factory()
-    try:
-        video = db.query(Video).get(video_id)
-        if not video:
-            return
 
-        video.status = VideoStatus.processing
-        db.commit()
-
-        results = {}
-
-        # Original HLS
+    # Wait for the semaphore — video stays 'pending' while queued
+    with _encode_semaphore:
+        db = session_factory()
         try:
-            manifest = ffmpeg.process_original_hls(video_id, main_input)
-            _upsert_asset(db, video_id, AssetType.hls_original, manifest)
-            results["original"] = True
+            video = db.query(Video).get(video_id)
+            if not video:
+                return
+
+            video.status = VideoStatus.processing
+            db.commit()
+
+            results = {}
+
+            # Original HLS
+            try:
+                manifest = ffmpeg.process_original_hls(video_id, main_input)
+                _upsert_asset(db, video_id, AssetType.hls_original, manifest)
+                results["original"] = True
+            except Exception as exc:
+                _fail_video(db, video_id, f"Erro no original: {exc}")
+                return
+
+            # Libras HLS
+            if libras_input:
+                try:
+                    manifest = ffmpeg.process_libras_hls(video_id, main_input, libras_input)
+                    _upsert_asset(db, video_id, AssetType.hls_libras, manifest)
+                    results["libras"] = True
+                except Exception as exc:
+                    _upsert_asset(db, video_id, AssetType.hls_libras, None, error=str(exc))
+
+            # AD HLS
+            if ad_input:
+                try:
+                    manifest = ffmpeg.process_ad_hls(video_id, main_input, ad_input)
+                    _upsert_asset(db, video_id, AssetType.hls_ad, manifest)
+                    results["ad"] = True
+                except Exception as exc:
+                    _upsert_asset(db, video_id, AssetType.hls_ad, None, error=str(exc))
+
+            # Subtitle VTT
+            if subtitle_input:
+                try:
+                    vtt_path = ffmpeg.process_subtitle_vtt(video_id, subtitle_input)
+                    _upsert_asset(db, video_id, AssetType.subtitle_vtt, vtt_path)
+                    results["subtitle"] = True
+                except Exception as exc:
+                    _upsert_asset(db, video_id, AssetType.subtitle_vtt, None, error=str(exc))
+
+            # Refresh video object and update flags
+            db.expire(video)
+            video = db.query(Video).get(video_id)
+            video.status = VideoStatus.ready
+            video.libras_available = results.get("libras", False)
+            video.ad_available = results.get("ad", False)
+            video.subtitle_available = results.get("subtitle", False)
+            db.commit()
+
         except Exception as exc:
-            _fail_video(db, video_id, f"Erro no original: {exc}")
-            return
-
-        # Libras HLS
-        if libras_input:
-            try:
-                manifest = ffmpeg.process_libras_hls(video_id, main_input, libras_input)
-                _upsert_asset(db, video_id, AssetType.hls_libras, manifest)
-                results["libras"] = True
-            except Exception as exc:
-                _upsert_asset(db, video_id, AssetType.hls_libras, None, error=str(exc))
-
-        # AD HLS
-        if ad_input:
-            try:
-                manifest = ffmpeg.process_ad_hls(video_id, main_input, ad_input)
-                _upsert_asset(db, video_id, AssetType.hls_ad, manifest)
-                results["ad"] = True
-            except Exception as exc:
-                _upsert_asset(db, video_id, AssetType.hls_ad, None, error=str(exc))
-
-        # Subtitle VTT
-        if subtitle_input:
-            try:
-                vtt_path = ffmpeg.process_subtitle_vtt(video_id, subtitle_input)
-                _upsert_asset(db, video_id, AssetType.subtitle_vtt, vtt_path)
-                results["subtitle"] = True
-            except Exception as exc:
-                _upsert_asset(db, video_id, AssetType.subtitle_vtt, None, error=str(exc))
-
-        # Refresh video object and update flags
-        db.expire(video)
-        video = db.query(Video).get(video_id)
-        video.status = VideoStatus.ready
-        video.libras_available = results.get("libras", False)
-        video.ad_available = results.get("ad", False)
-        video.subtitle_available = results.get("subtitle", False)
-        db.commit()
-
-    except Exception as exc:
-        _fail_video(db, video_id, str(exc))
-    finally:
-        db.close()
+            _fail_video(db, video_id, str(exc))
+        finally:
+            db.close()
 
 
 def _upsert_asset(

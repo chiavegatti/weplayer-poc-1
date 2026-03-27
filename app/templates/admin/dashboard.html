@@ -379,19 +379,55 @@ if (new URLSearchParams(location.search).get('uploaded') === '1') {
 }
 
 // ── Elapsed time display ──────────────────────────────────────────────
-function fmtElapsed(seconds) {
-  if (seconds < 60)  return 'há ' + Math.floor(seconds) + 's';
-  if (seconds < 3600) return 'há ' + Math.floor(seconds/60) + 'm ' + Math.floor(seconds%60) + 's';
-  return 'há ' + Math.floor(seconds/3600) + 'h ' + Math.floor((seconds%3600)/60) + 'm';
+function fmtDuration(secs) {
+  secs = Math.floor(secs);
+  if (secs < 60)  return secs + ' segundo' + (secs !== 1 ? 's' : '');
+  if (secs < 3600) {
+    const m = Math.floor(secs / 60), s = secs % 60;
+    return m + ' minuto' + (m !== 1 ? 's' : '') + (s > 0 ? ' e ' + s + 's' : '');
+  }
+  const h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60);
+  return h + ' hora' + (h !== 1 ? 's' : '') + (m > 0 ? ' e ' + m + ' min' : '');
 }
 
 function updateElapsed() {
   const now = Date.now();
-  document.querySelectorAll('tr[data-status="processing"]').forEach(row => {
+  document.querySelectorAll('tr[data-status="processing"], tr[data-status="pending"]').forEach(row => {
     const created = new Date(row.dataset.created).getTime();
-    const secs = (now - created) / 1000;
+    const elapsed = (now - created) / 1000;
     const el = row.querySelector('.elapsed-time');
-    if (el) el.textContent = 'Processando ' + fmtElapsed(secs);
+    if (!el) return;
+
+    const status      = row.dataset.status;
+    const stagesDone  = parseInt(row.dataset.stagesDone  || '0', 10);
+    const stagesTotal = parseInt(row.dataset.stagesTotal || '1', 10);
+    const queuePos    = row.dataset.queuePosition ? parseInt(row.dataset.queuePosition, 10) : null;
+
+    let text;
+
+    if (status === 'pending') {
+      if (queuePos !== null) {
+        text = 'Na fila — posição ' + queuePos + ' · aguardando encode…';
+      } else {
+        text = 'Na fila · aguardando encode…';
+      }
+    } else {
+      // processing
+      text = 'Há ' + fmtDuration(elapsed);
+      if (stagesDone > 0 && stagesDone < stagesTotal) {
+        const progress  = stagesDone / stagesTotal;
+        const remaining = (elapsed / progress) - elapsed;
+        if (remaining > 30) {
+          text += ' · ' + stagesDone + '/' + stagesTotal + ' etapas · ~' + fmtDuration(remaining) + ' restantes';
+        } else {
+          text += ' · ' + stagesDone + '/' + stagesTotal + ' etapas · finalizando…';
+        }
+      } else if (stagesDone === 0) {
+        text += ' · iniciando…';
+      }
+    }
+
+    el.textContent = text;
   });
 }
 updateElapsed();
@@ -412,6 +448,10 @@ async function pollStatuses() {
       const res = await fetch('/admin/videos/' + row.dataset.videoId + '/status');
       if (!res.ok) return;
       const data = await res.json();
+      // Update stage counters and queue position
+      if (data.stages_done !== undefined)  row.dataset.stagesDone    = data.stages_done;
+      if (data.stages_total !== undefined) row.dataset.stagesTotal   = data.stages_total;
+      if (data.queue_position != null)     row.dataset.queuePosition = data.queue_position;
       if (data.status !== row.dataset.status) {
         row.dataset.status = data.status;
         anyChanged = true;
@@ -420,7 +460,6 @@ async function pollStatuses() {
   }));
 
   if (anyChanged) {
-    // Reload page to reflect new statuses cleanly
     location.reload();
   }
 }
@@ -428,6 +467,7 @@ async function pollStatuses() {
 // Poll every 8s while there are processing/pending videos
 const processingRows = getProcessingRows();
 if (processingRows.length) {
+  pollStatuses(); // immediate first poll for stage data
   setInterval(pollStatuses, 8000);
 }
 </script>

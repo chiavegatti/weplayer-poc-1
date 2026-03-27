@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import logging
 import subprocess
 from pathlib import Path
@@ -14,6 +15,58 @@ HLS_PLAYLIST_TYPE = "vod"
 # Libras PIP defaults (bottom-right corner, 25% of video width)
 LIBRAS_SCALE = "iw*0.25"
 LIBRAS_POSITION = "W-w-20:H-h-20"  # 20px margin from bottom-right
+
+
+# ── Hardware acceleration detection ──────────────────────────────────────────
+
+@functools.lru_cache(maxsize=1)
+def detect_hwaccel() -> str:
+    """
+    Detect the best available hardware encoder.
+    Returns 'nvenc', 'vaapi', or 'cpu'. Cached after first call.
+    """
+    # Test NVIDIA NVENC
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-loglevel", "quiet",
+             "-f", "lavfi", "-i", "nullsrc=s=64x64:d=0.1",
+             "-c:v", "h264_nvenc", "-f", "null", "-"],
+            capture_output=True, timeout=8,
+        )
+        if r.returncode == 0:
+            logger.info("hwaccel: NVENC (NVIDIA GPU) detected")
+            return "nvenc"
+    except Exception:
+        pass
+
+    # Test VAAPI (Intel / AMD iGPU on Linux with /dev/dri)
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-loglevel", "quiet",
+             "-vaapi_device", "/dev/dri/renderD128",
+             "-f", "lavfi", "-i", "nullsrc=s=64x64:d=0.1",
+             "-vf", "format=nv12,hwupload",
+             "-c:v", "h264_vaapi", "-f", "null", "-"],
+            capture_output=True, timeout=8,
+        )
+        if r.returncode == 0:
+            logger.info("hwaccel: VAAPI (Intel/AMD GPU) detected")
+            return "vaapi"
+    except Exception:
+        pass
+
+    logger.info("hwaccel: no GPU found, using CPU (libx264)")
+    return "cpu"
+
+
+def _video_encode_args(hwaccel: str) -> list[str]:
+    if hwaccel == "nvenc":
+        # p5 = fast NVENC preset, good quality
+        return ["-c:v", "h264_nvenc", "-preset", "p5", "-cq", "23"]
+    if hwaccel == "vaapi":
+        return ["-c:v", "h264_vaapi", "-qp", "23"]
+    # veryfast: ~3x faster than 'fast', negligible quality loss for EAD content
+    return ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"]
 
 
 def _run(cmd: list[str], log_path: Path | None = None) -> subprocess.CompletedProcess:
@@ -47,14 +100,25 @@ def process_original_hls(video_id: str, input_path: Path) -> Path:
     """Transcode main video to HLS."""
     output_dir = settings.video_processed_dir(video_id, "original")
     log_path = settings.video_logs_dir(video_id) / "original.log"
+    hw = detect_hwaccel()
 
-    cmd = [
-        "ffmpeg", "-y", "-i", str(input_path),
-        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-        "-c:a", "aac", "-b:a", "128k",
-        "-vf", "scale=-2:720",
-        *_hls_output_args(output_dir),
-    ]
+    if hw == "vaapi":
+        cmd = [
+            "ffmpeg", "-y", "-vaapi_device", "/dev/dri/renderD128",
+            "-i", str(input_path),
+            "-vf", "scale=-2:720,format=nv12,hwupload",
+            *_video_encode_args(hw),
+            "-c:a", "aac", "-b:a", "128k",
+            *_hls_output_args(output_dir),
+        ]
+    else:
+        cmd = [
+            "ffmpeg", "-y", "-i", str(input_path),
+            *_video_encode_args(hw),
+            "-c:a", "aac", "-b:a", "128k",
+            "-vf", "scale=-2:720",
+            *_hls_output_args(output_dir),
+        ]
     _run(cmd, log_path)
     return output_dir / "index.m3u8"
 
@@ -76,13 +140,14 @@ def process_libras_hls(
         f"[0:v][libras]overlay={position}[out]"
     )
 
+    hw = detect_hwaccel()
     cmd = [
         "ffmpeg", "-y",
         "-i", str(main_input),
         "-i", str(libras_input),
         "-filter_complex", filter_complex,
         "-map", "[out]", "-map", "0:a",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+        *_video_encode_args(hw),
         "-c:a", "aac", "-b:a", "128k",
         *_hls_output_args(output_dir),
     ]
@@ -102,17 +167,31 @@ def process_ad_hls(video_id: str, main_input: Path, ad_input: Path) -> Path:
         "[orig][ad]amix=inputs=2:duration=first:dropout_transition=2[aout]"
     )
 
-    cmd = [
-        "ffmpeg", "-y",
-        "-i", str(main_input),
-        "-i", str(ad_input),
-        "-filter_complex", filter_complex,
-        "-map", "0:v", "-map", "[aout]",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-        "-c:a", "aac", "-b:a", "128k",
-        "-vf", "scale=-2:720",
-        *_hls_output_args(output_dir),
-    ]
+    hw = detect_hwaccel()
+    if hw == "vaapi":
+        cmd = [
+            "ffmpeg", "-y", "-vaapi_device", "/dev/dri/renderD128",
+            "-i", str(main_input),
+            "-i", str(ad_input),
+            "-filter_complex", filter_complex,
+            "-map", "0:v", "-map", "[aout]",
+            "-vf", "scale=-2:720,format=nv12,hwupload",
+            *_video_encode_args(hw),
+            "-c:a", "aac", "-b:a", "128k",
+            *_hls_output_args(output_dir),
+        ]
+    else:
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", str(main_input),
+            "-i", str(ad_input),
+            "-filter_complex", filter_complex,
+            "-map", "0:v", "-map", "[aout]",
+            *_video_encode_args(hw),
+            "-c:a", "aac", "-b:a", "128k",
+            "-vf", "scale=-2:720",
+            *_hls_output_args(output_dir),
+        ]
     _run(cmd, log_path)
     return output_dir / "index.m3u8"
 
