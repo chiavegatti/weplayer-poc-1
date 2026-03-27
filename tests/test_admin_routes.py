@@ -115,7 +115,7 @@ def test_create_video_invalid_extension(auth_client):
         data={"title": "Bad Video"},
     )
     assert r.status_code == 422
-    assert "invÃ¡lido" in r.text
+    assert "inválido" in r.text.lower()
 
 
 def test_create_video_with_all_assets(auth_client, tmp_path, monkeypatch):

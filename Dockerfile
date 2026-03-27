@@ -17,7 +17,7 @@ COPY app/ ./app/
 COPY static/ ./static/
 
 # Create storage dir
-RUN mkdir -p /app/storage/weplayer/videos
+RUN mkdir -p /app/data /app/storage/weplayer/videos
 
 # ─── Runtime ──────────────────────────────────────────────────────────────────
 ENV PYTHONUNBUFFERED=1 \
