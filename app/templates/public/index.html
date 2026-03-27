@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}WePlayer — Vídeo acessível{% endblock %}
+
+{% block nav_links %}
+  <a href="/catalog" class="text-sm" style="color: var(--wp-muted);">Catálogo</a>
+  <a href="/admin/login" class="btn-secondary text-sm">Admin</a>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center text-center py-24 gap-8">
+  <img src="/static/assets/logo-full.png" alt="WePlayer" class="h-16" />
+  <div class="flex flex-col gap-3 max-w-xl">
+    <h1 class="text-4xl font-bold tracking-tight">Vídeo acessível para todos</h1>
+    <p class="text-lg" style="color: var(--wp-muted);">
+      Player com Libras, Audiodescrição e Legendas integrados — leve, acessível e fácil de embutir.
+    </p>
+  </div>
+  <div class="flex gap-3">
+    <a href="/catalog" class="btn-primary px-6 py-3 text-base">Ver catálogo</a>
+    <a href="/admin/login" class="btn-secondary px-6 py-3 text-base">Painel admin</a>
+  </div>
+  <div class="flex gap-8 mt-4">
+    <div class="flex flex-col items-center gap-1">
+      <span class="text-2xl font-bold" style="color: var(--wp-accent);">Libras</span>
+      <span class="text-sm" style="color: var(--wp-muted);">Picture-in-picture</span>
+    </div>
+    <div class="flex flex-col items-center gap-1">
+      <span class="text-2xl font-bold" style="color: var(--wp-accent);">AD</span>
+      <span class="text-sm" style="color: var(--wp-muted);">Audiodescrição</span>
+    </div>
+    <div class="flex flex-col items-center gap-1">
+      <span class="text-2xl font-bold" style="color: var(--wp-accent);">VTT</span>
+      <span class="text-sm" style="color: var(--wp-muted);">Legendas nativas</span>
+    </div>
+    <div class="flex flex-col items-center gap-1">
+      <span class="text-2xl font-bold" style="color: var(--wp-accent);">HLS</span>
+      <span class="text-sm" style="color: var(--wp-muted);">Streaming adaptativo</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title }} — WePlayer Admin{% endblock %}
+
+{% block nav_links %}
+  <a href="/admin/dashboard" class="btn-secondary text-sm">← Dashboard</a>
+  <a href="/admin/logout" class="btn-secondary text-sm">Sair</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto flex flex-col gap-6">
+  <!-- Header -->
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold">{{ video.title }}</h1>
+      <p class="text-sm mt-1" style="color: var(--wp-muted);">ID: {{ video.id }}</p>
+    </div>
+    <div class="flex gap-2 flex-shrink-0">
+      {% if video.status.value == 'ready' %}
+        <a href="/watch/{{ video.id }}" target="_blank" class="btn-secondary text-sm">▶ Assistir</a>
+      {% endif %}
+      <form method="post" action="/admin/videos/{{ video.id }}/reprocess">
+        <button type="submit" class="btn-secondary text-sm">⟳ Reprocessar</button>
+      </form>
+      <form method="post" action="/admin/videos/{{ video.id }}/delete"
+            onsubmit="return confirm('Excluir permanentemente?')">
+        <button type="submit" class="text-sm px-3 py-1.5 rounded-lg font-medium"
+                style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d;">
+          Excluir
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="card p-5 flex flex-col gap-3">
+    <div class="flex items-center gap-3">
+      <span class="font-semibold text-sm" style="color: var(--wp-muted);">STATUS</span>
+      {% if video.status.value == 'ready' %}
+        <span class="badge badge-ready">✓ Pronto</span>
+      {% elif video.status.value == 'processing' %}
+        <span class="badge badge-processing">⟳ Processando…</span>
+      {% elif video.status.value == 'error' %}
+        <span class="badge badge-error">✗ Erro</span>
+      {% else %}
+        <span class="badge badge-pending">○ Pendente</span>
+      {% endif %}
+    </div>
+    {% if video.error_message %}
+    <pre class="text-xs p-3 rounded-lg overflow-auto" style="background:#0F0F1A; color:#fca5a5;">{{ video.error_message }}</pre>
+    {% endif %}
+    <div class="flex gap-2 flex-wrap">
+      {% if video.libras_available %}<span class="badge badge-libras">Libras</span>{% endif %}
+      {% if video.ad_available %}<span class="badge badge-ad">Audiodescrição</span>{% endif %}
+      {% if video.subtitle_available %}<span class="badge badge-sub">Legenda</span>{% endif %}
+    </div>
+  </div>
+
+  <!-- Description -->
+  {% if video.description %}
+  <div class="card p-5">
+    <p class="text-sm font-semibold mb-2" style="color: var(--wp-muted);">DESCRIÇÃO</p>
+    <p class="text-sm leading-relaxed">{{ video.description }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Assets -->
+  <div class="card p-5">
+    <p class="text-sm font-semibold mb-3" style="color: var(--wp-muted);">ASSETS</p>
+    <div class="flex flex-col gap-2">
+      {% for asset in video.assets %}
+      <div class="flex items-center justify-between text-sm p-3 rounded-lg" style="background: #0F0F1A;">
+        <div class="flex items-center gap-3">
+          <span class="font-mono text-xs px-2 py-0.5 rounded" style="background: var(--wp-border);">{{ asset.asset_type.value }}</span>
+          <span class="text-xs font-mono truncate max-w-xs" style="color: var(--wp-muted);">{{ asset.file_path or '—' }}</span>
+        </div>
+        {% if asset.status.value == 'ready' %}
+          <span class="badge badge-ready text-xs">✓</span>
+        {% elif asset.status.value == 'error' %}
+          <span class="badge badge-error text-xs" title="{{ asset.error_message }}">✗</span>
+        {% else %}
+          <span class="badge badge-pending text-xs">○</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Logs -->
+  {% if logs %}
+  <div class="card p-5">
+    <p class="text-sm font-semibold mb-3" style="color: var(--wp-muted);">LOGS DE PROCESSAMENTO</p>
+    {% for name, content in logs.items() %}
+    <details class="mb-2">
+      <summary class="cursor-pointer text-sm font-medium py-1">{{ name }}.log</summary>
+      <pre class="text-xs mt-2 p-3 rounded-lg overflow-auto max-h-48" style="background:#0F0F1A; color: var(--wp-muted);">{{ content }}</pre>
+    </details>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <p class="text-xs" style="color: var(--wp-muted);">
+    Criado em {{ video.created_at.strftime('%d/%m/%Y às %H:%M') }} •
+    Atualizado em {{ video.updated_at.strftime('%d/%m/%Y às %H:%M') }}
+  </p>
+</div>
+{% endblock %}

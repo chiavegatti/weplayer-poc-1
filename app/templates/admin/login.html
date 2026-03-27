@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Login — WePlayer Admin{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block main_class %}min-h-screen flex items-center justify-center px-4{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-sm">
+  <div class="flex flex-col items-center mb-8">
+    <img src="/static/assets/logo-full.png" alt="WePlayer" class="h-14 mb-4" />
+    <p style="color: var(--wp-muted);" class="text-sm">Painel Administrativo</p>
+  </div>
+
+  <div class="card p-8">
+    {% if error %}
+    <div class="mb-4 p-3 rounded-lg text-sm" style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d;">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/admin/login" class="flex flex-col gap-5">
+      <div>
+        <label for="username">Usuário</label>
+        <input id="username" name="username" type="text" autocomplete="username" required placeholder="admin" />
+      </div>
+      <div>
+        <label for="password">Senha</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn-primary w-full mt-2 py-2.5">Entrar</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

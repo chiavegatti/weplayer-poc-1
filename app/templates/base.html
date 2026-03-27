@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}WePlayer{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/static/assets/logo-weplayer.png" type="image/png" />
+  <style>
+    :root {
+      --wp-primary: #7C3AED;
+      --wp-primary-dark: #5B21B6;
+      --wp-accent: #06B6D4;
+      --wp-bg: #0F0F1A;
+      --wp-surface: #1A1A2E;
+      --wp-border: #2D2D44;
+      --wp-text: #E2E8F0;
+      --wp-muted: #94A3B8;
+    }
+    body { background-color: var(--wp-bg); color: var(--wp-text); font-family: 'Inter', system-ui, sans-serif; }
+    .btn-primary { background: var(--wp-primary); color: white; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: background 0.2s; }
+    .btn-primary:hover { background: var(--wp-primary-dark); }
+    .btn-secondary { background: var(--wp-surface); color: var(--wp-text); border: 1px solid var(--wp-border); padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 500; transition: border-color 0.2s; }
+    .btn-secondary:hover { border-color: var(--wp-primary); }
+    .card { background: var(--wp-surface); border: 1px solid var(--wp-border); border-radius: 0.75rem; }
+    .badge { display: inline-flex; align-items: center; padding: 0.15rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-ready { background: #064e3b; color: #6ee7b7; }
+    .badge-processing { background: #1c3f6e; color: #93c5fd; }
+    .badge-pending { background: #2d2d44; color: #94a3b8; }
+    .badge-error { background: #450a0a; color: #fca5a5; }
+    .badge-libras { background: #1e3a5f; color: #93c5fd; }
+    .badge-ad { background: #2d1a4d; color: #c4b5fd; }
+    .badge-sub { background: #14532d; color: #86efac; }
+    input, textarea, select {
+      background: #0F0F1A;
+      border: 1px solid var(--wp-border);
+      border-radius: 0.5rem;
+      color: var(--wp-text);
+      padding: 0.5rem 0.75rem;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--wp-primary); }
+    label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--wp-muted); margin-bottom: 0.25rem; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen">
+  {% block navbar %}
+  <nav style="background: var(--wp-surface); border-bottom: 1px solid var(--wp-border);" class="px-6 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2">
+      <img src="/static/assets/logo-weplayer.png" alt="WePlayer" class="h-8 w-auto" />
+    </a>
+    <div class="flex items-center gap-4">
+      {% block nav_links %}{% endblock %}
+    </div>
+  </nav>
+  {% endblock %}
+
+  <main class="{% block main_class %}max-w-7xl mx-auto px-6 py-8{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

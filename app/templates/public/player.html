@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title }} — WePlayer{% endblock %}
+
+{% block head %}
+<!-- Shaka Player -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.min.js"></script>
+<style>
+  #player-container {
+    background: #000;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+  }
+  #main-video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #000;
+  }
+  /* Custom controls */
+  #wp-controls {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+    padding: 1.5rem 1rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  #player-container:hover #wp-controls,
+  #player-container:focus-within #wp-controls { opacity: 1; }
+  #seek-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    accent-color: #7C3AED;
+  }
+  #seek-bar::-webkit-slider-thumb { width: 14px; height: 14px; }
+  .ctrl-row { display: flex; align-items: center; gap: 0.75rem; }
+  .ctrl-btn {
+    background: none; border: none; cursor: pointer; padding: 4px;
+    opacity: 0.85; transition: opacity 0.15s; display: flex; align-items: center;
+  }
+  .ctrl-btn:hover { opacity: 1; }
+  .ctrl-btn img { width: 22px; height: 22px; filter: invert(1); }
+  #volume-bar {
+    width: 70px; height: 4px; accent-color: #7C3AED;
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+  }
+  #time-display { color: #fff; font-size: 0.75rem; font-variant-numeric: tabular-nums; margin-left: 4px; }
+  .spacer { flex: 1; }
+  /* Mode toggle buttons */
+  .mode-btn {
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    transition: all 0.2s;
+  }
+  .mode-btn.active { background: #7C3AED; border-color: #7C3AED; }
+  .mode-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  /* Caption toggle */
+  #caption-btn.active { color: #06B6D4; }
+  #buffering-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  #buffering-overlay img { width: 48px; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+</style>
+{% endblock %}
+
+{% block nav_links %}
+  <a href="/catalog" class="text-sm" style="color: var(--wp-muted);">← Catálogo</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto flex flex-col gap-6">
+
+  <!-- Player -->
+  <div id="player-container" tabindex="0" aria-label="Player de vídeo: {{ video.title }}">
+    <video id="main-video" crossorigin="anonymous" playsinline
+           aria-label="{{ video.title }}"
+           role="application">
+    </video>
+
+    <!-- Buffering -->
+    <div id="buffering-overlay" class="hidden">
+      <img src="/static/assets/loader.svg" alt="Carregando..." />
+    </div>
+
+    <!-- Controls -->
+    <div id="wp-controls" role="group" aria-label="Controles do player">
+      <input id="seek-bar" type="range" min="0" max="100" value="0"
+             aria-label="Barra de progresso" step="0.1" />
+
+      <div class="ctrl-row">
+        <!-- Play/Pause -->
+        <button class="ctrl-btn" id="play-btn" aria-label="Play / Pause">
+          <img id="play-icon" src="/static/assets/to-play.svg" alt="" />
+        </button>
+
+        <!-- Volume -->
+        <button class="ctrl-btn" id="mute-btn" aria-label="Mutar / desmutar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path id="vol-icon" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        </button>
+        <input id="volume-bar" type="range" min="0" max="1" step="0.05" value="1"
+               aria-label="Volume" />
+
+        <span id="time-display" aria-live="off">0:00 / 0:00</span>
+
+        <div class="spacer"></div>
+
+        <!-- Mode buttons -->
+        <div class="ctrl-row gap-1" role="group" aria-label="Modo de exibição">
+          <button class="mode-btn active" id="btn-original" aria-pressed="true"
+                  onclick="switchMode('original')" aria-label="Modo original">Original</button>
+          <button class="mode-btn" id="btn-libras" aria-pressed="false"
+                  onclick="switchMode('libras')" aria-label="Modo com Libras"
+                  {% if not manifests.libras %}disabled{% endif %}>Libras</button>
+          <button class="mode-btn" id="btn-ad" aria-pressed="false"
+                  onclick="switchMode('ad')" aria-label="Modo com Audiodescrição"
+                  {% if not manifests.ad %}disabled{% endif %}>AD</button>
+        </div>
+
+        <!-- Subtitles -->
+        {% if subtitle_path %}
+        <button class="ctrl-btn" id="caption-btn" aria-label="Ativar/desativar legenda" aria-pressed="false"
+                onclick="toggleCaptions()" title="Legendas">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white" opacity="0.85">
+            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-9 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/>
+          </svg>
+        </button>
+        {% endif %}
+
+        <!-- Fullscreen -->
+        <button class="ctrl-btn" id="fs-btn" aria-label="Tela cheia" onclick="toggleFullscreen()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="flex flex-col gap-2">
+    <h1 class="text-xl font-bold">{{ video.title }}</h1>
+    {% if video.description %}
+      <p class="text-sm leading-relaxed" style="color: var(--wp-muted);">{{ video.description }}</p>
+    {% endif %}
+    <div class="flex gap-2 flex-wrap mt-1">
+      {% if video.libras_available %}<span class="badge badge-libras">Libras disponível</span>{% endif %}
+      {% if video.ad_available %}<span class="badge badge-ad">Audiodescrição disponível</span>{% endif %}
+      {% if video.subtitle_available %}<span class="badge badge-sub">Legenda disponível</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+const MANIFESTS = {
+  original: "{{ manifests.original or '' }}",
+  libras:   "{{ manifests.libras or '' }}",
+  ad:       "{{ manifests.ad or '' }}",
+};
+const SUBTITLE_PATH = "{{ subtitle_path or '' }}";
+
+let player = null;
+let currentMode = 'original';
+let captionsOn = false;
+let savedTime = 0;
+
+const videoEl = document.getElementById('main-video');
+const playBtn = document.getElementById('play-btn');
+const playIcon = document.getElementById('play-icon');
+const seekBar = document.getElementById('seek-bar');
+const volumeBar = document.getElementById('volume-bar');
+const timeDisplay = document.getElementById('time-display');
+const bufferingOverlay = document.getElementById('buffering-overlay');
+
+async function initPlayer() {
+  shaka.polyfill.installAll();
+  if (!shaka.Player.isBrowserSupported()) {
+    console.error('Shaka Player not supported in this browser.');
+    return;
+  }
+
+  player = new shaka.Player();
+  await player.attach(videoEl);
+
+  player.addEventListener('error', onError);
+  player.addEventListener('buffering', (e) => {
+    bufferingOverlay.classList.toggle('hidden', !e.buffering);
+  });
+
+  const manifest = MANIFESTS[currentMode];
+  if (manifest) {
+    await loadManifest(manifest);
+  }
+
+  restorePreferences();
+}
+
+async function loadManifest(manifestUrl) {
+  const fullUrl = '/media/' + manifestUrl;
+  try {
+    await player.load(fullUrl);
+    if (SUBTITLE_PATH && captionsOn) applySubtitle();
+  } catch (e) {
+    onError(e);
+  }
+}
+
+function applySubtitle() {
+  if (!SUBTITLE_PATH) return;
+  const existing = videoEl.querySelector('track');
+  if (existing) existing.remove();
+  const track = document.createElement('track');
+  track.kind = 'subtitles';
+  track.label = 'Português';
+  track.srclang = 'pt';
+  track.src = '/media/' + SUBTITLE_PATH;
+  if (captionsOn) track.default = true;
+  videoEl.appendChild(track);
+  if (captionsOn && videoEl.textTracks[0]) {
+    videoEl.textTracks[0].mode = 'showing';
+  }
+}
+
+async function switchMode(mode) {
+  if (mode === currentMode) return;
+  savedTime = videoEl.currentTime;
+  const wasPlaying = !videoEl.paused;
+
+  // Update button states
+  ['original', 'libras', 'ad'].forEach(m => {
+    const btn = document.getElementById('btn-' + m);
+    btn.classList.toggle('active', m === mode);
+    btn.setAttribute('aria-pressed', m === mode ? 'true' : 'false');
+  });
+
+  currentMode = mode;
+  savePreferences();
+
+  const manifest = MANIFESTS[mode];
+  if (!manifest) return;
+
+  await loadManifest(manifest);
+  videoEl.currentTime = savedTime;
+  if (wasPlaying) videoEl.play();
+}
+
+function toggleCaptions() {
+  captionsOn = !captionsOn;
+  const btn = document.getElementById('caption-btn');
+  if (btn) {
+    btn.classList.toggle('active', captionsOn);
+    btn.setAttribute('aria-pressed', captionsOn ? 'true' : 'false');
+  }
+  if (captionsOn) {
+    applySubtitle();
+  } else {
+    if (videoEl.textTracks[0]) videoEl.textTracks[0].mode = 'hidden';
+  }
+  savePreferences();
+}
+
+function toggleFullscreen() {
+  const container = document.getElementById('player-container');
+  if (!document.fullscreenElement) {
+    container.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+
+playBtn.addEventListener('click', () => {
+  videoEl.paused ? videoEl.play() : videoEl.pause();
+});
+
+videoEl.addEventListener('play', () => {
+  playIcon.src = '/static/assets/to-pause.svg';
+  playIcon.alt = 'Pausar';
+});
+videoEl.addEventListener('pause', () => {
+  playIcon.src = '/static/assets/to-play.svg';
+  playIcon.alt = 'Reproduzir';
+});
+
+videoEl.addEventListener('timeupdate', () => {
+  if (!videoEl.duration) return;
+  seekBar.value = (videoEl.currentTime / videoEl.duration) * 100;
+  timeDisplay.textContent = fmt(videoEl.currentTime) + ' / ' + fmt(videoEl.duration);
+});
+
+seekBar.addEventListener('input', () => {
+  if (!videoEl.duration) return;
+  videoEl.currentTime = (seekBar.value / 100) * videoEl.duration;
+});
+
+volumeBar.addEventListener('input', () => {
+  videoEl.volume = volumeBar.value;
+  videoEl.muted = volumeBar.value == 0;
+});
+
+document.getElementById('mute-btn').addEventListener('click', () => {
+  videoEl.muted = !videoEl.muted;
+  volumeBar.value = videoEl.muted ? 0 : videoEl.volume;
+});
+
+// Keyboard shortcuts
+document.getElementById('player-container').addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'k') { e.preventDefault(); videoEl.paused ? videoEl.play() : videoEl.pause(); }
+  if (e.key === 'ArrowRight') videoEl.currentTime = Math.min(videoEl.duration, videoEl.currentTime + 10);
+  if (e.key === 'ArrowLeft')  videoEl.currentTime = Math.max(0, videoEl.currentTime - 10);
+  if (e.key === 'ArrowUp')    videoEl.volume = Math.min(1, videoEl.volume + 0.1);
+  if (e.key === 'ArrowDown')  videoEl.volume = Math.max(0, videoEl.volume - 0.1);
+  if (e.key === 'm') videoEl.muted = !videoEl.muted;
+  if (e.key === 'f') toggleFullscreen();
+  if (e.key === 'c') { if (SUBTITLE_PATH) toggleCaptions(); }
+});
+
+// ── Preferences ───────────────────────────────────────────────────────────────
+
+function savePreferences() {
+  localStorage.setItem('wp_mode_{{ video.id }}', currentMode);
+  localStorage.setItem('wp_captions_{{ video.id }}', captionsOn ? '1' : '0');
+}
+
+function restorePreferences() {
+  const savedMode = localStorage.getItem('wp_mode_{{ video.id }}');
+  const savedCaptions = localStorage.getItem('wp_captions_{{ video.id }}');
+  if (savedMode && MANIFESTS[savedMode]) switchMode(savedMode);
+  if (savedCaptions === '1') toggleCaptions();
+}
+
+function fmt(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function onError(e) {
+  console.error('Player error:', e.detail || e);
+}
+
+initPlayer();
+</script>
+{% endblock %}

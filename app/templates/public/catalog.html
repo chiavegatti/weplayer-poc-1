@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Catálogo — WePlayer{% endblock %}
+
+{% block nav_links %}
+  <a href="/" class="text-sm" style="color: var(--wp-muted);">Início</a>
+  <a href="/admin/login" class="btn-secondary text-sm">Admin</a>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+  <h1 class="text-2xl font-bold">Catálogo</h1>
+  <p class="text-sm" style="color: var(--wp-muted);">{{ videos|length }} vídeo{% if videos|length != 1 %}s{% endif %} disponível{% if videos|length != 1 %}is{% endif %}</p>
+</div>
+
+{% if videos %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for v in videos %}
+  <a href="/watch/{{ v.id }}" class="card overflow-hidden group hover:border-purple-500 transition-colors block">
+    <!-- Thumbnail -->
+    <div class="aspect-video w-full overflow-hidden relative" style="background: var(--wp-bg);">
+      {% if v.cover_path %}
+        <img src="/media/{{ v.cover_path }}" alt="{{ v.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+      {% else %}
+        <div class="w-full h-full flex items-center justify-center">
+          <img src="/static/assets/media-control.svg" alt="" class="w-12 opacity-20" />
+        </div>
+      {% endif %}
+      <!-- Play overlay -->
+      <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style="background: rgba(0,0,0,0.4);">
+        <img src="/static/assets/to-play.svg" alt="Assistir" class="w-14" />
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col gap-2">
+      <h2 class="font-semibold text-sm leading-snug line-clamp-2">{{ v.title }}</h2>
+      {% if v.description %}
+        <p class="text-xs leading-relaxed line-clamp-2" style="color: var(--wp-muted);">{{ v.description }}</p>
+      {% endif %}
+      <div class="flex gap-1 flex-wrap mt-1">
+        {% if v.libras_available %}<span class="badge badge-libras">Libras</span>{% endif %}
+        {% if v.ad_available %}<span class="badge badge-ad">AD</span>{% endif %}
+        {% if v.subtitle_available %}<span class="badge badge-sub">Legenda</span>{% endif %}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center py-24 gap-4">
+  <img src="/static/assets/loader.svg" alt="" class="w-12 opacity-20" />
+  <p style="color: var(--wp-muted);">Nenhum vídeo disponível ainda.</p>
+</div>
+{% endif %}
+{% endblock %}

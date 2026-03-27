@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Novo Vídeo — WePlayer Admin{% endblock %}
+
+{% block nav_links %}
+  <a href="/admin/dashboard" class="btn-secondary text-sm">← Dashboard</a>
+  <a href="/admin/logout" class="btn-secondary text-sm">Sair</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold mb-8">Novo Vídeo</h1>
+
+  {% if error %}
+  <div class="mb-6 p-4 rounded-lg text-sm" style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d;">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="post" action="/admin/videos/new" enctype="multipart/form-data" class="flex flex-col gap-6">
+    <div class="card p-6 flex flex-col gap-5">
+      <h2 class="font-semibold text-base" style="color: var(--wp-muted);">INFORMAÇÕES</h2>
+
+      <div>
+        <label for="title">Título <span style="color:#f87171;">*</span></label>
+        <input id="title" name="title" type="text" required placeholder="Ex: Documentário Acessível" />
+      </div>
+      <div>
+        <label for="description">Descrição</label>
+        <textarea id="description" name="description" rows="3" placeholder="Sinopse ou descrição do conteúdo..."></textarea>
+      </div>
+    </div>
+
+    <div class="card p-6 flex flex-col gap-5">
+      <h2 class="font-semibold text-base" style="color: var(--wp-muted);">ARQUIVOS</h2>
+
+      <div>
+        <label for="video_file">Vídeo principal <span style="color:#f87171;">*</span></label>
+        <input id="video_file" name="video_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" required />
+        <p class="text-xs mt-1" style="color: var(--wp-muted);">MP4, MOV, AVI, MKV ou WEBM</p>
+      </div>
+
+      <div>
+        <label for="cover_file">Capa (imagem)</label>
+        <input id="cover_file" name="cover_file" type="file" accept=".jpg,.jpeg,.png,.webp" />
+        <p class="text-xs mt-1" style="color: var(--wp-muted);">JPG, PNG ou WEBP — recomendado 16:9</p>
+      </div>
+    </div>
+
+    <div class="card p-6 flex flex-col gap-5">
+      <h2 class="font-semibold text-base" style="color: var(--wp-muted);">ACESSIBILIDADE</h2>
+
+      <div>
+        <label for="libras_file">Vídeo de Libras</label>
+        <input id="libras_file" name="libras_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" />
+        <p class="text-xs mt-1" style="color: var(--wp-muted);">Será sobreposto no canto inferior direito (PIP)</p>
+      </div>
+
+      <div>
+        <label for="ad_file">Áudio de Audiodescrição (AD)</label>
+        <input id="ad_file" name="ad_file" type="file" accept=".mp3,.aac,.wav,.ogg,.m4a" />
+        <p class="text-xs mt-1" style="color: var(--wp-muted);">MP3, AAC, WAV, OGG ou M4A</p>
+      </div>
+
+      <div>
+        <label for="subtitle_file">Legenda</label>
+        <input id="subtitle_file" name="subtitle_file" type="file" accept=".srt,.vtt" />
+        <p class="text-xs mt-1" style="color: var(--wp-muted);">SRT ou WebVTT — será convertido automaticamente</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 justify-end">
+      <a href="/admin/dashboard" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary">Salvar e processar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

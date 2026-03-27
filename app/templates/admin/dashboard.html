@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — WePlayer Admin{% endblock %}
+
+{% block nav_links %}
+  <a href="/catalog" class="text-sm" style="color: var(--wp-muted);">Ver catálogo</a>
+  <a href="/admin/videos/new" class="btn-primary text-sm">+ Novo vídeo</a>
+  <a href="/admin/logout" class="btn-secondary text-sm">Sair</a>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+  <h1 class="text-2xl font-bold">Vídeos</h1>
+  <a href="/admin/videos/new" class="btn-primary">+ Novo vídeo</a>
+</div>
+
+{% if videos %}
+<div class="card overflow-hidden">
+  <table class="w-full text-sm">
+    <thead>
+      <tr style="border-bottom: 1px solid var(--wp-border); color: var(--wp-muted);">
+        <th class="text-left px-5 py-3 font-medium">Título</th>
+        <th class="text-left px-5 py-3 font-medium">Status</th>
+        <th class="text-left px-5 py-3 font-medium">Recursos</th>
+        <th class="text-left px-5 py-3 font-medium">Criado em</th>
+        <th class="px-5 py-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in videos %}
+      <tr style="border-bottom: 1px solid var(--wp-border);" class="hover:opacity-80 transition-opacity">
+        <td class="px-5 py-4 font-medium">{{ v.title }}</td>
+        <td class="px-5 py-4">
+          {% if v.status.value == 'ready' %}
+            <span class="badge badge-ready">✓ Pronto</span>
+          {% elif v.status.value == 'processing' %}
+            <span class="badge badge-processing">⟳ Processando</span>
+          {% elif v.status.value == 'error' %}
+            <span class="badge badge-error">✗ Erro</span>
+          {% else %}
+            <span class="badge badge-pending">○ Pendente</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-4 flex gap-1 flex-wrap">
+          {% if v.libras_available %}<span class="badge badge-libras">Libras</span>{% endif %}
+          {% if v.ad_available %}<span class="badge badge-ad">AD</span>{% endif %}
+          {% if v.subtitle_available %}<span class="badge badge-sub">Legenda</span>{% endif %}
+        </td>
+        <td class="px-5 py-4" style="color: var(--wp-muted);">
+          {{ v.created_at.strftime('%d/%m/%Y %H:%M') }}
+        </td>
+        <td class="px-5 py-4 text-right">
+          <a href="/admin/videos/{{ v.id }}" class="btn-secondary text-xs px-3 py-1.5">Detalhes</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card flex flex-col items-center justify-center py-20 gap-4">
+  <img src="/static/assets/loader.svg" alt="" class="w-12 opacity-30" />
+  <p style="color: var(--wp-muted);">Nenhum vídeo cadastrado ainda.</p>
+  <a href="/admin/videos/new" class="btn-primary">Adicionar primeiro vídeo</a>
+</div>
+{% endif %}
+{% endblock %}
