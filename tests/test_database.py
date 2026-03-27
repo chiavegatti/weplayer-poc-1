@@ -11,7 +11,7 @@ def test_get_db_yields_session():
     try:
         next(gen)
     except StopIteration:
-        pass  # expected — generator closed
+        pass  # expected â€” generator closed
 
 
 def test_get_db_closes_on_exit():

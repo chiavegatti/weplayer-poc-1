@@ -18,7 +18,7 @@ def make_video_in_db(db, video_id: str, status=VideoStatus.pending) -> Video:
     return v
 
 
-# ── _upsert_asset ─────────────────────────────────────────────────────────────
+# â”€â”€ _upsert_asset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_upsert_asset_creates_new(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
@@ -75,7 +75,7 @@ def test_upsert_asset_error(tmp_path, monkeypatch):
     db.close()
 
 
-# ── _fail_video ───────────────────────────────────────────────────────────────
+# â”€â”€ _fail_video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_fail_video(tmp_path, monkeypatch):
     db = TestingSessionLocal()
@@ -98,7 +98,7 @@ def test_fail_video_nonexistent():
     db.close()
 
 
-# ── _process_video ────────────────────────────────────────────────────────────
+# â”€â”€ _process_video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_process_video_success(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
@@ -111,7 +111,11 @@ def test_process_video_success(tmp_path, monkeypatch):
     fake_manifest = tmp_path / "index.m3u8"
     fake_manifest.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.routes.admin._upsert_asset"):
         _process_video(
             video_id=vid_id,
@@ -136,7 +140,11 @@ def test_process_video_ffmpeg_failure(tmp_path, monkeypatch):
     make_video_in_db(db, vid_id)
     db.close()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", side_effect=RuntimeError("boom")):
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.process_original_hls", side_effect=RuntimeError("boom")):
         _process_video(
             video_id=vid_id,
             main_input=tmp_path / "main.mp4",
@@ -164,7 +172,14 @@ def test_process_video_libras_failure_does_not_stop_pipeline(tmp_path, monkeypat
     fake_manifest = tmp_path / "index.m3u8"
     fake_manifest.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+    fake_libras = tmp_path / "libras_480p.mp4"
+    fake_libras.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.preprocess_libras_input", return_value=fake_libras), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_libras_hls", side_effect=RuntimeError("libras fail")), \
          patch("app.routes.admin._upsert_asset"):
         _process_video(
@@ -198,7 +213,7 @@ def test_process_video_nonexistent_id(tmp_path, monkeypatch):
 
 
 def test_process_video_ad_failure_continues(tmp_path, monkeypatch):
-    """AD failure should not stop pipeline — video ends as ready with ad_available=False."""
+    """AD failure should not stop pipeline â€” video ends as ready with ad_available=False."""
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
 
     db = TestingSessionLocal()
@@ -209,7 +224,11 @@ def test_process_video_ad_failure_continues(tmp_path, monkeypatch):
     fake_manifest = tmp_path / "index.m3u8"
     fake_manifest.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_ad_hls", side_effect=RuntimeError("ad fail")), \
          patch("app.routes.admin._upsert_asset"):
         _process_video(
@@ -240,7 +259,11 @@ def test_process_video_subtitle_failure_continues(tmp_path, monkeypatch):
     fake_manifest = tmp_path / "index.m3u8"
     fake_manifest.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_subtitle_vtt", side_effect=RuntimeError("sub fail")), \
          patch("app.routes.admin._upsert_asset"):
         _process_video(
@@ -273,7 +296,14 @@ def test_process_video_with_all_assets_success(tmp_path, monkeypatch):
     fake_manifest.touch()
     fake_vtt.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+    fake_libras = tmp_path / "libras_480p.mp4"
+    fake_libras.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.preprocess_libras_input", return_value=fake_libras), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_libras_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_ad_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_subtitle_vtt", return_value=fake_vtt), \
@@ -296,7 +326,7 @@ def test_process_video_with_all_assets_success(tmp_path, monkeypatch):
     db.close()
 
 
-# ── _read_logs ────────────────────────────────────────────────────────────────
+# â”€â”€ _read_logs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_read_logs(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
@@ -313,3 +343,66 @@ def test_read_logs_no_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
     logs = _read_logs("nonexistent-vid")
     assert logs == {}
+
+def test_process_video_main_normalization_failure(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+
+    db = TestingSessionLocal()
+    vid_id = str(uuid.uuid4())
+    make_video_in_db(db, vid_id)
+    db.close()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", side_effect=RuntimeError("norm fail")):
+        _process_video(
+            video_id=vid_id,
+            main_input=tmp_path / "main.mp4",
+            libras_input=None,
+            ad_input=None,
+            subtitle_input=None,
+            _session_factory=TestingSessionLocal,
+        )
+
+    db = TestingSessionLocal()
+    v = db.query(Video).get(vid_id)
+    assert v.status == VideoStatus.error
+    assert "normalizacao" in v.error_message
+    db.close()
+
+
+def test_process_video_unlinks_original_inputs(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+
+    db = TestingSessionLocal()
+    vid_id = str(uuid.uuid4())
+    make_video_in_db(db, vid_id)
+    db.close()
+
+    raw_main = tmp_path / "raw-main.mp4"
+    raw_libras = tmp_path / "raw-libras.mp4"
+    raw_main.write_bytes(b"raw")
+    raw_libras.write_bytes(b"raw")
+
+    normalized_main = tmp_path / "norm-main.mp4"
+    normalized_libras = tmp_path / "norm-libras.mp4"
+    normalized_main.write_bytes(b"norm")
+    normalized_libras.write_bytes(b"norm")
+
+    fake_manifest = tmp_path / "index.m3u8"
+    fake_manifest.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=normalized_main), \
+         patch("app.services.ffmpeg_service.preprocess_libras_input", return_value=normalized_libras), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+         patch("app.services.ffmpeg_service.process_libras_hls", return_value=fake_manifest), \
+         patch("app.routes.admin._upsert_asset"):
+        _process_video(
+            video_id=vid_id,
+            main_input=raw_main,
+            libras_input=raw_libras,
+            ad_input=None,
+            subtitle_input=None,
+            _session_factory=TestingSessionLocal,
+        )
+
+    assert not raw_main.exists()
+    assert not raw_libras.exists()

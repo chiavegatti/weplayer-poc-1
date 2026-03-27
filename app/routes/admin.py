@@ -19,11 +19,11 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 router = APIRouter()
 
-# Max 1 FFmpeg job at a time — protects the server under concurrent uploads
+# Max 1 FFmpeg job at a time â€” protects the server under concurrent uploads
 _encode_semaphore = threading.Semaphore(1)
 
 
-# ─── Auth ────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
@@ -40,7 +40,7 @@ def login(
     if not check_credentials(username, password, db):
         return templates.TemplateResponse(
             "admin/login.html",
-            {"request": request, "error": "Usuário ou senha inválidos."},
+            {"request": request, "error": "UsuÃ¡rio ou senha invÃ¡lidos."},
             status_code=401,
         )
     token = create_session_token(username)
@@ -62,7 +62,7 @@ def logout():
     return response
 
 
-# ─── Dashboard ───────────────────────────────────────────────────────────────
+# â”€â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(
@@ -76,7 +76,7 @@ def dashboard(
     )
 
 
-# ─── Docs ─────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Docs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/docs", response_class=HTMLResponse)
 def admin_docs(
@@ -88,7 +88,7 @@ def admin_docs(
     )
 
 
-# ─── New Video ───────────────────────────────────────────────────────────────
+# â”€â”€â”€ New Video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/videos/new", response_class=HTMLResponse)
 def new_video_form(
@@ -116,7 +116,7 @@ async def create_video(
     if not storage.validate_extension(video_file.filename or "", storage.ALLOWED_VIDEO_EXTENSIONS):
         return templates.TemplateResponse(
             "admin/video_form.html",
-            {"request": request, "error": "Arquivo de vídeo inválido. Use MP4, MOV, AVI, MKV ou WEBM."},
+            {"request": request, "error": "Arquivo de vÃ­deo invÃ¡lido. Use MP4, MOV, AVI, MKV ou WEBM."},
             status_code=422,
         )
 
@@ -204,7 +204,7 @@ def _add_asset(db: Session, video_id: str, asset_type: AssetType, path: Path) ->
     return asset
 
 
-# ─── Video Status JSON ────────────────────────────────────────────────────────
+# â”€â”€â”€ Video Status JSON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/videos/{video_id}/status")
 def video_status_api(
@@ -243,7 +243,7 @@ def video_status_api(
     })
 
 
-# ─── Video Detail ─────────────────────────────────────────────────────────────
+# â”€â”€â”€ Video Detail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/videos/{video_id}", response_class=HTMLResponse)
 def video_detail(
@@ -256,7 +256,7 @@ def video_detail(
     log_content = _read_logs(video_id)
     return templates.TemplateResponse(
         "admin/video_detail.html",
-        {"request": request, "video": video, "logs": log_content},
+        {"request": request, "video": video, "logs": log_content, "update_error": None},
     )
 
 
@@ -269,16 +269,9 @@ def reprocess_video(
 ):
     video = _get_video_or_404(db, video_id)
 
-    def _get_input_path(asset_type: AssetType) -> Path | None:
-        for a in video.assets:
-            if a.asset_type == asset_type and a.file_path:
-                p = Path(a.file_path)
-                return p if p.exists() else None
-        return None
-
-    main_input = _get_input_path(AssetType.original_input)
+    main_input = _get_input_path_from_assets(video, AssetType.original_input)
     if not main_input:
-        raise HTTPException(status_code=400, detail="Vídeo original não encontrado no storage.")
+        raise HTTPException(status_code=400, detail="VÃ­deo original nÃ£o encontrado no storage.")
 
     video.status = VideoStatus.pending
     video.error_message = None
@@ -288,9 +281,9 @@ def reprocess_video(
         _process_video,
         video_id=video_id,
         main_input=main_input,
-        libras_input=_get_input_path(AssetType.libras_input),
-        ad_input=_get_input_path(AssetType.ad_input),
-        subtitle_input=_get_input_path(AssetType.subtitle_input),
+        libras_input=_get_input_path_from_assets(video, AssetType.libras_input),
+        ad_input=_get_input_path_from_assets(video, AssetType.ad_input),
+        subtitle_input=_get_input_path_from_assets(video, AssetType.subtitle_input),
     )
     return RedirectResponse(url=f"/admin/videos/{video_id}", status_code=302)
 
@@ -308,7 +301,112 @@ def delete_video(
     return RedirectResponse(url="/admin/dashboard", status_code=302)
 
 
-# ─── Background processing ───────────────────────────────────────────────────
+@router.post("/videos/{video_id}/update")
+async def update_video(
+    video_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    title: str = Form(...),
+    description: str = Form(""),
+    video_file: UploadFile | None = File(None),
+    libras_file: UploadFile | None = File(None),
+    ad_file: UploadFile | None = File(None),
+    subtitle_file: UploadFile | None = File(None),
+    cover_file: UploadFile | None = File(None),
+    db: Session = Depends(get_db),
+    _admin: str = Depends(get_current_admin),
+):
+    video = _get_video_or_404(db, video_id)
+
+    def _invalid_file(upload: UploadFile | None, allowed: set[str]) -> bool:
+        return bool(upload and upload.filename and not storage.validate_extension(upload.filename, allowed))
+
+    if _invalid_file(video_file, storage.ALLOWED_VIDEO_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de video principal invalido.", db, status_code=422
+        )
+    if _invalid_file(libras_file, storage.ALLOWED_VIDEO_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de Libras invalido.", db, status_code=422
+        )
+    if _invalid_file(ad_file, storage.ALLOWED_AUDIO_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de audiodescricao invalido.", db, status_code=422
+        )
+    if _invalid_file(subtitle_file, storage.ALLOWED_SUBTITLE_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de legenda invalido.", db, status_code=422
+        )
+    if _invalid_file(cover_file, storage.ALLOWED_IMAGE_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de capa invalido.", db, status_code=422
+        )
+
+    video.title = title.strip()
+    video.description = description.strip() or None
+
+    main_input = _get_input_path_from_assets(video, AssetType.original_input)
+    libras_input = _get_input_path_from_assets(video, AssetType.libras_input)
+    ad_input = _get_input_path_from_assets(video, AssetType.ad_input)
+    subtitle_input = _get_input_path_from_assets(video, AssetType.subtitle_input)
+    needs_reprocess = False
+
+    if video_file and video_file.filename:
+        main_input = storage.get_input_path(video_id, f"main{Path(video_file.filename).suffix}")
+        await save_upload(video_file, main_input)
+        _set_input_asset_path(db, video_id, AssetType.original_input, main_input)
+        needs_reprocess = True
+
+    if libras_file and libras_file.filename:
+        libras_input = storage.get_input_path(video_id, f"libras{Path(libras_file.filename).suffix}")
+        await save_upload(libras_file, libras_input)
+        _set_input_asset_path(db, video_id, AssetType.libras_input, libras_input)
+        needs_reprocess = True
+
+    if ad_file and ad_file.filename:
+        ad_input = storage.get_input_path(video_id, f"ad{Path(ad_file.filename).suffix}")
+        await save_upload(ad_file, ad_input)
+        _set_input_asset_path(db, video_id, AssetType.ad_input, ad_input)
+        needs_reprocess = True
+
+    if subtitle_file and subtitle_file.filename:
+        subtitle_input = storage.get_input_path(video_id, f"subtitle{Path(subtitle_file.filename).suffix}")
+        await save_upload(subtitle_file, subtitle_input)
+        _set_input_asset_path(db, video_id, AssetType.subtitle_input, subtitle_input)
+        needs_reprocess = True
+
+    if cover_file and cover_file.filename:
+        cover_path = storage.get_cover_path(video_id, f"cover{Path(cover_file.filename).suffix}")
+        await save_upload(cover_file, cover_path)
+        video.cover_path = storage.get_relative_media_path(cover_path)
+
+    if needs_reprocess:
+        if not main_input or not main_input.exists():
+            return _video_detail_with_error(
+                request, video, "Nao foi possivel localizar o video principal para reprocessar.", db, status_code=400
+            )
+        video.status = VideoStatus.pending
+        video.error_message = None
+        video.libras_available = False
+        video.ad_available = False
+        video.subtitle_available = False
+        db.commit()
+
+        background_tasks.add_task(
+            _process_video,
+            video_id=video_id,
+            main_input=main_input,
+            libras_input=libras_input,
+            ad_input=ad_input,
+            subtitle_input=subtitle_input,
+        )
+        return RedirectResponse(url=f"/admin/videos/{video_id}?updated=1&reprocess=1", status_code=302)
+
+    db.commit()
+    return RedirectResponse(url=f"/admin/videos/{video_id}?updated=1", status_code=302)
+
+
+# â”€â”€â”€ Background processing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _process_video(
     video_id: str,
@@ -318,13 +416,13 @@ def _process_video(
     subtitle_input: Path | None,
     _session_factory=None,
 ) -> None:
-    """Synchronous processing job — runs in BackgroundTasks thread."""
+    """Synchronous processing job â€” runs in BackgroundTasks thread."""
     from app.database import SessionLocal
     from app.services import ffmpeg_service as ffmpeg
 
     session_factory = _session_factory or SessionLocal
 
-    # Wait for the semaphore — video stays 'pending' while queued
+    # Wait for the semaphore â€” video stays 'pending' while queued
     with _encode_semaphore:
         db = session_factory()
         try:
@@ -336,10 +434,33 @@ def _process_video(
             db.commit()
 
             results = {}
+            normalized_main = main_input
+            normalized_libras = libras_input
+
+            # Always normalize main source before HLS generation.
+            try:
+                normalized_main = ffmpeg.preprocess_main_input(video_id, main_input)
+                _set_input_asset_path(db, video_id, AssetType.original_input, normalized_main)
+                if main_input != normalized_main and main_input.exists():
+                    main_input.unlink()
+            except Exception as exc:
+                _fail_video(db, video_id, f"Erro na normalizacao do video principal: {exc}")
+                return
+
+            # Always normalize Libras source before overlay processing.
+            if libras_input:
+                try:
+                    normalized_libras = ffmpeg.preprocess_libras_input(video_id, libras_input)
+                    _set_input_asset_path(db, video_id, AssetType.libras_input, normalized_libras)
+                    if libras_input != normalized_libras and libras_input.exists():
+                        libras_input.unlink()
+                except Exception as exc:
+                    _upsert_asset(db, video_id, AssetType.hls_libras, None, error=str(exc))
+                    normalized_libras = None
 
             # Original HLS
             try:
-                manifest = ffmpeg.process_original_hls(video_id, main_input)
+                manifest = ffmpeg.process_original_hls(video_id, normalized_main)
                 _upsert_asset(db, video_id, AssetType.hls_original, manifest)
                 results["original"] = True
             except Exception as exc:
@@ -347,9 +468,14 @@ def _process_video(
                 return
 
             # Libras HLS
-            if libras_input:
+            if normalized_libras:
                 try:
-                    manifest = ffmpeg.process_libras_hls(video_id, main_input, libras_input)
+                    manifest = ffmpeg.process_libras_hls(
+                        video_id,
+                        normalized_main,
+                        normalized_libras,
+                        pre_normalized=True,
+                    )
                     _upsert_asset(db, video_id, AssetType.hls_libras, manifest)
                     results["libras"] = True
                 except Exception as exc:
@@ -358,7 +484,7 @@ def _process_video(
             # AD HLS
             if ad_input:
                 try:
-                    manifest = ffmpeg.process_ad_hls(video_id, main_input, ad_input)
+                    manifest = ffmpeg.process_ad_hls(video_id, normalized_main, ad_input)
                     _upsert_asset(db, video_id, AssetType.hls_ad, manifest)
                     results["ad"] = True
                 except Exception as exc:
@@ -373,6 +499,14 @@ def _process_video(
                 except Exception as exc:
                     _upsert_asset(db, video_id, AssetType.subtitle_vtt, None, error=str(exc))
 
+            # Auto-thumbnail fallback when cover is not provided.
+            if not video.cover_path:
+                try:
+                    thumb_path = ffmpeg.extract_thumbnail(video_id, normalized_main)
+                    video.cover_path = storage.get_relative_media_path(thumb_path)
+                except Exception:
+                    pass
+
             # Refresh video object and update flags
             db.expire(video)
             video = db.query(Video).get(video_id)
@@ -386,6 +520,46 @@ def _process_video(
             _fail_video(db, video_id, str(exc))
         finally:
             db.close()
+
+
+def _set_input_asset_path(db: Session, video_id: str, asset_type: AssetType, path: Path) -> None:
+    asset = db.query(VideoAsset).filter_by(video_id=video_id, asset_type=asset_type).first()
+    if not asset:
+        asset = VideoAsset(video_id=video_id, asset_type=asset_type)
+        db.add(asset)
+    asset.file_path = str(path)
+    asset.status = AssetStatus.ready
+    asset.error_message = None
+    db.commit()
+
+
+def _get_input_path_from_assets(video: Video, asset_type: AssetType) -> Path | None:
+    for asset in video.assets:
+        if asset.asset_type == asset_type and asset.file_path:
+            p = storage.resolve_media_path(asset.file_path)
+            if p and p.exists():
+                return p
+    return None
+
+
+def _video_detail_with_error(
+    request: Request,
+    video: Video,
+    message: str,
+    db: Session,
+    status_code: int,
+):
+    db.refresh(video)
+    return templates.TemplateResponse(
+        "admin/video_detail.html",
+        {
+            "request": request,
+            "video": video,
+            "logs": _read_logs(video.id),
+            "update_error": message,
+        },
+        status_code=status_code,
+    )
 
 
 def _upsert_asset(
@@ -425,7 +599,7 @@ def _fail_video(db: Session, video_id: str, message: str) -> None:
 def _get_video_or_404(db: Session, video_id: str) -> Video:
     video = db.query(Video).get(video_id)
     if not video:
-        raise HTTPException(status_code=404, detail="Vídeo não encontrado.")
+        raise HTTPException(status_code=404, detail="VÃ­deo nÃ£o encontrado.")
     return video
 
 

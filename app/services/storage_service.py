@@ -49,3 +49,13 @@ def get_relative_media_path(absolute_path: Path) -> str:
         return str(rel).replace("\\", "/")
     except ValueError:
         return str(absolute_path).replace("\\", "/")
+
+
+def resolve_media_path(path_value: str | None) -> Path | None:
+    """Resolve absolute or storage-relative media paths to absolute Path."""
+    if not path_value:
+        return None
+    p = Path(path_value)
+    if p.is_absolute():
+        return p
+    return settings.storage_dir / p

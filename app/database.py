@@ -20,5 +20,5 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    from app.models.models import Base  # noqa: F401 — ensure models are registered
+    from app.models.models import Base  # noqa: F401 â€” ensure models are registered
     Base.metadata.create_all(bind=engine)

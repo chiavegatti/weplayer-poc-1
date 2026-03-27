@@ -176,6 +176,131 @@
     vertical-align: middle;
   }
 
+  .field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted-2);
+    margin-bottom: 8px;
+  }
+
+  .field-hint {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 6px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font-body);
+  }
+  .form-input:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 4px rgba(34,211,238,0.10);
+  }
+  textarea.form-input {
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  .upload-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .file-field {
+    position: relative;
+  }
+  .file-drop {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: rgba(255,255,255,0.02);
+    min-height: 74px;
+  }
+  .file-drop:hover {
+    border-color: rgba(34,211,238,0.3);
+    background: rgba(34,211,238,0.03);
+  }
+  .file-drop:has(input:focus-visible) {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-color: var(--cyan);
+  }
+  .file-drop input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .file-drop-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-2);
+    flex-shrink: 0;
+  }
+  .file-drop-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .file-drop-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .file-drop-text span {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .file-drop.file-selected {
+    border-color: rgba(52,211,153,0.4);
+    background: rgba(52,211,153,0.04);
+  }
+  .file-drop.file-selected .file-drop-icon {
+    background: rgba(52,211,153,0.12);
+    border-color: rgba(52,211,153,0.25);
+    color: #34D399;
+  }
+  .file-drop.file-selected .file-drop-text span {
+    color: var(--muted-2);
+  }
+  .file-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid rgba(52,211,153,0.25);
+    flex-shrink: 0;
+  }
+
   /* ── Mobile ─────────────────────────────────────────── */
   @media (max-width: 640px) {
     /* Assets table: scrollable */
@@ -191,6 +316,7 @@
     .detail-actions { flex-wrap: wrap; }
     /* ID chip: hide on very small */
     .id-chip { display: none; }
+    .upload-grid { grid-template-columns: 1fr; }
   }
 </style>
 {% endblock %}
@@ -353,6 +479,132 @@
   </div>
 
   <!-- ── Descrição ───────────────────────────────────── -->
+
+  <div class="card animate-fade-up delay-2" style="padding: 24px;">
+    <div class="section-label">
+      <span class="section-label-dot" style="background: var(--gold);" aria-hidden="true"></span>
+      Atualizar Conteúdo
+    </div>
+
+    {% if request.query_params.get('updated') %}
+      <div class="badge badge-ready" style="margin-bottom: 14px;">
+        Alterações salvas{% if request.query_params.get('reprocess') %} e reprocessamento iniciado{% endif %}.
+      </div>
+    {% endif %}
+    {% if update_error %}
+      <div class="error-box" style="margin-bottom: 14px;">{{ update_error }}</div>
+    {% endif %}
+
+        <form method="post" action="/admin/videos/{{ video.id }}/update" enctype="multipart/form-data"
+          style="display:flex; flex-direction:column; gap:16px;">
+      <div>
+        <label for="title" class="field-label">Título</label>
+        <input id="title" name="title" class="form-input" value="{{ video.title }}" required />
+      </div>
+      <div>
+        <label for="description" class="field-label">Descrição</label>
+        <textarea id="description" name="description" class="form-input" rows="4">{{ video.description or '' }}</textarea>
+      </div>
+
+      <div class="upload-grid">
+        <div class="file-field">
+          <label for="video_file" class="field-label">Trocar vídeo principal</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="video_file" name="video_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <polyline points="10 8 16 12 10 16 10 8"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar novo vídeo</strong>
+              <span>MP4, MOV, AVI, MKV ou WEBM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-field">
+          <label for="cover_file" class="field-label">Trocar capa</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="cover_file" name="cover_file" type="file" accept=".jpg,.jpeg,.png,.webp" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar nova capa</strong>
+              <span>JPG, PNG ou WEBP</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-field">
+          <label for="libras_file" class="field-label">Trocar Libras</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="libras_file" name="libras_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path d="M8 19h8"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar vídeo de Libras</strong>
+              <span>Opcional</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-field">
+          <label for="ad_file" class="field-label">Trocar audiodescrição</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="ad_file" name="ad_file" type="file" accept=".mp3,.aac,.wav,.ogg,.m4a" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                <path d="M15.5 8.5a5 5 0 010 7"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar novo AD</strong>
+              <span>MP3, AAC, WAV, OGG ou M4A</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-field" style="grid-column: 1 / -1;">
+          <label for="subtitle_file" class="field-label">Trocar legenda</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="subtitle_file" name="subtitle_file" type="file" accept=".srt,.vtt" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <line x1="6" y1="9" x2="18" y2="9"/>
+                <line x1="6" y1="13" x2="14" y2="13"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar novo arquivo de legenda</strong>
+              <span>SRT ou VTT</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="field-hint" style="margin: 0;">
+        Troca de capa, título e descrição não dispara reprocessamento. Troca de vídeo, Libras, AD ou legenda dispara.
+      </p>
+
+      <div style="display: flex; justify-content: flex-start;">
+        <button type="submit" class="btn btn-primary btn-sm">Salvar alterações</button>
+      </div>
+    </form>
+  </div>
+
   {% if video.description %}
   <div class="card animate-fade-up delay-2" style="padding: 24px;">
     <div class="section-label">
@@ -501,4 +753,48 @@
 
 </div>
 </main>
+
+<script>
+function formatFileBytes(bytes) {
+  if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+  if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+  if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return bytes + ' B';
+}
+
+function setupUpdatePicker(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  input.addEventListener('change', function() {
+    const file = this.files && this.files[0];
+    if (!file) return;
+
+    const drop = this.closest('.file-drop');
+    if (!drop) return;
+
+    const nameEl = drop.querySelector('.file-drop-text strong');
+    const hintEl = drop.querySelector('.file-drop-text span');
+    const iconEl = drop.querySelector('.file-drop-icon');
+
+    drop.classList.add('file-selected');
+    if (nameEl) nameEl.textContent = file.name;
+    if (hintEl) hintEl.textContent = formatFileBytes(file.size);
+
+    if (iconEl) {
+      if (file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        iconEl.innerHTML = '<img src="' + url + '" class="file-thumb" alt="" aria-hidden="true" />';
+      } else {
+        iconEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+      }
+    }
+  });
+}
+
+['video_file', 'cover_file', 'libras_file', 'ad_file', 'subtitle_file'].forEach(setupUpdatePicker);
+</script>
 {% endblock %}
+
+
+

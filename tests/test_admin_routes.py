@@ -22,7 +22,7 @@ def make_video(db, status=VideoStatus.ready, **kwargs) -> Video:
     return v
 
 
-# ── Auth ──────────────────────────────────────────────────────────────────────
+# â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_login_page(client):
     r = client.get("/admin/login")
@@ -39,7 +39,7 @@ def test_login_success(client):
 def test_login_invalid_credentials(client):
     r = client.post("/admin/login", data={"username": "admin", "password": "wrong"})
     assert r.status_code == 401
-    assert "inválidos" in r.text
+    assert "invÃ¡lidos" in r.text
 
 
 def test_logout(auth_client):
@@ -53,7 +53,7 @@ def test_dashboard_requires_auth(client):
     assert r.status_code == 401
 
 
-# ── Dashboard ─────────────────────────────────────────────────────────────────
+# â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_dashboard_empty(auth_client):
     r = auth_client.get("/admin/dashboard")
@@ -63,16 +63,16 @@ def test_dashboard_empty(auth_client):
 
 def test_dashboard_with_videos(auth_client):
     db = TestingSessionLocal()
-    make_video(db, title="Meu Vídeo", libras_available=True)
+    make_video(db, title="Meu VÃ­deo", libras_available=True)
     db.close()
 
     r = auth_client.get("/admin/dashboard")
     assert r.status_code == 200
-    assert "Meu Vídeo" in r.text
+    assert "Meu VÃ­deo" in r.text
     assert "Libras" in r.text
 
 
-# ── New Video Form ─────────────────────────────────────────────────────────────
+# â”€â”€ New Video Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_new_video_form(auth_client):
     r = auth_client.get("/admin/videos/new")
@@ -115,7 +115,7 @@ def test_create_video_invalid_extension(auth_client):
         data={"title": "Bad Video"},
     )
     assert r.status_code == 422
-    assert "inválido" in r.text
+    assert "invÃ¡lido" in r.text
 
 
 def test_create_video_with_all_assets(auth_client, tmp_path, monkeypatch):
@@ -138,7 +138,7 @@ def test_create_video_with_all_assets(auth_client, tmp_path, monkeypatch):
     assert r.status_code == 200
 
 
-# ── Video Detail ──────────────────────────────────────────────────────────────
+# â”€â”€ Video Detail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_video_detail(auth_client):
     db = TestingSessionLocal()
@@ -199,7 +199,7 @@ def test_video_detail_with_error_status(auth_client):
     assert "FFmpeg crashed" in r.text
 
 
-# ── Reprocess ─────────────────────────────────────────────────────────────────
+# â”€â”€ Reprocess â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_reprocess_no_input_file(auth_client):
     db = TestingSessionLocal()
@@ -243,7 +243,7 @@ def test_reprocess_not_found(auth_client):
     assert r.status_code == 404
 
 
-# ── Delete ────────────────────────────────────────────────────────────────────
+# â”€â”€ Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_delete_video(auth_client):
     db = TestingSessionLocal()
@@ -264,7 +264,7 @@ def test_delete_video_not_found(auth_client):
     assert r.status_code == 404
 
 
-# ── Docs ──────────────────────────────────────────────────────────────────────
+# â”€â”€ Docs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_docs_page(auth_client):
     r = auth_client.get("/admin/docs")
@@ -278,7 +278,7 @@ def test_docs_requires_auth(client):
     assert r.status_code == 401
 
 
-# ── DB-based login ─────────────────────────────────────────────────────────────
+# â”€â”€ DB-based login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_login_with_db_admin_user(client):
     from app.auth import hash_password
@@ -298,7 +298,7 @@ def test_login_with_db_admin_user(client):
     assert "weplayer_session" in client.cookies
 
 
-# ── Video Status API ──────────────────────────────────────────────────────────
+# â”€â”€ Video Status API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_video_status_api(auth_client):
     db = TestingSessionLocal()
@@ -333,3 +333,148 @@ def test_video_status_api_not_found(auth_client):
 def test_video_status_api_requires_auth(client):
     r = client.get("/admin/videos/some-id/status", follow_redirects=False)
     assert r.status_code == 401
+
+
+def test_update_video_metadata_only(auth_client, tmp_path, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+
+    main_input = tmp_path / "weplayer" / "videos" / "vid-upd-1" / "input" / "main.mp4"
+    main_input.parent.mkdir(parents=True)
+    main_input.write_bytes(b"fake")
+
+    db = TestingSessionLocal()
+    v = Video(id="vid-upd-1", title="Old", description="Old desc", status=VideoStatus.ready)
+    db.add(v)
+    db.add(VideoAsset(
+        id=str(uuid.uuid4()),
+        video_id="vid-upd-1",
+        asset_type=AssetType.original_input,
+        file_path=str(main_input),
+        status=AssetStatus.ready,
+    ))
+    db.commit()
+    db.close()
+
+    r = auth_client.post(
+        "/admin/videos/vid-upd-1/update",
+        data={"title": "Novo titulo", "description": "Nova descricao"},
+    )
+    assert r.status_code == 200
+
+    db = TestingSessionLocal()
+    v = db.query(Video).get("vid-upd-1")
+    assert v.title == "Novo titulo"
+    assert v.description == "Nova descricao"
+    assert v.status == VideoStatus.ready
+    db.close()
+
+
+def test_update_video_with_new_main_triggers_reprocess(auth_client, tmp_path, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+
+    old_main = tmp_path / "weplayer" / "videos" / "vid-upd-2" / "input" / "main.mp4"
+    old_main.parent.mkdir(parents=True)
+    old_main.write_bytes(b"old")
+
+    db = TestingSessionLocal()
+    v = Video(id="vid-upd-2", title="Old", status=VideoStatus.ready)
+    db.add(v)
+    db.add(VideoAsset(
+        id=str(uuid.uuid4()),
+        video_id="vid-upd-2",
+        asset_type=AssetType.original_input,
+        file_path=str(old_main),
+        status=AssetStatus.ready,
+    ))
+    db.commit()
+    db.close()
+
+    with patch("app.routes.admin._process_video"):
+        r = auth_client.post(
+            "/admin/videos/vid-upd-2/update",
+            data={"title": "Com novo video", "description": ""},
+            files=[_fake_file("video_file", "novo.mp4", b"new-main", "video/mp4")],
+        )
+    assert r.status_code == 200
+
+    db = TestingSessionLocal()
+    v = db.query(Video).get("vid-upd-2")
+    assert v.status == VideoStatus.pending
+    assert v.title == "Com novo video"
+    db.close()
+
+
+def test_update_video_invalid_cover_extension(auth_client):
+    db = TestingSessionLocal()
+    v = make_video(db, status=VideoStatus.ready)
+    vid_id = v.id
+    db.close()
+
+    r = auth_client.post(
+        f"/admin/videos/{vid_id}/update",
+        data={"title": "X", "description": ""},
+        files=[_fake_file("cover_file", "bad.gif", b"gifdata", "image/gif")],
+    )
+    assert r.status_code == 422
+    assert "capa invalido" in r.text
+
+def test_update_video_with_all_optional_assets(auth_client, tmp_path, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+
+    old_main = tmp_path / "weplayer" / "videos" / "vid-upd-3" / "input" / "main.mp4"
+    old_main.parent.mkdir(parents=True)
+    old_main.write_bytes(b"old")
+
+    db = TestingSessionLocal()
+    v = Video(id="vid-upd-3", title="Old", status=VideoStatus.ready)
+    db.add(v)
+    db.add(VideoAsset(
+        id=str(uuid.uuid4()),
+        video_id="vid-upd-3",
+        asset_type=AssetType.original_input,
+        file_path=str(old_main),
+        status=AssetStatus.ready,
+    ))
+    db.commit()
+    db.close()
+
+    with patch("app.routes.admin._process_video"):
+        r = auth_client.post(
+            "/admin/videos/vid-upd-3/update",
+            data={"title": "Full update", "description": "desc"},
+            files=[
+                _fake_file("libras_file", "libras.mp4", b"l", "video/mp4"),
+                _fake_file("ad_file", "ad.mp3", b"a", "audio/mpeg"),
+                _fake_file("subtitle_file", "sub.srt", b"1", "text/plain"),
+                _fake_file("cover_file", "cover.jpg", b"img", "image/jpeg"),
+            ],
+        )
+    assert r.status_code == 200
+
+    db = TestingSessionLocal()
+    v = db.query(Video).get("vid-upd-3")
+    assert v.status == VideoStatus.pending
+    assert v.cover_path is not None
+    db.close()
+
+
+def test_update_video_reprocess_without_main_returns_400(auth_client, tmp_path, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+
+    db = TestingSessionLocal()
+    v = Video(id="vid-upd-4", title="Old", status=VideoStatus.ready)
+    db.add(v)
+    db.commit()
+    db.close()
+
+    r = auth_client.post(
+        "/admin/videos/vid-upd-4/update",
+        data={"title": "No main", "description": ""},
+        files=[_fake_file("libras_file", "libras.mp4", b"l", "video/mp4")],
+    )
+    assert r.status_code == 400
+    assert "Nao foi possivel localizar" in r.text

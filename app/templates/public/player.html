@@ -4,9 +4,9 @@
 {% block head %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.min.js"></script>
 <style>
-/* ══════════════════════════════════════════════════════════
+/* 
    PLAYER SHELL
-══════════════════════════════════════════════════════════ */
+ */
 #player-wrap {
   position: relative;
   background: #000;
@@ -21,9 +21,9 @@
   display: block; background: #000;
 }
 
-/* ══════════════════════════════════════════════════════════
+/* 
    CONTROLS OVERLAY
-══════════════════════════════════════════════════════════ */
+ */
 #wp-overlay {
   position: absolute; inset: 0;
   display: flex; flex-direction: column;
@@ -32,12 +32,11 @@
   transition: opacity 0.25s ease;
   pointer-events: none;
 }
-#player-wrap:hover #wp-overlay,
-#player-wrap.show-controls #wp-overlay,
-#player-wrap:focus-within #wp-overlay {
+#player-wrap.show-controls #wp-overlay {
   opacity: 1;
   pointer-events: auto;
 }
+#player-wrap.fullscreen-idle { cursor: none; }
 
 /* Top gradient */
 #wp-overlay::before {
@@ -176,6 +175,34 @@
 #cc-btn { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; font-family: var(--font-display); min-width: 36px; }
 #cc-btn.active { color: var(--gold); }
 
+#settings-panel {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 260px;
+  max-width: min(300px, calc(100% - 16px));
+  background: rgba(8, 11, 20, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: none;
+  z-index: 12;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.45);
+}
+#settings-panel.open { display: block; }
+.settings-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.settings-row label { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.settings-row select,
+.settings-row input[type="color"] {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 6px 8px;
+}
+.settings-color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
 /* ── Buffering spinner ─────────────────────────── */
 #buffering {
   position: absolute; inset: 0;
@@ -211,9 +238,9 @@
   opacity: 0; transform: translate(-50%,-50%) scale(1.3);
 }
 
-/* ══════════════════════════════════════════════════════════
+/* 
    SIDEBAR / META PANEL
-══════════════════════════════════════════════════════════ */
+ */
 .meta-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -272,9 +299,9 @@
   min-width: 20px;
 }
 
-/* ══════════════════════════════════════════════════════════
+/* 
    LAYOUT
-══════════════════════════════════════════════════════════ */
+ */
 .watch-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -285,9 +312,9 @@
   .watch-layout { grid-template-columns: 1fr; }
 }
 
-/* ══════════════════════════════════════════════════════════
+/* 
    MOBILE — touch targets, compact controls
-══════════════════════════════════════════════════════════ */
+ */
 @media (max-width: 640px) {
   /* Bigger touch targets */
   .ctrl-btn {
@@ -330,14 +357,14 @@
 {% endblock %}
 
 {% block nav_links %}
-  <a href="/catalog" class="btn btn-ghost btn-sm">← Catálogo</a>
+  <a href="/catalog" class="btn btn-ghost btn-sm"> Catálogo</a>
 {% endblock %}
 
 {% block content %}
 
 <div class="watch-layout animate-fade-in">
 
-  <!-- ══════════════════ LEFT: Player + info ══════ -->
+  <!--  LEFT: Player + info  -->
   <div style="display:flex; flex-direction:column; gap:20px;">
 
     <!-- Player -->
@@ -410,7 +437,7 @@
               <button class="mode-btn" id="btn-ad"
                       onclick="switchMode('ad')" aria-pressed="false"
                       {% if not manifests.ad %}disabled title="AD não disponível"{% endif %}>
-                🎙️ AD
+                🎙 AD
               </button>
             </div>
 
@@ -420,6 +447,13 @@
                     aria-label="Legendas" title="Legendas (C)">CC</button>
             {% endif %}
 
+            <button class="ctrl-btn" id="settings-btn" onclick="toggleSettingsPanel(event)"
+                    aria-label="Preferencias de reproducao" title="Preferencias">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M19.14 12.94a7.43 7.43 0 0 0 .05-.94 7.43 7.43 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.14 7.14 0 0 0-1.63-.94l-.36-2.54a.49.49 0 0 0-.49-.42h-3.84a.49.49 0 0 0-.49.42L8.2 5.32a7.14 7.14 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L1.66 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.43 7.43 0 0 0-.05.94c0 .32.02.63.05.94L1.78 14.5a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.69.22l2.39-.96c.5.39 1.05.71 1.63.94l.36 2.54c.05.24.25.42.49.42h3.84c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.13-.55 1.63-.94l2.39.96c.26.12.55.02.69-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.56zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+              </svg>
+            </button>
+
             <!-- Fullscreen -->
             <button class="ctrl-btn" onclick="toggleFullscreen()" aria-label="Tela cheia (F)">
               <svg id="fs-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -427,6 +461,38 @@
               </svg>
             </button>
           </div>
+        </div>
+
+        <div id="settings-panel" aria-label="Configuracoes do player">
+          <div class="settings-row">
+            <label for="pref-speed">Velocidade</label>
+            <select id="pref-speed" onchange="onPrefSpeedChange(this.value)">
+              <option value="0.75">0.75x</option>
+              <option value="1">1x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label for="pref-size">Tamanho da legenda</label>
+            <select id="pref-size" onchange="onPrefSizeChange(this.value)">
+              <option value="80">Pequeno</option>
+              <option value="100">Medio</option>
+              <option value="125">Grande</option>
+            </select>
+          </div>
+          <div class="settings-color-grid">
+            <div class="settings-row">
+              <label for="pref-text-color">Cor texto</label>
+              <input id="pref-text-color" type="color" onchange="onPrefTextColorChange(this.value)" />
+            </div>
+            <div class="settings-row">
+              <label for="pref-bg-color">Cor fundo</label>
+              <input id="pref-bg-color" type="color" onchange="onPrefBgColorChange(this.value)" />
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="resetPlayerPrefs()">Restaurar padrao</button>
         </div>
       </div>
     </div>
@@ -439,13 +505,13 @@
       {% endif %}
       <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;">
         {% if video.libras_available %}<span class="badge badge-libras">🤟 Libras disponível</span>{% endif %}
-        {% if video.ad_available %}<span class="badge badge-ad">🎙️ Audiodescrição</span>{% endif %}
+        {% if video.ad_available %}<span class="badge badge-ad">🎙 Audiodescrição</span>{% endif %}
         {% if video.subtitle_available %}<span class="badge badge-sub">💬 Legenda</span>{% endif %}
       </div>
     </div>
   </div>
 
-  <!-- ══════════════════ RIGHT: Panel ════════════ -->
+  <!--  RIGHT: Panel  -->
   <div class="meta-panel animate-fade-up delay-2">
 
     <!-- Accessibility controls -->
@@ -479,7 +545,7 @@
            aria-label="Audiodescrição — Narração de cenas"
            style="{% if not manifests.ad %}opacity:0.4; cursor:default;{% endif %}">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">🎙️</span>
+          <span style="font-size:18px;" aria-hidden="true">🎙</span>
           <div>
             <div style="font-size:13px; font-weight:600;">Audiodescrição</div>
             <div style="font-size:11px; color:var(--muted);">Narração de cenas</div>
@@ -535,7 +601,7 @@
       <dl aria-labelledby="shortcuts-label" style="display:flex; flex-direction:column; gap:8px; margin:0;">
         {% for shortcut in [
           ('Espaço / K', 'Play / Pause'),
-          ('← / →', 'Retroceder / Avançar 10s'),
+          (' / →', 'Retroceder / Avançar 10s'),
           ('↑ / ↓', 'Volume'),
           ('M', 'Mudo'),
           ('F', 'Tela cheia'),
@@ -552,7 +618,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════ SCRIPT ═══ -->
+<!--  SCRIPT  -->
 <script>
 const MANIFESTS = {
   original: {{ manifests.original | tojson }},
@@ -568,6 +634,13 @@ let captionsOn   = false;
 let savedTime    = 0;
 let wasPlaying   = false;
 let hideTimer    = null;
+const USER_PREF_KEY = 'wp_player_user_prefs_v1';
+let userPrefs = {
+  subtitleText: '#ffffff',
+  subtitleBg: '#000000',
+  subtitleSize: '100',
+  playbackRate: '1',
+};
 
 const wrap      = document.getElementById('player-wrap');
 const videoEl   = document.getElementById('main-video');
@@ -579,6 +652,8 @@ const timeEl    = document.getElementById('time-display');
 const buffering = document.getElementById('buffering');
 const flash     = document.getElementById('center-flash');
 const streamLbl = document.getElementById('stream-label');
+const settingsPanel = document.getElementById('settings-panel');
+const settingsBtn = document.getElementById('settings-btn');
 
 /* ─── Init ──────────────────────────────────────────── */
 async function initPlayer() {
@@ -594,6 +669,8 @@ async function initPlayer() {
   });
 
   restorePrefs();
+  restoreUserPrefs();
+  applyUserPrefs();
   if (!MANIFESTS[currentMode]) return;
   await loadManifest(MANIFESTS[currentMode]);
 }
@@ -602,6 +679,7 @@ async function loadManifest(path) {
   try {
     await player.load('/media/' + path);
     if (captionsOn && SUBTITLE) applySubtitle();
+    applyUserPrefs();
     updateQualityBadge();
   } catch(e) { console.error('Load error:', e); }
 }
@@ -692,6 +770,46 @@ function toggleMute() {
   document.getElementById('volume-bar').value = videoEl.muted ? 0 : videoEl.volume;
   updateVolIcon();
 }
+function toggleSettingsPanel(event) {
+  if (event) event.stopPropagation();
+  if (!settingsPanel) return;
+  const opening = !settingsPanel.classList.contains('open');
+  settingsPanel.classList.toggle('open', opening);
+  wrap.classList.add('show-controls');
+  wrap.classList.remove('fullscreen-idle');
+  if (opening) {
+    requestAnimationFrame(positionSettingsPanel);
+  } else {
+    scheduleControlsHide();
+  }
+}
+
+function positionSettingsPanel() {
+  if (!settingsPanel || !settingsBtn || !wrap) return;
+
+  const wrapRect = wrap.getBoundingClientRect();
+  const btnRect = settingsBtn.getBoundingClientRect();
+  const panelW = settingsPanel.offsetWidth || 260;
+  const panelH = settingsPanel.offsetHeight || 220;
+  const gap = 10;
+  const edge = 8;
+
+  let left = btnRect.right - wrapRect.left - panelW;
+  let top = btnRect.top - wrapRect.top - panelH - gap;
+
+  if (left < edge) left = edge;
+  const maxLeft = Math.max(edge, wrapRect.width - panelW - edge);
+  if (left > maxLeft) left = maxLeft;
+
+  if (top < edge) {
+    top = btnRect.bottom - wrapRect.top + gap;
+  }
+  const maxTop = Math.max(edge, wrapRect.height - panelH - edge);
+  if (top > maxTop) top = maxTop;
+
+  settingsPanel.style.left = Math.round(left) + 'px';
+  settingsPanel.style.top = Math.round(top) + 'px';
+}
 function toggleFullscreen() {
   if (!document.fullscreenElement) wrap.requestFullscreen();
   else document.exitFullscreen();
@@ -706,6 +824,21 @@ function showFlash(type) {
   flash.className = 'show';
   clearTimeout(flash._t);
   flash._t = setTimeout(() => { flash.className = 'hide'; setTimeout(() => flash.className = '', 200); }, 600);
+}
+
+function scheduleControlsHide() {
+  clearTimeout(hideTimer);
+  wrap.classList.remove('fullscreen-idle');
+  if (videoEl.paused) return;
+  const timeoutMs = document.fullscreenElement ? 4000 : 2500;
+  hideTimer = setTimeout(() => {
+    if (!videoEl.paused && (!settingsPanel || !settingsPanel.classList.contains('open'))) {
+      wrap.classList.remove('show-controls');
+      if (document.fullscreenElement) {
+        wrap.classList.add('fullscreen-idle');
+      }
+    }
+  }, timeoutMs);
 }
 
 /* ─── Events ────────────────────────────────────────── */
@@ -726,12 +859,13 @@ seekBar.addEventListener('input', () => {
 videoEl.addEventListener('play',  () => {
   playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
   wrap.classList.add('show-controls');
-  clearTimeout(hideTimer);
-  hideTimer = setTimeout(() => wrap.classList.remove('show-controls'), 2500);
+  scheduleControlsHide();
 });
 videoEl.addEventListener('pause', () => {
   playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
   wrap.classList.add('show-controls');
+  wrap.classList.remove('fullscreen-idle');
+  clearTimeout(hideTimer);
 });
 document.getElementById('volume-bar').addEventListener('input', e => {
   videoEl.volume = e.target.value;
@@ -740,8 +874,8 @@ document.getElementById('volume-bar').addEventListener('input', e => {
 });
 wrap.addEventListener('mousemove', () => {
   wrap.classList.add('show-controls');
-  clearTimeout(hideTimer);
-  hideTimer = setTimeout(() => { if (!videoEl.paused) wrap.classList.remove('show-controls'); }, 2500);
+  wrap.classList.remove('fullscreen-idle');
+  scheduleControlsHide();
 });
 wrap.addEventListener('click', e => {
   if (e.target === videoEl || e.target === wrap) togglePlay();
@@ -752,6 +886,25 @@ document.addEventListener('fullscreenchange', () => {
     icon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
   } else {
     icon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+  }
+  wrap.classList.add('show-controls');
+  wrap.classList.remove('fullscreen-idle');
+  if (settingsPanel && settingsPanel.classList.contains('open')) {
+    requestAnimationFrame(positionSettingsPanel);
+  }
+  scheduleControlsHide();
+});
+document.addEventListener('click', e => {
+  if (settingsPanel && settingsPanel.classList.contains('open')) {
+    if (!settingsPanel.contains(e.target) && !(settingsBtn && settingsBtn.contains(e.target))) {
+      settingsPanel.classList.remove('open');
+      scheduleControlsHide();
+    }
+  }
+});
+window.addEventListener('resize', () => {
+  if (settingsPanel && settingsPanel.classList.contains('open')) {
+    positionSettingsPanel();
   }
 });
 
@@ -797,6 +950,44 @@ function fmt(s) {
 }
 
 /* ─── Prefs ─────────────────────────────────────────── */
+function saveUserPrefs() {
+  localStorage.setItem(USER_PREF_KEY, JSON.stringify(userPrefs));
+}
+function restoreUserPrefs() {
+  try {
+    const raw = localStorage.getItem(USER_PREF_KEY);
+    if (raw) userPrefs = { ...userPrefs, ...JSON.parse(raw) };
+  } catch (_) {}
+  const speed = document.getElementById('pref-speed');
+  const size = document.getElementById('pref-size');
+  const text = document.getElementById('pref-text-color');
+  const bg = document.getElementById('pref-bg-color');
+  if (speed) speed.value = String(userPrefs.playbackRate);
+  if (size) size.value = String(userPrefs.subtitleSize);
+  if (text) text.value = userPrefs.subtitleText;
+  if (bg) bg.value = userPrefs.subtitleBg;
+}
+function applyUserPrefs() {
+  videoEl.playbackRate = parseFloat(userPrefs.playbackRate || '1');
+  let cueStyle = document.getElementById('wp-cue-style');
+  if (!cueStyle) {
+    cueStyle = document.createElement('style');
+    cueStyle.id = 'wp-cue-style';
+    document.head.appendChild(cueStyle);
+  }
+  cueStyle.textContent = `#main-video::cue { color: ${userPrefs.subtitleText}; background: ${userPrefs.subtitleBg}; font-size: ${userPrefs.subtitleSize}% !important; }`;
+}
+function onPrefSpeedChange(value) { userPrefs.playbackRate = String(value); saveUserPrefs(); applyUserPrefs(); }
+function onPrefSizeChange(value) { userPrefs.subtitleSize = String(value); saveUserPrefs(); applyUserPrefs(); }
+function onPrefTextColorChange(value) { userPrefs.subtitleText = value; saveUserPrefs(); applyUserPrefs(); }
+function onPrefBgColorChange(value) { userPrefs.subtitleBg = value; saveUserPrefs(); applyUserPrefs(); }
+function resetPlayerPrefs() {
+  userPrefs = { subtitleText: '#ffffff', subtitleBg: '#000000', subtitleSize: '100', playbackRate: '1' };
+  saveUserPrefs();
+  restoreUserPrefs();
+  applyUserPrefs();
+}
+
 function savePrefs() {
   localStorage.setItem('wp_mode_'    + VIDEO_ID, currentMode);
   localStorage.setItem('wp_captions_'+ VIDEO_ID, captionsOn ? '1' : '0');
