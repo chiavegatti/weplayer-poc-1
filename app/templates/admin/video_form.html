@@ -565,7 +565,9 @@
         </svg>
       </div>
       <h2 id="overlay-title" style="font-size:18px; font-weight:700; margin-bottom:6px;">Enviando arquivos…</h2>
+      <p id="ov-stage" style="font-size:12px; color:var(--cyan); font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:8px;">Preparando envio</p>
       <p id="ov-filename" style="font-size:13px; color:var(--muted); margin-bottom:4px; word-break:break-all;"></p>
+      <p id="ov-summary" style="font-size:12px; color:var(--muted-2); margin-bottom:12px;">Progresso total do lote</p>
       <div class="upload-progress-track">
         <div id="ov-bar" class="upload-progress-fill"></div>
       </div>
@@ -690,6 +692,19 @@ function updateOverlayProgress(loaded, total, startTime) {
   document.getElementById('ov-eta').textContent   = fmtTime(eta);
 }
 
+function setOverlayStage(text) {
+  document.getElementById('ov-stage').textContent = text;
+}
+
+function setOverlaySummary(currentIndex, totalFiles, totalBytes) {
+  if (!totalFiles) {
+    document.getElementById('ov-summary').textContent = 'Progresso total do lote';
+    return;
+  }
+  document.getElementById('ov-summary').textContent =
+    `Arquivo ${currentIndex} de ${totalFiles} • Total do lote: ${fmtBytes(totalBytes)}`;
+}
+
 async function initiateChunkedUpload(fieldName, file) {
   const response = await sendXHR('/admin/uploads/initiate', () => {
     const fd = new FormData();
@@ -749,6 +764,8 @@ form.addEventListener('submit', async function(e) {
   document.getElementById('state-done').style.display   = 'none';
   document.getElementById('state-error').style.display  = 'none';
   document.getElementById('ov-filename').textContent = mainFile.name;
+  setOverlayStage('Preparando envio');
+  setOverlaySummary(1, selectedUploads.length, totalChunkBytes);
   document.getElementById('ov-bar').style.width = '0%';
   document.getElementById('ov-pct').textContent  = '0%';
   document.getElementById('ov-bytes').textContent = '0 B';
@@ -761,7 +778,9 @@ form.addEventListener('submit', async function(e) {
     let uploadedBytes = 0;
     const chunkResults = {};
 
-    for (const item of selectedUploads) {
+    for (const [index, item] of selectedUploads.entries()) {
+      setOverlayStage(`Enviando ${item.config.label}`);
+      setOverlaySummary(index + 1, selectedUploads.length, totalChunkBytes);
       document.getElementById('ov-filename').textContent = `${item.config.label}: ${item.file.name}`;
       chunkResults[item.config.metaPrefix] = await uploadFileInChunks(
         item.config,
@@ -773,6 +792,9 @@ form.addEventListener('submit', async function(e) {
       uploadedBytes += item.file.size;
     }
 
+    setOverlayStage('Finalizando cadastro');
+    setOverlaySummary(selectedUploads.length, selectedUploads.length, totalChunkBytes);
+    document.getElementById('ov-filename').textContent = 'Registrando o vídeo e iniciando o processamento.';
     const finalResponse = await sendXHR(form.action, () => {
       const fd = new FormData(form);
       for (const item of selectedUploads) {
