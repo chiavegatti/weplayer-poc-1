@@ -1,20 +1,20 @@
+import bcrypt as _bcrypt
+
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from fastapi import Request, HTTPException
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.config import settings
 
 _serializer = URLSafeTimedSerializer(settings.secret_key)
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
-    return _pwd_context.hash(password)
+    return _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return _pwd_context.verify(plain, hashed)
+    return _bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 def create_session_token(username: str) -> str:
