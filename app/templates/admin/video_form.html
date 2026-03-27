@@ -1,77 +1,501 @@
 {% extends "base.html" %}
 {% block title %}Novo Vídeo — WePlayer Admin{% endblock %}
 
+{% block head %}
+<style>
+  /* Focus rings WCAG 2.2 AA */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+  .input:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 4px rgba(34,211,238,0.10);
+  }
+
+  /* Nav link muted */
+  .nav-link-muted {
+    font-size: 14px;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-link-muted:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  /* Section heading */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-label-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* File input customizado */
+  .file-field {
+    position: relative;
+  }
+  .file-drop {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: rgba(255,255,255,0.02);
+  }
+  .file-drop:hover {
+    border-color: rgba(34,211,238,0.3);
+    background: rgba(34,211,238,0.03);
+  }
+  .file-drop:has(input:focus-visible) {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-color: var(--cyan);
+  }
+  .file-drop input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .file-drop-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted-2);
+    flex-shrink: 0;
+  }
+  .file-drop-text { flex: 1; }
+  .file-drop-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .file-drop-text span {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .file-required-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border-radius: 100px;
+    background: rgba(34,211,238,0.10);
+    color: var(--cyan);
+    border: 1px solid rgba(34,211,238,0.2);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  /* Checkbox acessível */
+  .check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .check-row:hover {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* Required asterisk sr-only helper */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* Hint text */
+  .field-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  /* ── Mobile ─────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    /* Accessibility grid: 1 column */
+    [style*="grid-template-columns: repeat(3"] {
+      grid-template-columns: 1fr !important;
+    }
+    [style*="grid-template-columns: repeat(2"] {
+      grid-template-columns: 1fr !important;
+    }
+    /* Form card padding */
+    .card { padding: 20px !important; }
+    /* File drop zone */
+    .file-drop { padding: 28px 16px !important; }
+  }
+</style>
+{% endblock %}
+
 {% block nav_links %}
-  <a href="/admin/dashboard" class="btn-secondary text-sm">← Dashboard</a>
-  <a href="/admin/logout" class="btn-secondary text-sm">Sair</a>
+  <a href="/admin/dashboard" class="nav-link-muted" aria-label="Voltar ao dashboard">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Dashboard
+  </a>
+  <a href="/admin/logout" class="btn btn-ghost btn-sm" aria-label="Sair do painel administrativo">
+    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+    Sair
+  </a>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto">
-  <h1 class="text-2xl font-bold mb-8">Novo Vídeo</h1>
+<main id="main-content">
+<div style="max-width: 680px; margin: 0 auto;">
 
+  <!-- Page header -->
+  <div class="animate-fade-up" style="margin-bottom: 32px;">
+    <h1 style="font-size: 26px; font-weight: 800; font-family: var(--font-display); letter-spacing: -0.02em;">
+      Novo Vídeo
+    </h1>
+    <p style="font-size: 13px; color: var(--muted); margin-top: 6px;">
+      Preencha as informações e faça o upload dos arquivos para processar o vídeo.
+    </p>
+  </div>
+
+  <!-- Mensagem de erro WCAG: role="alert" -->
   {% if error %}
-  <div class="mb-6 p-4 rounded-lg text-sm" style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d;">
-    {{ error }}
+  <div
+    role="alert"
+    aria-live="assertive"
+    class="animate-fade-up"
+    style="
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.25);
+      border-radius: var(--radius-sm);
+      color: var(--red);
+      padding: 14px 18px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    "
+  >
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0; margin-top:1px;">
+      <circle cx="8" cy="8" r="7.5" stroke="currentColor" stroke-opacity="0.5"/>
+      <path d="M8 4.5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="8" cy="11" r="0.75" fill="currentColor"/>
+    </svg>
+    <span>{{ error }}</span>
   </div>
   {% endif %}
 
-  <form method="post" action="/admin/videos/new" enctype="multipart/form-data" class="flex flex-col gap-6">
-    <div class="card p-6 flex flex-col gap-5">
-      <h2 class="font-semibold text-base" style="color: var(--wp-muted);">INFORMAÇÕES</h2>
+  <form
+    method="post"
+    action="/admin/videos/new"
+    enctype="multipart/form-data"
+    novalidate
+    aria-label="Formulário de cadastro de novo vídeo"
+    style="display: flex; flex-direction: column; gap: 20px;"
+  >
 
-      <div>
-        <label for="title">Título <span style="color:#f87171;">*</span></label>
-        <input id="title" name="title" type="text" required placeholder="Ex: Documentário Acessível" />
+    <!-- ── 1. INFORMAÇÕES ──────────────────────────────── -->
+    <section class="card animate-fade-up delay-1" style="padding: 28px;" aria-labelledby="section-info">
+      <div class="section-label">
+        <span class="section-label-icon" style="background: rgba(34,211,238,0.10); color: var(--cyan);" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </span>
+        <span id="section-info">Informações</span>
       </div>
-      <div>
-        <label for="description">Descrição</label>
-        <textarea id="description" name="description" rows="3" placeholder="Sinopse ou descrição do conteúdo..."></textarea>
+
+      <div style="display: flex; flex-direction: column; gap: 18px;">
+        <!-- Título -->
+        <div>
+          <label for="title">
+            Título
+            <span aria-hidden="true" style="color: var(--red); margin-left: 2px;">*</span>
+            <span class="sr-only">(obrigatório)</span>
+          </label>
+          <input
+            class="input"
+            id="title"
+            name="title"
+            type="text"
+            required
+            aria-required="true"
+            placeholder="Ex: Documentário Acessível"
+            style="margin-top: 6px;"
+          />
+        </div>
+
+        <!-- Descrição -->
+        <div>
+          <label for="description">Descrição</label>
+          <textarea
+            class="input"
+            id="description"
+            name="description"
+            rows="3"
+            placeholder="Sinopse ou descrição do conteúdo..."
+            style="margin-top: 6px;"
+          ></textarea>
+          <p class="field-hint">Opcional. Será exibida no catálogo público e no player.</p>
+        </div>
       </div>
+    </section>
+
+    <!-- ── 2. ARQUIVO PRINCIPAL ───────────────────────── -->
+    <section class="card animate-fade-up delay-2" style="padding: 28px;" aria-labelledby="section-files">
+      <div class="section-label">
+        <span class="section-label-icon" style="background: rgba(167,139,250,0.10); color: var(--violet);" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2"/>
+          </svg>
+        </span>
+        <span id="section-files">Arquivo Principal</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 18px;">
+        <!-- Vídeo principal -->
+        <div class="file-field">
+          <label for="video_file" style="margin-bottom: 8px;">
+            Vídeo principal
+            <span aria-hidden="true" style="color: var(--red); margin-left: 2px;">*</span>
+            <span class="sr-only">(obrigatório)</span>
+          </label>
+          <div class="file-drop" aria-hidden="true">
+            <input
+              id="video_file"
+              name="video_file"
+              type="file"
+              accept=".mp4,.mov,.avi,.mkv,.webm"
+              required
+              aria-required="true"
+              aria-describedby="video-file-hint"
+              style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;"
+            />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 16 12 12 8 16"/>
+                <line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Escolher arquivo de vídeo</strong>
+              <span id="video-file-hint">MP4, MOV, AVI, MKV ou WEBM</span>
+            </div>
+            <span class="file-required-badge">Obrigatório</span>
+          </div>
+        </div>
+
+        <!-- Capa -->
+        <div class="file-field">
+          <label for="cover_file" style="margin-bottom: 8px;">
+            Imagem de capa
+          </label>
+          <div class="file-drop" aria-hidden="true">
+            <input
+              id="cover_file"
+              name="cover_file"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp"
+              aria-describedby="cover-file-hint"
+              style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;"
+            />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Escolher imagem de capa</strong>
+              <span id="cover-file-hint">JPG, PNG ou WEBP — recomendado proporção 16:9</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 3. ACESSIBILIDADE ───────────────────────────── -->
+    <section class="card animate-fade-up delay-3" style="padding: 28px;" aria-labelledby="section-a11y">
+      <div class="section-label">
+        <span class="section-label-icon" style="background: rgba(251,191,36,0.10); color: var(--gold);" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4M12 16h.01"/>
+          </svg>
+        </span>
+        <span id="section-a11y">Acessibilidade</span>
+      </div>
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px; margin-top: -8px;">
+        Todos os arquivos são opcionais. Quanto mais recursos, maior a acessibilidade do conteúdo.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 18px;">
+
+        <!-- Libras -->
+        <div class="file-field">
+          <label for="libras_file" style="margin-bottom: 8px;">
+            <span class="badge badge-libras" aria-hidden="true" style="vertical-align: middle; margin-right: 6px;">Libras</span>
+            Vídeo de Libras
+          </label>
+          <div class="file-drop" aria-hidden="true">
+            <input
+              id="libras_file"
+              name="libras_file"
+              type="file"
+              accept=".mp4,.mov,.avi,.mkv,.webm"
+              aria-describedby="libras-file-hint"
+              style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;"
+            />
+            <div class="file-drop-icon" style="color: var(--cyan);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8h1a4 4 0 010 8h-1"/>
+                <path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+                <line x1="6" y1="1" x2="6" y2="4"/>
+                <line x1="10" y1="1" x2="10" y2="4"/>
+                <line x1="14" y1="1" x2="14" y2="4"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Escolher vídeo de Libras</strong>
+              <span id="libras-file-hint">MP4, MOV, AVI, MKV ou WEBM — sobreposto em PIP no canto inferior direito</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AD -->
+        <div class="file-field">
+          <label for="ad_file" style="margin-bottom: 8px;">
+            <span class="badge badge-ad" aria-hidden="true" style="vertical-align: middle; margin-right: 6px;">AD</span>
+            Audiodescrição (AD)
+          </label>
+          <div class="file-drop" aria-hidden="true">
+            <input
+              id="ad_file"
+              name="ad_file"
+              type="file"
+              accept=".mp3,.aac,.wav,.ogg,.m4a"
+              aria-describedby="ad-file-hint"
+              style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;"
+            />
+            <div class="file-drop-icon" style="color: var(--violet);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 010 7.07"/>
+                <path d="M19.07 4.93a10 10 0 010 14.14"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Escolher áudio de audiodescrição</strong>
+              <span id="ad-file-hint">MP3, AAC, WAV, OGG ou M4A</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legenda -->
+        <div class="file-field">
+          <label for="subtitle_file" style="margin-bottom: 8px;">
+            <span class="badge badge-sub" aria-hidden="true" style="vertical-align: middle; margin-right: 6px;">Legenda</span>
+            Arquivo de legenda
+          </label>
+          <div class="file-drop" aria-hidden="true">
+            <input
+              id="subtitle_file"
+              name="subtitle_file"
+              type="file"
+              accept=".srt,.vtt"
+              aria-describedby="subtitle-file-hint"
+              style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;"
+            />
+            <div class="file-drop-icon" style="color: var(--gold);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path d="M8 21h8M12 17v4"/>
+                <line x1="6" y1="9" x2="18" y2="9"/>
+                <line x1="6" y1="13" x2="14" y2="13"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Escolher arquivo de legenda</strong>
+              <span id="subtitle-file-hint">SRT ou WebVTT — será convertido automaticamente</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Ações ──────────────────────────────────────── -->
+    <div class="animate-fade-up delay-4" style="display: flex; gap: 12px; justify-content: flex-end; padding-bottom: 8px;">
+      <a
+        href="/admin/dashboard"
+        class="btn btn-ghost"
+        aria-label="Cancelar e voltar ao dashboard"
+      >
+        Cancelar
+      </a>
+      <button
+        type="submit"
+        class="btn btn-primary btn-lg"
+        aria-label="Salvar vídeo e iniciar processamento"
+      >
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Salvar e processar
+      </button>
     </div>
 
-    <div class="card p-6 flex flex-col gap-5">
-      <h2 class="font-semibold text-base" style="color: var(--wp-muted);">ARQUIVOS</h2>
-
-      <div>
-        <label for="video_file">Vídeo principal <span style="color:#f87171;">*</span></label>
-        <input id="video_file" name="video_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" required />
-        <p class="text-xs mt-1" style="color: var(--wp-muted);">MP4, MOV, AVI, MKV ou WEBM</p>
-      </div>
-
-      <div>
-        <label for="cover_file">Capa (imagem)</label>
-        <input id="cover_file" name="cover_file" type="file" accept=".jpg,.jpeg,.png,.webp" />
-        <p class="text-xs mt-1" style="color: var(--wp-muted);">JPG, PNG ou WEBP — recomendado 16:9</p>
-      </div>
-    </div>
-
-    <div class="card p-6 flex flex-col gap-5">
-      <h2 class="font-semibold text-base" style="color: var(--wp-muted);">ACESSIBILIDADE</h2>
-
-      <div>
-        <label for="libras_file">Vídeo de Libras</label>
-        <input id="libras_file" name="libras_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" />
-        <p class="text-xs mt-1" style="color: var(--wp-muted);">Será sobreposto no canto inferior direito (PIP)</p>
-      </div>
-
-      <div>
-        <label for="ad_file">Áudio de Audiodescrição (AD)</label>
-        <input id="ad_file" name="ad_file" type="file" accept=".mp3,.aac,.wav,.ogg,.m4a" />
-        <p class="text-xs mt-1" style="color: var(--wp-muted);">MP3, AAC, WAV, OGG ou M4A</p>
-      </div>
-
-      <div>
-        <label for="subtitle_file">Legenda</label>
-        <input id="subtitle_file" name="subtitle_file" type="file" accept=".srt,.vtt" />
-        <p class="text-xs mt-1" style="color: var(--wp-muted);">SRT ou WebVTT — será convertido automaticamente</p>
-      </div>
-    </div>
-
-    <div class="flex gap-3 justify-end">
-      <a href="/admin/dashboard" class="btn-secondary">Cancelar</a>
-      <button type="submit" class="btn-primary">Salvar e processar</button>
-    </div>
   </form>
 </div>
+</main>
 {% endblock %}

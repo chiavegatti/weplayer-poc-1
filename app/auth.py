@@ -1,8 +1,20 @@
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from fastapi import Request, HTTPException
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
 from app.config import settings
 
 _serializer = URLSafeTimedSerializer(settings.secret_key)
+_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_password(password: str) -> str:
+    return _pwd_context.hash(password)
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return _pwd_context.verify(plain, hashed)
 
 
 def create_session_token(username: str) -> str:
@@ -27,5 +39,13 @@ def get_current_admin(request: Request) -> str:
     return user
 
 
-def check_credentials(username: str, password: str) -> bool:
+def check_credentials(username: str, password: str, db: Session | None = None) -> bool:
+    """Check credentials against DB admin users first, then fall back to env-var admin."""
+    if db is not None:
+        from app.models.models import AdminUser
+        user = db.query(AdminUser).filter(AdminUser.email == username).first()
+        if user:
+            return verify_password(password, user.hashed_password)
+
+    # Fallback: env-var based admin (for backwards compat / first boot)
     return username == settings.admin_username and password == settings.admin_password

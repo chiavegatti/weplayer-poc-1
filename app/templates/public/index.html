@@ -1,41 +1,322 @@
 {% extends "base.html" %}
-{% block title %}WePlayer — Vídeo acessível{% endblock %}
+{% block title %}WePlayer — Vídeo acessível que converte{% endblock %}
 
-{% block nav_links %}
-  <a href="/catalog" class="text-sm" style="color: var(--wp-muted);">Catálogo</a>
-  <a href="/admin/login" class="btn-secondary text-sm">Admin</a>
+{% block head %}
+<style>
+  /* ── Hero ──────────────────────────────────────────────────── */
+  .hero-bg {
+    position: absolute; inset: 0; overflow: hidden; z-index: 0;
+  }
+  .hero-orb {
+    position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+  }
+  .hero-orb-1 {
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(34,211,238,0.08) 0%, transparent 70%);
+    top: -200px; left: 50%; transform: translateX(-50%);
+  }
+  .hero-orb-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%);
+    bottom: -100px; left: 10%;
+  }
+  .hero-orb-3 {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(251,191,36,0.05) 0%, transparent 70%);
+    top: 50px; right: 8%;
+  }
+
+  .hero-line {
+    position: absolute; left: 50%; top: 0;
+    width: 1px; height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(34,211,238,0.2) 40%, rgba(34,211,238,0.1) 60%, transparent);
+    transform: translateX(-50%);
+  }
+
+  /* ── Feature cards ─────────────────────────────────────────── */
+  .feat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: border-color 0.3s, transform 0.3s;
+    cursor: default;
+  }
+  .feat-card:hover {
+    border-color: var(--border-glow);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow-cyan);
+  }
+  .feat-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 16px;
+  }
+
+  /* ── Stats ──────────────────────────────────────────────────── */
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 3rem; font-weight: 800; line-height: 1;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  /* ── Mockup player ──────────────────────────────────────────── */
+  .mockup-player {
+    background: #0A0E1A;
+    border: 1px solid rgba(34,211,238,0.15);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), var(--shadow-glow-cyan);
+  }
+  .mockup-bar {
+    background: #070A12;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 12px 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .mockup-thumb { width: 8px; height: 8px; border-radius: 50%; }
+  .mockup-seek {
+    flex: 1; height: 3px; border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    position: relative; overflow: hidden;
+  }
+  .mockup-seek::after {
+    content: '';
+    position: absolute; left: 0; top: 0; height: 100%;
+    width: 38%; background: linear-gradient(90deg, var(--cyan), var(--violet));
+    border-radius: 2px;
+  }
+  .mode-pill {
+    padding: 4px 12px; border-radius: 100px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  }
+
+  /* ── CTA section ────────────────────────────────────────────── */
+  .cta-section {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, rgba(34,211,238,0.05) 0%, rgba(167,139,250,0.05) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2322D3EE' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* ── Mobile ─────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    section[style*="padding: 120px"] {
+      padding: 72px 20px 60px !important;
+    }
+    section[style*="padding: 80px"] {
+      padding: 60px 20px !important;
+    }
+    section[style*="padding: 100px"] {
+      padding: 64px 20px !important;
+    }
+    .stat-num { font-size: 2.2rem; }
+    .feat-card { padding: 20px; }
+    .feat-icon { width: 40px; height: 40px; font-size: 18px; }
+    /* Stats grid: 2 columns on mobile */
+    [style*="grid-template-columns: repeat(4"] {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 16px !important;
+    }
+    /* Feature grid: 1 column */
+    [style*="grid-template-columns: repeat(3"] {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+    /* Step grid: 1 column */
+    [style*="grid-template-columns: repeat(4, 1fr)"] {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+    /* CTA section padding */
+    .cta-section [style*="padding: 80px"] {
+      padding: 48px 24px !important;
+    }
+    /* Hero headline */
+    [style*="font-size: 3.5rem"] { font-size: 2rem !important; }
+    [style*="font-size: 4rem"] { font-size: 2.2rem !important; }
+    /* CTA buttons: stack on mobile */
+    [style*="display:flex; gap:12px; justify-content:center"] {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+</style>
 {% endblock %}
 
+{% block nav_links %}
+  <a href="/catalog" class="btn btn-ghost btn-sm">Catálogo</a>
+  <a href="/catalog" class="btn btn-primary btn-sm">Começar grátis</a>
+{% endblock %}
+
+{% block main_class %}{% endblock %}
+
 {% block content %}
-<div class="flex flex-col items-center justify-center text-center py-24 gap-8">
-  <img src="/static/assets/logo-full.png" alt="WePlayer" class="h-16" />
-  <div class="flex flex-col gap-3 max-w-xl">
-    <h1 class="text-4xl font-bold tracking-tight">Vídeo acessível para todos</h1>
-    <p class="text-lg" style="color: var(--wp-muted);">
-      Player com Libras, Audiodescrição e Legendas integrados — leve, acessível e fácil de embutir.
+
+<!-- ═══════════════════════════════════════ HERO ═══ -->
+<section style="position:relative; padding: 120px 32px 100px; text-align:center; overflow:hidden;">
+  <div class="hero-bg">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <div class="hero-line"></div>
+  </div>
+
+  <div style="position:relative; z-index:1; max-width:860px; margin: 0 auto;">
+    <div class="animate-fade-up" style="margin-bottom:24px;">
+      <span class="badge badge-ready" style="font-size:12px; padding: 5px 14px;">
+        <span>●</span> Plataforma de vídeo acessível
+      </span>
+    </div>
+
+    <h1 class="animate-fade-up delay-1" style="font-size: clamp(2.8rem, 7vw, 5.5rem); margin-bottom: 24px; letter-spacing: -0.03em;">
+      Vídeo que fala<br/>
+      <span class="text-gradient">para todos.</span>
+    </h1>
+
+    <p class="animate-fade-up delay-2" style="font-size: clamp(1rem, 2vw, 1.2rem); color: var(--muted-2); max-width: 600px; margin: 0 auto 40px; line-height: 1.7;">
+      Libras, Audiodescrição e Legendas integrados em um player de alta performance.
+      Streaming HLS adaptativo. Embed em qualquer site. Conformidade total com a LBI.
     </p>
+
+    <div class="animate-fade-up delay-3" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="/catalog" class="btn btn-primary btn-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        Ver demos ao vivo
+      </a>
+    </div>
+
+    <!-- Mockup player (decorativo) -->
+    <div class="animate-fade-up delay-4" aria-hidden="true" style="margin-top: 72px; max-width: 780px; margin-left:auto; margin-right:auto;">
+      <div class="mockup-player">
+        <!-- Screen -->
+        <div style="aspect-ratio:16/9; background: linear-gradient(135deg, #0A0E1A 0%, #0D1526 100%); position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+          <!-- Fake video content -->
+          <div style="position:absolute; inset:0; background: linear-gradient(180deg, rgba(34,211,238,0.03) 0%, transparent 60%);"></div>
+          <div style="position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg, transparent, rgba(34,211,238,0.3), transparent);"></div>
+
+          <!-- Play button -->
+          <div style="width:64px; height:64px; border-radius:50%; background:rgba(34,211,238,0.15); border:2px solid rgba(34,211,238,0.4); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--cyan)" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+
+          <!-- Libras PIP mockup -->
+          <div style="position:absolute; bottom:16px; right:16px; width:110px; height:70px; background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+            <span style="font-size:28px;">🤟</span>
+          </div>
+
+          <!-- Subtitle mockup -->
+          <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); padding:6px 16px; border-radius:4px; font-size:13px; white-space:nowrap; border:1px solid rgba(255,255,255,0.08);">
+            Audiodescrição e Libras ativados
+          </div>
+        </div>
+
+        <!-- Controls bar -->
+        <div class="mockup-bar">
+          <div class="mockup-thumb" style="background:var(--cyan);"></div>
+          <div class="mockup-seek"></div>
+          <div style="display:flex; gap:6px;">
+            <span class="mode-pill badge-libras">Libras</span>
+            <span class="mode-pill badge-ad">AD</span>
+            <span class="mode-pill badge-sub">CC</span>
+          </div>
+          <span style="font-size:12px; color:var(--muted); font-family:var(--font-display); letter-spacing:0.04em;">HLS</span>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="flex gap-3">
-    <a href="/catalog" class="btn-primary px-6 py-3 text-base">Ver catálogo</a>
-    <a href="/admin/login" class="btn-secondary px-6 py-3 text-base">Painel admin</a>
+</section>
+
+<!-- ═════════════════════════════════════ STATS ═══ -->
+<section style="max-width: 1100px; margin: 0 auto; padding: 0 32px 100px;">
+  <div role="list" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1px; background: var(--border); border-radius: var(--radius); overflow:hidden;">
+    {% for stat in [
+      ('45M+', 'Brasileiros surdos ou com deficiência auditiva'),
+      ('LBI', 'Lei nº 13.146 — conformidade obrigatória'),
+      ('3×', 'Mais retenção com acessibilidade ativa'),
+      ('HLS', 'Streaming adaptativo em qualquer device'),
+    ] %}
+    <div role="listitem" style="background:var(--surface); padding: 36px 32px; text-align:center;" class="animate-fade-up delay-{{ loop.index }}">
+      <div class="stat-num">{{ stat[0] }}</div>
+      <p style="margin-top:8px; font-size:13px; color:var(--muted-2); line-height:1.5; max-width:180px; margin-left:auto; margin-right:auto;">{{ stat[1] }}</p>
+    </div>
+    {% endfor %}
   </div>
-  <div class="flex gap-8 mt-4">
-    <div class="flex flex-col items-center gap-1">
-      <span class="text-2xl font-bold" style="color: var(--wp-accent);">Libras</span>
-      <span class="text-sm" style="color: var(--wp-muted);">Picture-in-picture</span>
+</section>
+
+<!-- ═══════════════════════════════ FEATURES ═══ -->
+<section style="max-width:1100px; margin:0 auto; padding: 0 32px 100px;">
+  <div style="text-align:center; margin-bottom:64px;" class="animate-fade-up">
+    <p style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:var(--cyan); text-transform:uppercase; margin-bottom:12px;">Plataforma completa</p>
+    <h2 style="font-size: clamp(1.8rem, 4vw, 2.8rem);">Tudo que você precisa,<br/>nada que você não precisa.</h2>
+  </div>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+    {% set features = [
+      ('🤟', 'Libras Integrada', 'Janela de intérprete em picture-in-picture, sincronizada automaticamente, sem drift.', 'var(--cyan-dim)', 'var(--cyan)'),
+      ('🎙️', 'Audiodescrição', 'Faixa de AD mixada no servidor com ajuste de volume, entregue via HLS.', 'var(--violet-dim)', 'var(--violet)'),
+      ('💬', 'Legendas WebVTT', 'Upload de SRT convertido automaticamente. Estilização personalizada por cliente.', 'var(--gold-dim)', 'var(--gold)'),
+      ('⚡', 'HLS Adaptativo', 'Streaming em múltiplas resoluções com Shaka Player. Funciona em qualquer device.', 'var(--cyan-dim)', 'var(--cyan)'),
+      ('🎛️', 'Painel de Controle', 'Upload, processamento FFmpeg em background e monitoramento em tempo real.', 'var(--violet-dim)', 'var(--violet)'),
+      ('📡', 'API REST', 'Integre em qualquer CMS, LMS ou plataforma com endpoints documentados.', 'var(--gold-dim)', 'var(--gold)'),
+    ] %}
+    {% for f in features %}
+    <div class="feat-card animate-fade-up delay-{{ loop.index }}">
+      <div class="feat-icon" style="background:{{ f[3] }}; color:{{ f[4] }};">{{ f[0] }}</div>
+      <h3 style="font-size:16px; margin-bottom:8px;">{{ f[1] }}</h3>
+      <p style="font-size:14px; color:var(--muted-2); line-height:1.6;">{{ f[2] }}</p>
     </div>
-    <div class="flex flex-col items-center gap-1">
-      <span class="text-2xl font-bold" style="color: var(--wp-accent);">AD</span>
-      <span class="text-sm" style="color: var(--wp-muted);">Audiodescrição</span>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ══════════════════════════ HOW IT WORKS ═══ -->
+<section style="max-width:1100px; margin:0 auto; padding:0 32px 100px;">
+  <div style="text-align:center; margin-bottom:64px;">
+    <p style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:var(--violet); text-transform:uppercase; margin-bottom:12px;">Fluxo simples</p>
+    <h2 style="font-size: clamp(1.8rem, 4vw, 2.8rem);">Da pasta ao ar em minutos.</h2>
+  </div>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:0; position:relative;">
+    {% set steps = [
+      ('01', 'Upload', 'Envie o vídeo principal, Libras, AD e legenda pelo painel.'),
+      ('02', 'Processa', 'FFmpeg gera variants HLS: original, com Libras e com AD.'),
+      ('03', 'Publica', 'Vídeo disponível no catálogo com player acessível.'),
+      ('04', 'Embeda', 'Uma linha de código. Funciona em qualquer site ou LMS.'),
+    ] %}
+    {% for s in steps %}
+    <div style="padding: 36px 28px; position:relative; {% if not loop.last %}border-right: 1px solid var(--border);{% endif %}">
+      <div style="font-family:var(--font-display); font-size:3rem; font-weight:800; color:rgba(255,255,255,0.04); line-height:1; margin-bottom:16px;">{{ s[0] }}</div>
+      <h3 style="font-size:18px; margin-bottom:8px;">{{ s[1] }}</h3>
+      <p style="font-size:14px; color:var(--muted-2); line-height:1.6;">{{ s[2] }}</p>
+      {% if not loop.last %}
+      <div style="position:absolute; right:-8px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:18px; z-index:2; background:var(--bg); padding:4px;">→</div>
+      {% endif %}
     </div>
-    <div class="flex flex-col items-center gap-1">
-      <span class="text-2xl font-bold" style="color: var(--wp-accent);">VTT</span>
-      <span class="text-sm" style="color: var(--wp-muted);">Legendas nativas</span>
-    </div>
-    <div class="flex flex-col items-center gap-1">
-      <span class="text-2xl font-bold" style="color: var(--wp-accent);">HLS</span>
-      <span class="text-sm" style="color: var(--wp-muted);">Streaming adaptativo</span>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ CTA ═══ -->
+<section style="max-width:1100px; margin:0 auto; padding:0 32px 120px;">
+  <div class="cta-section" style="padding: 80px 64px; text-align:center;">
+    <p style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:var(--gold); text-transform:uppercase; margin-bottom:16px;">Pronto para usar</p>
+    <h2 style="font-size: clamp(2rem, 4vw, 3rem); margin-bottom:20px;">Comece agora.<br/>Sem cartão de crédito.</h2>
+    <p style="color:var(--muted-2); font-size:16px; max-width:480px; margin: 0 auto 40px; line-height:1.7;">
+      POC completa, open source. Deploy com Docker em um comando.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="/catalog" class="btn btn-primary btn-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        Explorar catálogo
+      </a>
     </div>
   </div>
-</div>
+</section>
+
 {% endblock %}

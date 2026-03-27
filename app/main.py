@@ -6,9 +6,30 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
-from app.database import init_db
+from app.database import init_db, SessionLocal
+from app.auth import hash_password
 
 BASE_DIR = Path(__file__).parent
+
+SEED_ADMIN_EMAIL = "iguale@iguale.com.br"
+SEED_ADMIN_PASSWORD = "acesso10@123"
+
+
+def _seed_admin_user() -> None:
+    """Create the default admin user if it doesn't exist yet."""
+    from app.models.models import AdminUser
+    db = SessionLocal()
+    try:
+        exists = db.query(AdminUser).filter(AdminUser.email == SEED_ADMIN_EMAIL).first()
+        if not exists:
+            user = AdminUser(
+                email=SEED_ADMIN_EMAIL,
+                hashed_password=hash_password(SEED_ADMIN_PASSWORD),
+            )
+            db.add(user)
+            db.commit()
+    finally:
+        db.close()
 
 
 @asynccontextmanager
@@ -17,6 +38,7 @@ async def lifespan(app: FastAPI):
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
     settings.videos_dir.mkdir(parents=True, exist_ok=True)
     init_db()
+    _seed_admin_user()
     yield
     # Shutdown (nothing to clean for POC)
 

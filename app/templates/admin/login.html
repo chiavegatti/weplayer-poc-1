@@ -3,33 +3,237 @@
 
 {% block navbar %}{% endblock %}
 
-{% block main_class %}min-h-screen flex items-center justify-center px-4{% endblock %}
+{% block main_class %}min-h-screen flex items-center justify-center px-4 py-12{% endblock %}
+
+{% block head %}
+<style>
+  /* Login-specific focus rings para WCAG 2.2 AA */
+  .input:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 4px rgba(34,211,238,0.12);
+  }
+  .btn-login:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+
+  /* Ambient violet orb no login */
+  .login-ambient {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(167,139,250,0.05) 0%, transparent 70%);
+    bottom: -150px;
+    left: -100px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .login-card {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Linha decorativa top do card */
+  .login-card-inner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.5;
+    border-radius: 1px;
+  }
+
+  .login-card-inner {
+    position: relative;
+  }
+
+  /* Input password toggle */
+  .input-wrap { position: relative; }
+  .input-wrap .toggle-pw {
+    position: absolute;
+    right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); padding: 4px;
+    display: flex; align-items: center;
+    transition: color 0.2s;
+  }
+  .input-wrap .toggle-pw:hover,
+  .input-wrap .toggle-pw:focus-visible { color: var(--muted-2); }
+  .input-wrap .toggle-pw:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .input-wrap input[type="password"],
+  .input-wrap input[type="text"] { padding-right: 42px; }
+
+  /* ── Mobile ─────────────────────────────────────────── */
+  @media (max-width: 480px) {
+    .login-card { padding: 32px 20px !important; margin: 0 16px; }
+    .login-wrap { padding: 32px 0 !important; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="w-full max-w-sm">
-  <div class="flex flex-col items-center mb-8">
-    <img src="/static/assets/logo-full.png" alt="WePlayer" class="h-14 mb-4" />
-    <p style="color: var(--wp-muted);" class="text-sm">Painel Administrativo</p>
+<div class="login-ambient" aria-hidden="true"></div>
+
+<div class="login-card w-full max-w-sm animate-fade-up">
+
+  <!-- Logo + título -->
+  <div class="flex flex-col items-center mb-8 gap-3">
+    <img
+      src="/static/assets/logo-weplayer.png"
+      alt="WePlayer"
+      style="height: 40px; width: auto;"
+    />
+    <div class="text-center">
+      <p style="font-size: 13px; color: var(--muted-2); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;">
+        Painel Administrativo
+      </p>
+    </div>
   </div>
 
-  <div class="card p-8">
+  <!-- Card principal -->
+  <div class="card card-glow login-card-inner" style="padding: 36px 32px;">
+
+    <!-- Mensagem de erro WCAG: role="alert" -->
     {% if error %}
-    <div class="mb-4 p-3 rounded-lg text-sm" style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d;">
-      {{ error }}
+    <div
+      role="alert"
+      aria-live="assertive"
+      style="
+        background: rgba(248,113,113,0.08);
+        border: 1px solid rgba(248,113,113,0.25);
+        border-radius: var(--radius-sm);
+        color: var(--red);
+        padding: 12px 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      "
+    >
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0; margin-top:1px;">
+        <circle cx="8" cy="8" r="7.5" stroke="currentColor" stroke-opacity="0.5"/>
+        <path d="M8 4.5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="8" cy="11" r="0.75" fill="currentColor"/>
+      </svg>
+      <span>{{ error }}</span>
     </div>
     {% endif %}
 
-    <form method="post" action="/admin/login" class="flex flex-col gap-5">
+    <form
+      method="post"
+      action="/admin/login"
+      novalidate
+      style="display: flex; flex-direction: column; gap: 20px;"
+    >
+      <!-- Campo: usuário -->
       <div>
-        <label for="username">Usuário</label>
-        <input id="username" name="username" type="text" autocomplete="username" required placeholder="admin" />
+        <label for="username">
+          Usuário
+          <span aria-hidden="true" style="color: var(--red); margin-left: 2px;">*</span>
+        </label>
+        <input
+          class="input"
+          id="username"
+          name="username"
+          type="text"
+          autocomplete="username"
+          required
+          aria-required="true"
+          placeholder="admin"
+          style="margin-top: 6px;"
+        />
       </div>
+
+      <!-- Campo: senha -->
       <div>
-        <label for="password">Senha</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+        <label for="password">
+          Senha
+          <span aria-hidden="true" style="color: var(--red); margin-left: 2px;">*</span>
+        </label>
+        <div class="input-wrap" style="margin-top: 6px;">
+          <input
+            class="input"
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            aria-required="true"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            class="toggle-pw"
+            aria-label="Mostrar ou ocultar senha"
+            onclick="togglePassword()"
+            id="toggle-pw-btn"
+          >
+            <!-- Ícone olho fechado (padrão) -->
+            <svg id="icon-eye-off" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.06 10.06 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+            <!-- Ícone olho aberto (oculto por padrão) -->
+            <svg id="icon-eye-on" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
       </div>
-      <button type="submit" class="btn-primary w-full mt-2 py-2.5">Entrar</button>
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        class="btn btn-primary btn-lg btn-login"
+        style="width: 100%; margin-top: 4px; justify-content: center;"
+        aria-label="Entrar no painel administrativo"
+      >
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        Entrar
+      </button>
     </form>
   </div>
+
+  <!-- Rodapé discreto -->
+  <p style="text-align: center; margin-top: 24px; font-size: 12px; color: var(--muted);">
+    WePlayer &copy; {{ 2025 }} — Acesso restrito
+  </p>
 </div>
+
+<script>
+  function togglePassword() {
+    const input = document.getElementById('password');
+    const iconOff = document.getElementById('icon-eye-off');
+    const iconOn  = document.getElementById('icon-eye-on');
+    const btn     = document.getElementById('toggle-pw-btn');
+    if (input.type === 'password') {
+      input.type = 'text';
+      iconOff.style.display = 'none';
+      iconOn.style.display  = 'block';
+      btn.setAttribute('aria-label', 'Ocultar senha');
+    } else {
+      input.type = 'password';
+      iconOff.style.display = 'block';
+      iconOn.style.display  = 'none';
+      btn.setAttribute('aria-label', 'Mostrar senha');
+    }
+  }
+</script>
 {% endblock %}

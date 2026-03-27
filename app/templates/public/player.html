@@ -2,360 +2,822 @@
 {% block title %}{{ video.title }} — WePlayer{% endblock %}
 
 {% block head %}
-<!-- Shaka Player -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.min.js"></script>
 <style>
-  #player-container {
-    background: #000;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16/9;
-  }
-  #main-video {
-    width: 100%;
-    height: 100%;
-    display: block;
-    background: #000;
-  }
-  /* Custom controls */
-  #wp-controls {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
-    padding: 1.5rem 1rem 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    opacity: 0;
-    transition: opacity 0.25s;
-  }
-  #player-container:hover #wp-controls,
-  #player-container:focus-within #wp-controls { opacity: 1; }
-  #seek-bar {
-    width: 100%;
-    height: 4px;
-    background: rgba(255,255,255,0.25);
-    border-radius: 2px;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    accent-color: #7C3AED;
-  }
-  #seek-bar::-webkit-slider-thumb { width: 14px; height: 14px; }
-  .ctrl-row { display: flex; align-items: center; gap: 0.75rem; }
+/* ══════════════════════════════════════════════════════════
+   PLAYER SHELL
+══════════════════════════════════════════════════════════ */
+#player-wrap {
+  position: relative;
+  background: #000;
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16/9;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
+}
+#main-video {
+  width: 100%; height: 100%;
+  display: block; background: #000;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CONTROLS OVERLAY
+══════════════════════════════════════════════════════════ */
+#wp-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+#player-wrap:hover #wp-overlay,
+#player-wrap.show-controls #wp-overlay,
+#player-wrap:focus-within #wp-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Top gradient */
+#wp-overlay::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 120px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+  pointer-events: none;
+}
+
+/* Bottom gradient */
+#controls-bg {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 160px;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ── Controls panel ────────────────────────────── */
+#controls {
+  position: relative; z-index: 2;
+  padding: 0 20px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* ── Seek bar ──────────────────────────────────── */
+.seek-wrap {
+  position: relative; height: 18px;
+  display: flex; align-items: center;
+  cursor: pointer;
+}
+#seek-bar {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; z-index: 2;
+  margin: 0;
+}
+.seek-track {
+  position: absolute; left: 0; right: 0;
+  height: 3px; border-radius: 2px;
+  background: rgba(255,255,255,0.15);
+  top: 50%; transform: translateY(-50%);
+  overflow: hidden; transition: height 0.15s;
+}
+.seek-wrap:hover .seek-track { height: 5px; }
+.seek-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  width: 0%; transition: width 0.1s linear;
+  position: relative;
+}
+.seek-fill::after {
+  content: '';
+  position: absolute; right: -5px; top: 50%; transform: translateY(-50%);
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(34,211,238,0.6);
+  opacity: 0; transition: opacity 0.15s;
+}
+.seek-wrap:hover .seek-fill::after { opacity: 1; }
+
+/* ── Control row ───────────────────────────────── */
+.ctrl-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.ctrl-btn {
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,0.8); padding: 6px;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.ctrl-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.ctrl-btn svg { width: 20px; height: 20px; display: block; }
+
+/* Volume slider */
+.vol-wrap {
+  display: flex; align-items: center; gap: 6px;
+}
+#volume-bar {
+  width: 72px; height: 3px;
+  accent-color: var(--cyan); cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background: rgba(255,255,255,0.2); border-radius: 2px;
+  outline: none;
+}
+#volume-bar::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--cyan); cursor: pointer;
+}
+
+/* Time */
+#time-display {
+  font-size: 12px; font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.6); white-space: nowrap;
+  font-family: var(--font-display); letter-spacing: 0.04em;
+}
+
+/* Spacer */
+.spacer { flex: 1; }
+
+/* ── Mode buttons ──────────────────────────────── */
+.mode-group {
+  display: flex; gap: 4px; align-items: center;
+}
+.mode-btn {
+  padding: 5px 14px; border-radius: 100px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  cursor: pointer; border: none;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.5);
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+.mode-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.9);
+}
+.mode-btn.active-original {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+}
+.mode-btn.active-libras {
+  background: rgba(34,211,238,0.2);
+  color: var(--cyan);
+  box-shadow: 0 0 12px rgba(34,211,238,0.3), 0 0 0 1px rgba(34,211,238,0.3);
+}
+.mode-btn.active-ad {
+  background: rgba(167,139,250,0.2);
+  color: var(--violet);
+  box-shadow: 0 0 12px rgba(167,139,250,0.3), 0 0 0 1px rgba(167,139,250,0.3);
+}
+.mode-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+/* CC button */
+#cc-btn { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; font-family: var(--font-display); min-width: 36px; }
+#cc-btn.active { color: var(--gold); }
+
+/* ── Buffering spinner ─────────────────────────── */
+#buffering {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 3;
+}
+#buffering .spinner {
+  width: 48px; height: 48px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+#buffering.hidden { display: none; }
+
+/* ── Center play flash ─────────────────────────── */
+#center-flash {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(34,211,238,0.15);
+  border: 2px solid rgba(34,211,238,0.4);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 4;
+}
+#center-flash.show {
+  opacity: 1; transform: translate(-50%,-50%) scale(1);
+}
+#center-flash.hide {
+  opacity: 0; transform: translate(-50%,-50%) scale(1.3);
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR / META PANEL
+══════════════════════════════════════════════════════════ */
+.meta-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.meta-section {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.meta-section:last-child { border-bottom: none; }
+.meta-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+}
+
+/* Accessibility pills in sidebar */
+.a11y-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  margin-bottom: 6px; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.a11y-row:hover { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); }
+.a11y-row.row-on { border-color: rgba(34,211,238,0.25); background: rgba(34,211,238,0.05); }
+.a11y-row.row-violet { border-color: rgba(167,139,250,0.25); background: rgba(167,139,250,0.05); }
+.a11y-row.row-gold { border-color: rgba(251,191,36,0.25); background: rgba(251,191,36,0.05); }
+
+/* Toggle switch */
+.toggle {
+  width: 34px; height: 18px; border-radius: 9px;
+  background: rgba(255,255,255,0.1); position: relative;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle.on-cyan { background: rgba(34,211,238,0.3); }
+.toggle.on-cyan::after { background: var(--cyan); transform: translateX(16px); }
+.toggle.on-violet { background: rgba(167,139,250,0.3); }
+.toggle.on-violet::after { background: var(--violet); transform: translateX(16px); }
+.toggle.on-gold { background: rgba(251,191,36,0.3); }
+.toggle.on-gold::after { background: var(--gold); transform: translateX(16px); }
+
+/* Keyboard shortcuts */
+.kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+  font-family: var(--font-display); letter-spacing: 0.05em; color: var(--muted-2);
+  min-width: 20px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════════════ */
+.watch-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .watch-layout { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE — touch targets, compact controls
+══════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Bigger touch targets */
   .ctrl-btn {
-    background: none; border: none; cursor: pointer; padding: 4px;
-    opacity: 0.85; transition: opacity 0.15s; display: flex; align-items: center;
+    padding: 10px;
+    min-width: 44px; min-height: 44px;
   }
-  .ctrl-btn:hover { opacity: 1; }
-  .ctrl-btn img { width: 22px; height: 22px; filter: invert(1); }
-  #volume-bar {
-    width: 70px; height: 4px; accent-color: #7C3AED;
-    appearance: none; -webkit-appearance: none; cursor: pointer;
-  }
-  #time-display { color: #fff; font-size: 0.75rem; font-variant-numeric: tabular-nums; margin-left: 4px; }
-  .spacer { flex: 1; }
-  /* Mode toggle buttons */
+  .ctrl-btn svg { width: 22px; height: 22px; }
+
+  /* Hide volume slider on mobile — use system volume */
+  .vol-wrap #volume-bar { display: none; }
+
+  /* Seek bar taller for fat fingers */
+  .seek-wrap { height: 28px; }
+  .seek-wrap:hover .seek-track,
+  .seek-track { height: 5px; }
+
+  /* Controls padding */
+  #controls { padding: 0 12px 14px; gap: 8px; }
+
+  /* Mode buttons: smaller text, still tappable */
   .mode-btn {
-    padding: 0.35rem 0.9rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1.5px solid rgba(255,255,255,0.25);
-    background: rgba(0,0,0,0.5);
-    color: #fff;
-    transition: all 0.2s;
+    padding: 8px 10px;
+    font-size: 10px;
+    min-height: 36px;
   }
-  .mode-btn.active { background: #7C3AED; border-color: #7C3AED; }
-  .mode-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  /* Caption toggle */
-  #caption-btn.active { color: #06B6D4; }
-  #buffering-overlay {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: none;
-  }
-  #buffering-overlay img { width: 48px; animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .hidden { display: none !important; }
+
+  /* Wrap mode group if needed */
+  .mode-group { flex-wrap: wrap; gap: 4px; }
+
+  /* Meta panel: compact sections */
+  .meta-section { padding: 14px 16px; }
+
+  /* Watch layout gap */
+  .watch-layout { gap: 16px; }
+
+  /* Sidebar keyboard shortcuts: hide on mobile */
+  .kbd-section { display: none; }
+}
 </style>
 {% endblock %}
 
 {% block nav_links %}
-  <a href="/catalog" class="text-sm" style="color: var(--wp-muted);">← Catálogo</a>
+  <a href="/catalog" class="btn btn-ghost btn-sm">← Catálogo</a>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto flex flex-col gap-6">
 
-  <!-- Player -->
-  <div id="player-container" tabindex="0" aria-label="Player de vídeo: {{ video.title }}">
-    <video id="main-video" crossorigin="anonymous" playsinline
-           aria-label="{{ video.title }}"
-           role="application">
-    </video>
+<div class="watch-layout animate-fade-in">
 
-    <!-- Buffering -->
-    <div id="buffering-overlay" class="hidden">
-      <img src="/static/assets/loader.svg" alt="Carregando..." />
+  <!-- ══════════════════ LEFT: Player + info ══════ -->
+  <div style="display:flex; flex-direction:column; gap:20px;">
+
+    <!-- Player -->
+    <div id="player-wrap" tabindex="0" role="region" aria-label="Player: {{ video.title }}">
+
+      <video id="main-video" crossorigin="anonymous" playsinline
+             aria-label="{{ video.title }}"></video>
+
+      <!-- Buffering -->
+      <div id="buffering" class="hidden" role="status" aria-label="Carregando vídeo">
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Center flash feedback (decorativo) -->
+      <div id="center-flash" aria-hidden="true">
+        <svg id="center-icon" width="28" height="28" viewBox="0 0 24 24" fill="var(--cyan)">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+      </div>
+
+      <!-- Controls overlay -->
+      <div id="wp-overlay" aria-label="Controles de reprodução">
+        <div id="controls-bg"></div>
+        <div id="controls">
+
+          <!-- Seek -->
+          <div class="seek-wrap" id="seekWrap">
+            <div class="seek-track">
+              <div class="seek-fill" id="seek-fill"></div>
+            </div>
+            <input id="seek-bar" type="range" min="0" max="100" value="0"
+                   step="0.1" aria-label="Progresso do vídeo" aria-valuetext="0:00 de 0:00" />
+          </div>
+
+          <!-- Row 1: playback + volume + time + spacer + modes + cc + fullscreen -->
+          <div class="ctrl-row">
+            <!-- Play/Pause -->
+            <button class="ctrl-btn" id="play-btn" aria-label="Play/Pause" onclick="togglePlay()">
+              <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+
+            <!-- Volume -->
+            <div class="vol-wrap">
+              <button class="ctrl-btn" id="mute-btn" onclick="toggleMute()" aria-label="Mudo">
+                <svg id="vol-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+              </button>
+              <input id="volume-bar" type="range" min="0" max="1" step="0.05" value="1"
+                     aria-label="Volume" />
+            </div>
+
+            <span id="time-display" aria-live="off">0:00 / 0:00</span>
+
+            <div class="spacer"></div>
+
+            <!-- Mode selector -->
+            <div class="mode-group" role="group" aria-label="Modo de acessibilidade">
+              <button class="mode-btn active-original" id="btn-original"
+                      onclick="switchMode('original')" aria-pressed="true">
+                Original
+              </button>
+              <button class="mode-btn" id="btn-libras"
+                      onclick="switchMode('libras')" aria-pressed="false"
+                      {% if not manifests.libras %}disabled title="Libras não disponível"{% endif %}>
+                🤟 Libras
+              </button>
+              <button class="mode-btn" id="btn-ad"
+                      onclick="switchMode('ad')" aria-pressed="false"
+                      {% if not manifests.ad %}disabled title="AD não disponível"{% endif %}>
+                🎙️ AD
+              </button>
+            </div>
+
+            <!-- CC -->
+            {% if subtitle_path %}
+            <button class="ctrl-btn" id="cc-btn" onclick="toggleCaptions()"
+                    aria-label="Legendas" title="Legendas (C)">CC</button>
+            {% endif %}
+
+            <!-- Fullscreen -->
+            <button class="ctrl-btn" onclick="toggleFullscreen()" aria-label="Tela cheia (F)">
+              <svg id="fs-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Controls -->
-    <div id="wp-controls" role="group" aria-label="Controles do player">
-      <input id="seek-bar" type="range" min="0" max="100" value="0"
-             aria-label="Barra de progresso" step="0.1" />
-
-      <div class="ctrl-row">
-        <!-- Play/Pause -->
-        <button class="ctrl-btn" id="play-btn" aria-label="Play / Pause">
-          <img id="play-icon" src="/static/assets/to-play.svg" alt="" />
-        </button>
-
-        <!-- Volume -->
-        <button class="ctrl-btn" id="mute-btn" aria-label="Mutar / desmutar">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path id="vol-icon" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-        </button>
-        <input id="volume-bar" type="range" min="0" max="1" step="0.05" value="1"
-               aria-label="Volume" />
-
-        <span id="time-display" aria-live="off">0:00 / 0:00</span>
-
-        <div class="spacer"></div>
-
-        <!-- Mode buttons -->
-        <div class="ctrl-row gap-1" role="group" aria-label="Modo de exibição">
-          <button class="mode-btn active" id="btn-original" aria-pressed="true"
-                  onclick="switchMode('original')" aria-label="Modo original">Original</button>
-          <button class="mode-btn" id="btn-libras" aria-pressed="false"
-                  onclick="switchMode('libras')" aria-label="Modo com Libras"
-                  {% if not manifests.libras %}disabled{% endif %}>Libras</button>
-          <button class="mode-btn" id="btn-ad" aria-pressed="false"
-                  onclick="switchMode('ad')" aria-label="Modo com Audiodescrição"
-                  {% if not manifests.ad %}disabled{% endif %}>AD</button>
-        </div>
-
-        <!-- Subtitles -->
-        {% if subtitle_path %}
-        <button class="ctrl-btn" id="caption-btn" aria-label="Ativar/desativar legenda" aria-pressed="false"
-                onclick="toggleCaptions()" title="Legendas">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white" opacity="0.85">
-            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-9 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/>
-          </svg>
-        </button>
-        {% endif %}
-
-        <!-- Fullscreen -->
-        <button class="ctrl-btn" id="fs-btn" aria-label="Tela cheia" onclick="toggleFullscreen()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-        </button>
+    <!-- Video info -->
+    <div class="animate-fade-up delay-1">
+      <h1 style="font-size:1.5rem; margin-bottom:8px;">{{ video.title }}</h1>
+      {% if video.description %}
+        <p style="color:var(--muted-2); font-size:14px; line-height:1.7;">{{ video.description }}</p>
+      {% endif %}
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;">
+        {% if video.libras_available %}<span class="badge badge-libras">🤟 Libras disponível</span>{% endif %}
+        {% if video.ad_available %}<span class="badge badge-ad">🎙️ Audiodescrição</span>{% endif %}
+        {% if video.subtitle_available %}<span class="badge badge-sub">💬 Legenda</span>{% endif %}
       </div>
     </div>
   </div>
 
-  <!-- Info -->
-  <div class="flex flex-col gap-2">
-    <h1 class="text-xl font-bold">{{ video.title }}</h1>
-    {% if video.description %}
-      <p class="text-sm leading-relaxed" style="color: var(--wp-muted);">{{ video.description }}</p>
-    {% endif %}
-    <div class="flex gap-2 flex-wrap mt-1">
-      {% if video.libras_available %}<span class="badge badge-libras">Libras disponível</span>{% endif %}
-      {% if video.ad_available %}<span class="badge badge-ad">Audiodescrição disponível</span>{% endif %}
-      {% if video.subtitle_available %}<span class="badge badge-sub">Legenda disponível</span>{% endif %}
+  <!-- ══════════════════ RIGHT: Panel ════════════ -->
+  <div class="meta-panel animate-fade-up delay-2">
+
+    <!-- Accessibility controls -->
+    <div class="meta-section">
+      <div class="meta-label">Acessibilidade</div>
+
+      <!-- Libras -->
+      <div class="a11y-row {% if manifests.libras %}row-on{% endif %}" id="row-libras"
+           role="switch" aria-checked="{{ 'true' if manifests.libras else 'false' }}"
+           tabindex="{{ '0' if manifests.libras else '-1' }}"
+           onclick="{% if manifests.libras %}switchMode(currentMode==='libras'?'original':'libras'){% endif %}"
+           onkeydown="{% if manifests.libras %}if(event.key==='Enter'||event.key===' '){event.preventDefault();switchMode(currentMode==='libras'?'original':'libras');}{% endif %}"
+           aria-label="Libras — Picture-in-picture"
+           style="{% if not manifests.libras %}opacity:0.4; cursor:default;{% endif %}">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:18px;" aria-hidden="true">🤟</span>
+          <div>
+            <div style="font-size:13px; font-weight:600;">Libras</div>
+            <div style="font-size:11px; color:var(--muted);">Picture-in-picture</div>
+          </div>
+        </div>
+        <div class="toggle {% if manifests.libras %}on-cyan{% endif %}" id="toggle-libras" aria-hidden="true"></div>
+      </div>
+
+      <!-- AD -->
+      <div class="a11y-row {% if manifests.ad %}row-violet{% endif %}" id="row-ad"
+           role="switch" aria-checked="{{ 'true' if manifests.ad else 'false' }}"
+           tabindex="{{ '0' if manifests.ad else '-1' }}"
+           onclick="{% if manifests.ad %}switchMode(currentMode==='ad'?'original':'ad'){% endif %}"
+           onkeydown="{% if manifests.ad %}if(event.key==='Enter'||event.key===' '){event.preventDefault();switchMode(currentMode==='ad'?'original':'ad');}{% endif %}"
+           aria-label="Audiodescrição — Narração de cenas"
+           style="{% if not manifests.ad %}opacity:0.4; cursor:default;{% endif %}">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:18px;" aria-hidden="true">🎙️</span>
+          <div>
+            <div style="font-size:13px; font-weight:600;">Audiodescrição</div>
+            <div style="font-size:11px; color:var(--muted);">Narração de cenas</div>
+          </div>
+        </div>
+        <div class="toggle {% if manifests.ad %}on-violet{% endif %}" id="toggle-ad" aria-hidden="true"></div>
+      </div>
+
+      <!-- Subtitles -->
+      {% if subtitle_path %}
+      <div class="a11y-row" id="row-cc"
+           role="switch" aria-checked="false"
+           tabindex="0"
+           onclick="toggleCaptions()"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCaptions();}"
+           aria-label="Legenda — Português">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:18px;" aria-hidden="true">💬</span>
+          <div>
+            <div style="font-size:13px; font-weight:600;">Legenda</div>
+            <div style="font-size:11px; color:var(--muted);">Português</div>
+          </div>
+        </div>
+        <div class="toggle" id="toggle-cc" aria-hidden="true"></div>
+      </div>
+      {% else %}
+      <div class="a11y-row" role="switch" aria-checked="false" aria-disabled="true"
+           aria-label="Legenda — Não disponível" style="opacity:0.4; cursor:default;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:18px;" aria-hidden="true">💬</span>
+          <div>
+            <div style="font-size:13px; font-weight:600;">Legenda</div>
+            <div style="font-size:11px; color:var(--muted);">Não disponível</div>
+          </div>
+        </div>
+        <div class="toggle" aria-hidden="true"></div>
+      </div>
+      {% endif %}
     </div>
+
+    <!-- Stream info -->
+    <div class="meta-section">
+      <div class="meta-label">Stream ativo</div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:13px; color:var(--muted-2);" id="stream-label">Original · HLS</span>
+        <span class="badge badge-ready" style="font-size:10px;" id="stream-quality">HD</span>
+      </div>
+    </div>
+
+    <!-- Keyboard shortcuts -->
+    <div class="meta-section">
+      <div class="meta-label" id="shortcuts-label">Atalhos de teclado</div>
+      <dl aria-labelledby="shortcuts-label" style="display:flex; flex-direction:column; gap:8px; margin:0;">
+        {% for shortcut in [
+          ('Espaço / K', 'Play / Pause'),
+          ('← / →', 'Retroceder / Avançar 10s'),
+          ('↑ / ↓', 'Volume'),
+          ('M', 'Mudo'),
+          ('F', 'Tela cheia'),
+          ('C', 'Legendas'),
+        ] %}
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <dt style="font-size:12px; color:var(--muted-2); margin:0;">{{ shortcut[1] }}</dt>
+          <dd style="margin:0;"><span class="kbd">{{ shortcut[0] }}</span></dd>
+        </div>
+        {% endfor %}
+      </dl>
+    </div>
+
   </div>
 </div>
 
+<!-- ═══════════════════════════════════ SCRIPT ═══ -->
 <script>
 const MANIFESTS = {
-  original: "{{ manifests.original or '' }}",
-  libras:   "{{ manifests.libras or '' }}",
-  ad:       "{{ manifests.ad or '' }}",
+  original: {{ ('"' ~ manifests.original ~ '"') if manifests.original else 'null' }},
+  libras:   {{ ('"' ~ manifests.libras   ~ '"') if manifests.libras   else 'null' }},
+  ad:       {{ ('"' ~ manifests.ad       ~ '"') if manifests.ad       else 'null' }},
 };
-const SUBTITLE_PATH = "{{ subtitle_path or '' }}";
+const SUBTITLE = {{ ('"' ~ subtitle_path ~ '"') if subtitle_path else 'null' }};
+const VIDEO_ID = '{{ video.id }}';
 
-let player = null;
-let currentMode = 'original';
-let captionsOn = false;
-let savedTime = 0;
+let player       = null;
+let currentMode  = 'original';
+let captionsOn   = false;
+let savedTime    = 0;
+let wasPlaying   = false;
+let hideTimer    = null;
 
-const videoEl = document.getElementById('main-video');
-const playBtn = document.getElementById('play-btn');
-const playIcon = document.getElementById('play-icon');
-const seekBar = document.getElementById('seek-bar');
-const volumeBar = document.getElementById('volume-bar');
-const timeDisplay = document.getElementById('time-display');
-const bufferingOverlay = document.getElementById('buffering-overlay');
+const wrap      = document.getElementById('player-wrap');
+const videoEl   = document.getElementById('main-video');
+const seekBar   = document.getElementById('seek-bar');
+const seekFill  = document.getElementById('seek-fill');
+const playIcon  = document.getElementById('play-icon');
+const volIcon   = document.getElementById('vol-icon');
+const timeEl    = document.getElementById('time-display');
+const buffering = document.getElementById('buffering');
+const flash     = document.getElementById('center-flash');
+const streamLbl = document.getElementById('stream-label');
 
+/* ─── Init ──────────────────────────────────────────── */
 async function initPlayer() {
   shaka.polyfill.installAll();
-  if (!shaka.Player.isBrowserSupported()) {
-    console.error('Shaka Player not supported in this browser.');
-    return;
-  }
+  if (!shaka.Player.isBrowserSupported()) return;
 
   player = new shaka.Player();
   await player.attach(videoEl);
-
-  player.addEventListener('error', onError);
-  player.addEventListener('buffering', (e) => {
-    bufferingOverlay.classList.toggle('hidden', !e.buffering);
+  player.addEventListener('error', e => console.error('Shaka error:', e.detail));
+  player.addEventListener('buffering', e => {
+    buffering.classList.toggle('hidden', !e.buffering);
+    videoEl.setAttribute('aria-busy', e.buffering ? 'true' : 'false');
   });
 
-  const manifest = MANIFESTS[currentMode];
-  if (manifest) {
-    await loadManifest(manifest);
-  }
-
-  restorePreferences();
+  restorePrefs();
+  if (!MANIFESTS[currentMode]) return;
+  await loadManifest(MANIFESTS[currentMode]);
 }
 
-async function loadManifest(manifestUrl) {
-  const fullUrl = '/media/' + manifestUrl;
+async function loadManifest(path) {
   try {
-    await player.load(fullUrl);
-    if (SUBTITLE_PATH && captionsOn) applySubtitle();
-  } catch (e) {
-    onError(e);
-  }
+    await player.load('/media/' + path);
+    if (captionsOn && SUBTITLE) applySubtitle();
+    updateQualityBadge();
+  } catch(e) { console.error('Load error:', e); }
 }
 
-function applySubtitle() {
-  if (!SUBTITLE_PATH) return;
-  const existing = videoEl.querySelector('track');
-  if (existing) existing.remove();
-  const track = document.createElement('track');
-  track.kind = 'subtitles';
-  track.label = 'Português';
-  track.srclang = 'pt';
-  track.src = '/media/' + SUBTITLE_PATH;
-  if (captionsOn) track.default = true;
-  videoEl.appendChild(track);
-  if (captionsOn && videoEl.textTracks[0]) {
-    videoEl.textTracks[0].mode = 'showing';
-  }
-}
-
+/* ─── Mode switch ───────────────────────────────────── */
 async function switchMode(mode) {
   if (mode === currentMode) return;
-  savedTime = videoEl.currentTime;
-  const wasPlaying = !videoEl.paused;
 
-  // Update button states
-  ['original', 'libras', 'ad'].forEach(m => {
+  savedTime  = videoEl.currentTime;
+  wasPlaying = !videoEl.paused;
+
+  // Update mode buttons
+  ['original','libras','ad'].forEach(m => {
     const btn = document.getElementById('btn-' + m);
-    btn.classList.toggle('active', m === mode);
+    if (!btn) return;
+    btn.className = 'mode-btn';
+    if (m === mode) btn.classList.add('active-' + mode);
     btn.setAttribute('aria-pressed', m === mode ? 'true' : 'false');
   });
 
+  // Update sidebar toggles
+  updateToggle('toggle-libras', mode === 'libras', 'on-cyan',   'row-libras', 'row-on');
+  updateToggle('toggle-ad',     mode === 'ad',     'on-violet', 'row-ad',     'row-violet');
+
+  // Update stream label
+  const labels = { original:'Original · HLS', libras:'Libras (PIP) · HLS', ad:'Audiodescrição · HLS' };
+  if (streamLbl) streamLbl.textContent = labels[mode] || mode;
+
   currentMode = mode;
-  savePreferences();
+  savePrefs();
 
-  const manifest = MANIFESTS[mode];
-  if (!manifest) return;
-
-  await loadManifest(manifest);
+  if (!MANIFESTS[mode]) return;
+  await loadManifest(MANIFESTS[mode]);
   videoEl.currentTime = savedTime;
   if (wasPlaying) videoEl.play();
 }
 
+function updateToggle(toggleId, isOn, onClass, rowId, rowClass) {
+  const t = document.getElementById(toggleId);
+  const r = document.getElementById(rowId);
+  if (!t) return;
+  t.className = 'toggle' + (isOn ? ' ' + onClass : '');
+  if (r) {
+    r.className = 'a11y-row' + (isOn ? ' ' + rowClass : '');
+    r.setAttribute('aria-checked', isOn ? 'true' : 'false');
+  }
+}
+
+/* ─── Captions ──────────────────────────────────────── */
 function toggleCaptions() {
   captionsOn = !captionsOn;
-  const btn = document.getElementById('caption-btn');
-  if (btn) {
-    btn.classList.toggle('active', captionsOn);
-    btn.setAttribute('aria-pressed', captionsOn ? 'true' : 'false');
+  const btn  = document.getElementById('cc-btn');
+  const tog  = document.getElementById('toggle-cc');
+  const row  = document.getElementById('row-cc');
+  if (btn) btn.classList.toggle('active', captionsOn);
+  if (tog) tog.className = 'toggle' + (captionsOn ? ' on-gold' : '');
+  if (row) {
+    row.className = 'a11y-row' + (captionsOn ? ' row-gold' : '');
+    row.setAttribute('aria-checked', captionsOn ? 'true' : 'false');
   }
-  if (captionsOn) {
-    applySubtitle();
-  } else {
-    if (videoEl.textTracks[0]) videoEl.textTracks[0].mode = 'hidden';
-  }
-  savePreferences();
+
+  if (captionsOn) applySubtitle();
+  else if (videoEl.textTracks[0]) videoEl.textTracks[0].mode = 'hidden';
+  savePrefs();
 }
 
+function applySubtitle() {
+  if (!SUBTITLE) return;
+  const existing = videoEl.querySelector('track');
+  if (existing) existing.remove();
+  const track   = document.createElement('track');
+  track.kind    = 'subtitles';
+  track.label   = 'Português';
+  track.srclang = 'pt';
+  track.src     = '/media/' + SUBTITLE;
+  if (captionsOn) track.default = true;
+  videoEl.appendChild(track);
+  if (captionsOn && videoEl.textTracks[0]) videoEl.textTracks[0].mode = 'showing';
+}
+
+/* ─── Playback controls ─────────────────────────────── */
+function togglePlay() {
+  if (videoEl.paused) { videoEl.play(); showFlash('play'); }
+  else { videoEl.pause(); showFlash('pause'); }
+}
+function toggleMute() {
+  videoEl.muted = !videoEl.muted;
+  document.getElementById('volume-bar').value = videoEl.muted ? 0 : videoEl.volume;
+  updateVolIcon();
+}
 function toggleFullscreen() {
-  const container = document.getElementById('player-container');
-  if (!document.fullscreenElement) {
-    container.requestFullscreen();
-  } else {
-    document.exitFullscreen();
-  }
+  if (!document.fullscreenElement) wrap.requestFullscreen();
+  else document.exitFullscreen();
 }
 
-// ── Controls ──────────────────────────────────────────────────────────────────
+/* ─── Flash feedback ────────────────────────────────── */
+function showFlash(type) {
+  const icon = document.getElementById('center-icon');
+  icon.innerHTML = type === 'play'
+    ? '<path d="M8 5v14l11-7z"/>'
+    : '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+  flash.className = 'show';
+  clearTimeout(flash._t);
+  flash._t = setTimeout(() => { flash.className = 'hide'; setTimeout(() => flash.className = '', 200); }, 600);
+}
 
-playBtn.addEventListener('click', () => {
-  videoEl.paused ? videoEl.play() : videoEl.pause();
-});
-
-videoEl.addEventListener('play', () => {
-  playIcon.src = '/static/assets/to-pause.svg';
-  playIcon.alt = 'Pausar';
-});
-videoEl.addEventListener('pause', () => {
-  playIcon.src = '/static/assets/to-play.svg';
-  playIcon.alt = 'Reproduzir';
-});
-
+/* ─── Events ────────────────────────────────────────── */
 videoEl.addEventListener('timeupdate', () => {
   if (!videoEl.duration) return;
-  seekBar.value = (videoEl.currentTime / videoEl.duration) * 100;
-  timeDisplay.textContent = fmt(videoEl.currentTime) + ' / ' + fmt(videoEl.duration);
+  const pct = (videoEl.currentTime / videoEl.duration) * 100;
+  seekBar.value = pct;
+  seekFill.style.width = pct + '%';
+  timeEl.textContent = fmt(videoEl.currentTime) + ' / ' + fmt(videoEl.duration);
+  seekBar.setAttribute('aria-valuetext', fmt(videoEl.currentTime) + ' de ' + fmt(videoEl.duration));
 });
-
 seekBar.addEventListener('input', () => {
   if (!videoEl.duration) return;
   videoEl.currentTime = (seekBar.value / 100) * videoEl.duration;
+  seekFill.style.width = seekBar.value + '%';
+  seekBar.setAttribute('aria-valuetext', fmt(videoEl.currentTime) + ' de ' + fmt(videoEl.duration));
+});
+videoEl.addEventListener('play',  () => {
+  playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+  wrap.classList.add('show-controls');
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => wrap.classList.remove('show-controls'), 2500);
+});
+videoEl.addEventListener('pause', () => {
+  playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+  wrap.classList.add('show-controls');
+});
+document.getElementById('volume-bar').addEventListener('input', e => {
+  videoEl.volume = e.target.value;
+  videoEl.muted  = e.target.value == 0;
+  updateVolIcon();
+});
+wrap.addEventListener('mousemove', () => {
+  wrap.classList.add('show-controls');
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => { if (!videoEl.paused) wrap.classList.remove('show-controls'); }, 2500);
+});
+wrap.addEventListener('click', e => {
+  if (e.target === videoEl || e.target === wrap) togglePlay();
+});
+document.addEventListener('fullscreenchange', () => {
+  const icon = document.getElementById('fs-icon');
+  if (document.fullscreenElement) {
+    icon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
+  } else {
+    icon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+  }
 });
 
-volumeBar.addEventListener('input', () => {
-  videoEl.volume = volumeBar.value;
-  videoEl.muted = volumeBar.value == 0;
+/* ─── Keyboard ──────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  const map = {
+    ' ': () => { e.preventDefault(); togglePlay(); },
+    'k': togglePlay,
+    'ArrowRight': () => videoEl.currentTime = Math.min(videoEl.duration||0, videoEl.currentTime+10),
+    'ArrowLeft':  () => videoEl.currentTime = Math.max(0, videoEl.currentTime-10),
+    'ArrowUp':    () => { e.preventDefault(); videoEl.volume = Math.min(1, videoEl.volume+0.1); document.getElementById('volume-bar').value = videoEl.volume; updateVolIcon(); },
+    'ArrowDown':  () => { e.preventDefault(); videoEl.volume = Math.max(0, videoEl.volume-0.1); document.getElementById('volume-bar').value = videoEl.volume; updateVolIcon(); },
+    'm': toggleMute,
+    'f': toggleFullscreen,
+    'c': () => { if (SUBTITLE) toggleCaptions(); },
+  };
+  if (map[e.key]) map[e.key]();
 });
 
-document.getElementById('mute-btn').addEventListener('click', () => {
-  videoEl.muted = !videoEl.muted;
-  volumeBar.value = videoEl.muted ? 0 : videoEl.volume;
-});
-
-// Keyboard shortcuts
-document.getElementById('player-container').addEventListener('keydown', (e) => {
-  if (e.key === ' ' || e.key === 'k') { e.preventDefault(); videoEl.paused ? videoEl.play() : videoEl.pause(); }
-  if (e.key === 'ArrowRight') videoEl.currentTime = Math.min(videoEl.duration, videoEl.currentTime + 10);
-  if (e.key === 'ArrowLeft')  videoEl.currentTime = Math.max(0, videoEl.currentTime - 10);
-  if (e.key === 'ArrowUp')    videoEl.volume = Math.min(1, videoEl.volume + 0.1);
-  if (e.key === 'ArrowDown')  videoEl.volume = Math.max(0, videoEl.volume - 0.1);
-  if (e.key === 'm') videoEl.muted = !videoEl.muted;
-  if (e.key === 'f') toggleFullscreen();
-  if (e.key === 'c') { if (SUBTITLE_PATH) toggleCaptions(); }
-});
-
-// ── Preferences ───────────────────────────────────────────────────────────────
-
-function savePreferences() {
-  localStorage.setItem('wp_mode_{{ video.id }}', currentMode);
-  localStorage.setItem('wp_captions_{{ video.id }}', captionsOn ? '1' : '0');
+/* ─── Helpers ───────────────────────────────────────── */
+function updateVolIcon() {
+  const muted = videoEl.muted || videoEl.volume === 0;
+  volIcon.innerHTML = muted
+    ? '<path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>'
+    : '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
 }
 
-function restorePreferences() {
-  const savedMode = localStorage.getItem('wp_mode_{{ video.id }}');
-  const savedCaptions = localStorage.getItem('wp_captions_{{ video.id }}');
-  if (savedMode && MANIFESTS[savedMode]) switchMode(savedMode);
-  if (savedCaptions === '1') toggleCaptions();
+function updateQualityBadge() {
+  const badge = document.getElementById('stream-quality');
+  if (!badge || !player) return;
+  const tracks = player.getVariantTracks();
+  if (tracks.length) {
+    const h = tracks.find(t => t.active)?.height || tracks[0].height;
+    badge.textContent = h >= 1080 ? 'FHD' : h >= 720 ? 'HD' : 'SD';
+  }
 }
 
 function fmt(s) {
+  if (!s || isNaN(s)) return '0:00';
   const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60).toString().padStart(2, '0');
-  return `${m}:${sec}`;
+  return m + ':' + Math.floor(s % 60).toString().padStart(2,'0');
 }
 
-function onError(e) {
-  console.error('Player error:', e.detail || e);
+/* ─── Prefs ─────────────────────────────────────────── */
+function savePrefs() {
+  localStorage.setItem('wp_mode_'    + VIDEO_ID, currentMode);
+  localStorage.setItem('wp_captions_'+ VIDEO_ID, captionsOn ? '1' : '0');
+}
+function restorePrefs() {
+  const m = localStorage.getItem('wp_mode_'     + VIDEO_ID);
+  const c = localStorage.getItem('wp_captions_' + VIDEO_ID);
+  if (m && MANIFESTS[m]) { currentMode = m; }
+  if (c === '1') { captionsOn = false; /* toggleCaptions will flip it */ }
+  // Apply mode button state without switching stream (stream loads in initPlayer)
+  ['original','libras','ad'].forEach(k => {
+    const btn = document.getElementById('btn-' + k);
+    if (!btn) return;
+    btn.className = 'mode-btn';
+    if (k === currentMode) btn.classList.add('active-' + currentMode);
+  });
+  updateToggle('toggle-libras', currentMode==='libras','on-cyan','row-libras','row-on');
+  updateToggle('toggle-ad',     currentMode==='ad','on-violet','row-ad','row-violet');
+  const labels = { original:'Original · HLS', libras:'Libras (PIP) · HLS', ad:'Audiodescrição · HLS' };
+  if (streamLbl) streamLbl.textContent = labels[currentMode] || currentMode;
+  if (c === '1') toggleCaptions();
 }
 
 initPlayer();

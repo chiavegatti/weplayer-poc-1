@@ -129,3 +129,36 @@ def test_asset_type_values():
     assert AssetType.hls_libras == "hls_libras"
     assert AssetType.hls_ad == "hls_ad"
     assert AssetType.subtitle_vtt == "subtitle_vtt"
+
+
+# ── AdminUser model ────────────────────────────────────────────────────────────
+
+def test_admin_user_repr(db_session):
+    from app.models.models import AdminUser
+    import uuid
+    u = AdminUser(id=str(uuid.uuid4()), email="a@b.com", hashed_password="hash")
+    db_session.add(u)
+    db_session.flush()
+    assert "a@b.com" in repr(u)
+
+
+def test_admin_user_defaults(db_session):
+    from app.models.models import AdminUser
+    import uuid
+    u = AdminUser(id=str(uuid.uuid4()), email="x@y.com", hashed_password="hash")
+    db_session.add(u)
+    db_session.flush()
+    assert u.created_at is not None
+
+
+def test_admin_user_unique_email(db_session):
+    from app.models.models import AdminUser
+    import uuid
+    from sqlalchemy.exc import IntegrityError
+    u1 = AdminUser(id=str(uuid.uuid4()), email="dup@test.com", hashed_password="h1")
+    u2 = AdminUser(id=str(uuid.uuid4()), email="dup@test.com", hashed_password="h2")
+    db_session.add(u1)
+    db_session.flush()
+    db_session.add(u2)
+    with pytest.raises(IntegrityError):
+        db_session.flush()

@@ -1,66 +1,323 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — WePlayer Admin{% endblock %}
 
+{% block head %}
+<style>
+  /* Focus rings WCAG 2.2 AA */
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Navbar admin */
+  .nav-link-muted {
+    font-size: 14px;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
+    font-weight: 500;
+  }
+  .nav-link-muted:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  /* Tabela */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    text-align: left;
+    padding: 14px 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .data-table th:last-child { text-align: right; }
+
+  .data-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    font-size: 14px;
+  }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+
+  .data-table tbody tr {
+    transition: background 0.15s;
+  }
+  .data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  /* Processing spinner */
+  @keyframes spin-slow { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 1.5px solid rgba(34,211,238,0.3);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin-slow 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    gap: 16px;
+    text-align: center;
+  }
+  .empty-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+  }
+
+  /* Recursos cell */
+  .recursos-cell { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+  /* Row highlight on focus-within para acessibilidade */
+  .data-table tbody tr:focus-within { background: rgba(34,211,238,0.03); }
+
+  /* ── Mobile ─────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    /* Scrollable table container */
+    .card { overflow-x: auto; }
+    .data-table { min-width: 560px; }
+    /* Hide "Criado em" column on very small screens */
+    .data-table th:nth-child(4),
+    .data-table td:nth-child(4) { display: none; }
+    /* Compact action cell */
+    .data-table td:last-child { padding: 12px 12px 12px 8px; }
+    /* Page header */
+    [style*="display: flex; align-items: center; justify-content: space-between"] {
+      flex-direction: column; align-items: flex-start !important;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block nav_links %}
-  <a href="/catalog" class="text-sm" style="color: var(--wp-muted);">Ver catálogo</a>
-  <a href="/admin/videos/new" class="btn-primary text-sm">+ Novo vídeo</a>
-  <a href="/admin/logout" class="btn-secondary text-sm">Sair</a>
+  <a href="/catalog" class="nav-link-muted" aria-label="Ver catálogo público de vídeos">
+    Ver catálogo
+  </a>
+  <a href="/admin/docs" class="nav-link-muted" aria-label="Ver documentação e tutorial">
+    Documentação
+  </a>
+  <a href="/admin/videos/new" class="btn btn-primary btn-sm" aria-label="Adicionar novo vídeo">
+    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Novo vídeo
+  </a>
+  <a href="/admin/logout" class="btn btn-ghost btn-sm" aria-label="Sair do painel administrativo">
+    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+    Sair
+  </a>
 {% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-between mb-8">
-  <h1 class="text-2xl font-bold">Vídeos</h1>
-  <a href="/admin/videos/new" class="btn-primary">+ Novo vídeo</a>
-</div>
+<main id="main-content">
 
-{% if videos %}
-<div class="card overflow-hidden">
-  <table class="w-full text-sm">
-    <thead>
-      <tr style="border-bottom: 1px solid var(--wp-border); color: var(--wp-muted);">
-        <th class="text-left px-5 py-3 font-medium">Título</th>
-        <th class="text-left px-5 py-3 font-medium">Status</th>
-        <th class="text-left px-5 py-3 font-medium">Recursos</th>
-        <th class="text-left px-5 py-3 font-medium">Criado em</th>
-        <th class="px-5 py-3"></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for v in videos %}
-      <tr style="border-bottom: 1px solid var(--wp-border);" class="hover:opacity-80 transition-opacity">
-        <td class="px-5 py-4 font-medium">{{ v.title }}</td>
-        <td class="px-5 py-4">
-          {% if v.status.value == 'ready' %}
-            <span class="badge badge-ready">✓ Pronto</span>
-          {% elif v.status.value == 'processing' %}
-            <span class="badge badge-processing">⟳ Processando</span>
-          {% elif v.status.value == 'error' %}
-            <span class="badge badge-error">✗ Erro</span>
-          {% else %}
-            <span class="badge badge-pending">○ Pendente</span>
-          {% endif %}
-        </td>
-        <td class="px-5 py-4 flex gap-1 flex-wrap">
-          {% if v.libras_available %}<span class="badge badge-libras">Libras</span>{% endif %}
-          {% if v.ad_available %}<span class="badge badge-ad">AD</span>{% endif %}
-          {% if v.subtitle_available %}<span class="badge badge-sub">Legenda</span>{% endif %}
-        </td>
-        <td class="px-5 py-4" style="color: var(--wp-muted);">
-          {{ v.created_at.strftime('%d/%m/%Y %H:%M') }}
-        </td>
-        <td class="px-5 py-4 text-right">
-          <a href="/admin/videos/{{ v.id }}" class="btn-secondary text-xs px-3 py-1.5">Detalhes</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-{% else %}
-<div class="card flex flex-col items-center justify-center py-20 gap-4">
-  <img src="/static/assets/loader.svg" alt="" class="w-12 opacity-30" />
-  <p style="color: var(--wp-muted);">Nenhum vídeo cadastrado ainda.</p>
-  <a href="/admin/videos/new" class="btn-primary">Adicionar primeiro vídeo</a>
-</div>
-{% endif %}
+  <!-- Page header -->
+  <div class="animate-fade-up" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; gap: 16px; flex-wrap: wrap;">
+    <div>
+      <h1 style="font-size: 26px; font-weight: 800; font-family: var(--font-display); letter-spacing: -0.02em;">
+        Vídeos
+      </h1>
+      <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+        {% if videos %}
+          {{ videos | length }} vídeo{% if videos | length != 1 %}s{% endif %} cadastrado{% if videos | length != 1 %}s{% endif %}
+        {% else %}
+          Nenhum vídeo cadastrado
+        {% endif %}
+      </p>
+    </div>
+    <a
+      href="/admin/videos/new"
+      class="btn btn-primary"
+      aria-label="Adicionar novo vídeo ao catálogo"
+    >
+      <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Novo vídeo
+    </a>
+  </div>
+
+  <!-- Tabela de vídeos -->
+  {% if videos %}
+  <div class="card animate-fade-up delay-1" style="overflow: hidden;">
+    <table
+      class="data-table"
+      role="table"
+      aria-label="Lista de vídeos cadastrados no WePlayer"
+    >
+      <caption style="display: none;">Lista de vídeos cadastrados — WePlayer Admin</caption>
+      <thead>
+        <tr role="row">
+          <th scope="col" role="columnheader">Título</th>
+          <th scope="col" role="columnheader">Status</th>
+          <th scope="col" role="columnheader">Recursos</th>
+          <th scope="col" role="columnheader">Criado em</th>
+          <th scope="col" role="columnheader"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in videos %}
+        <tr role="row">
+
+          <!-- Título -->
+          <td role="cell">
+            <a
+              href="/admin/videos/{{ v.id }}"
+              style="color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px;"
+              aria-label="Ver detalhes do vídeo: {{ v.title }}"
+            >
+              {{ v.title }}
+            </a>
+          </td>
+
+          <!-- Status -->
+          <td role="cell">
+            {% if v.status.value == 'ready' %}
+              <span
+                class="badge badge-ready"
+                aria-label="Status: Pronto para reprodução"
+              >
+                <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Pronto
+              </span>
+            {% elif v.status.value == 'processing' %}
+              <span
+                class="badge badge-processing"
+                aria-label="Status: Processando vídeo"
+              >
+                <span class="spinner" aria-hidden="true"></span>
+                Processando
+              </span>
+            {% elif v.status.value == 'error' %}
+              <span
+                class="badge badge-error"
+                aria-label="Status: Erro no processamento"
+              >
+                <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Erro
+              </span>
+            {% else %}
+              <span
+                class="badge badge-pending"
+                aria-label="Status: Aguardando processamento"
+              >
+                <svg aria-hidden="true" width="8" height="8" viewBox="0 0 8 8">
+                  <circle cx="4" cy="4" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                </svg>
+                Pendente
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Recursos de acessibilidade -->
+          <td role="cell">
+            <div class="recursos-cell" aria-label="Recursos disponíveis">
+              {% if v.libras_available %}
+                <span class="badge badge-libras" aria-label="Possui Libras">Libras</span>
+              {% endif %}
+              {% if v.ad_available %}
+                <span class="badge badge-ad" aria-label="Possui Audiodescrição">AD</span>
+              {% endif %}
+              {% if v.subtitle_available %}
+                <span class="badge badge-sub" aria-label="Possui Legenda">Legenda</span>
+              {% endif %}
+              {% if not v.libras_available and not v.ad_available and not v.subtitle_available %}
+                <span style="font-size: 12px; color: var(--muted);" aria-label="Nenhum recurso de acessibilidade disponível">—</span>
+              {% endif %}
+            </div>
+          </td>
+
+          <!-- Data de criação -->
+          <td role="cell">
+            <time
+              datetime="{{ v.created_at.strftime('%Y-%m-%dT%H:%M') }}"
+              style="font-size: 13px; color: var(--muted-2);"
+            >
+              {{ v.created_at.strftime('%d/%m/%Y') }}
+              <span style="color: var(--muted); margin-left: 4px;">
+                {{ v.created_at.strftime('%H:%M') }}
+              </span>
+            </time>
+          </td>
+
+          <!-- Ações -->
+          <td role="cell" style="text-align: right;">
+            <a
+              href="/admin/videos/{{ v.id }}"
+              class="btn btn-secondary btn-sm"
+              aria-label="Ver detalhes do vídeo {{ v.title }}"
+            >
+              Detalhes
+              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+
+  <!-- Empty state -->
+  <div class="card animate-fade-up delay-1">
+    <div class="empty-state">
+      <div class="empty-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+          <path d="M10 9l5 3-5 3V9z" fill="currentColor" opacity="0.4"/>
+        </svg>
+      </div>
+      <div>
+        <p style="font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px;">
+          Nenhum vídeo cadastrado
+        </p>
+        <p style="font-size: 13px; color: var(--muted);">
+          Adicione o primeiro vídeo para começar a construir o catálogo.
+        </p>
+      </div>
+      <a
+        href="/admin/videos/new"
+        class="btn btn-primary"
+        aria-label="Adicionar o primeiro vídeo ao catálogo"
+      >
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Adicionar primeiro vídeo
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+</main>
 {% endblock %}

@@ -31,8 +31,9 @@ def login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
+    db: Session = Depends(get_db),
 ):
-    if not check_credentials(username, password):
+    if not check_credentials(username, password, db):
         return templates.TemplateResponse(
             "admin/login.html",
             {"request": request, "error": "Usuário ou senha inválidos."},
@@ -68,6 +69,18 @@ def dashboard(
     videos = db.query(Video).order_by(Video.created_at.desc()).all()
     return templates.TemplateResponse(
         "admin/dashboard.html", {"request": request, "videos": videos, "admin": _admin}
+    )
+
+
+# ─── Docs ─────────────────────────────────────────────────────────────────────
+
+@router.get("/docs", response_class=HTMLResponse)
+def admin_docs(
+    request: Request,
+    _admin: str = Depends(get_current_admin),
+):
+    return templates.TemplateResponse(
+        "admin/docs.html", {"request": request, "admin": _admin}
     )
 
 

@@ -262,3 +262,37 @@ def test_delete_video(auth_client):
 def test_delete_video_not_found(auth_client):
     r = auth_client.post("/admin/videos/nonexistent/delete")
     assert r.status_code == 404
+
+
+# ── Docs ──────────────────────────────────────────────────────────────────────
+
+def test_docs_page(auth_client):
+    r = auth_client.get("/admin/docs")
+    assert r.status_code == 200
+    assert "Documentação" in r.text
+    assert "Tutorial" in r.text
+
+
+def test_docs_requires_auth(client):
+    r = client.get("/admin/docs", follow_redirects=False)
+    assert r.status_code == 401
+
+
+# ── DB-based login ─────────────────────────────────────────────────────────────
+
+def test_login_with_db_admin_user(client):
+    from app.auth import hash_password
+    from app.models.models import AdminUser
+    db = TestingSessionLocal()
+    user = AdminUser(email="iguale@iguale.com.br", hashed_password=hash_password("acesso10@123"))
+    db.add(user)
+    db.commit()
+    db.close()
+
+    r = client.post(
+        "/admin/login",
+        data={"username": "iguale@iguale.com.br", "password": "acesso10@123"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+    assert "weplayer_session" in client.cookies

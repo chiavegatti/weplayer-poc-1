@@ -92,3 +92,15 @@ class VideoAsset(Base):
 
     def __repr__(self) -> str:
         return f"<VideoAsset id={self.id!r} type={self.asset_type} status={self.status}>"
+
+
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String(255), nullable=False, unique=True, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self) -> str:
+        return f"<AdminUser id={self.id!r} email={self.email!r}>"

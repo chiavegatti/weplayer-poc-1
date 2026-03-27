@@ -4,61 +4,298 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}WePlayer{% endblock %}</title>
+
+  <!-- Fonts: Syne (display) + Figtree (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="/static/assets/logo-weplayer.png" type="image/png" />
+
   <style>
     :root {
-      --wp-primary: #7C3AED;
-      --wp-primary-dark: #5B21B6;
-      --wp-accent: #06B6D4;
-      --wp-bg: #0F0F1A;
-      --wp-surface: #1A1A2E;
-      --wp-border: #2D2D44;
-      --wp-text: #E2E8F0;
-      --wp-muted: #94A3B8;
+      --bg:        #07080D;
+      --surface:   #0F1524;
+      --surface-2: #161D30;
+      --border:    rgba(255,255,255,0.07);
+      --border-glow: rgba(34,211,238,0.25);
+      --cyan:      #22D3EE;
+      --cyan-dim:  rgba(34,211,238,0.12);
+      --violet:    #A78BFA;
+      --violet-dim:rgba(167,139,250,0.12);
+      --gold:      #FBBF24;
+      --gold-dim:  rgba(251,191,36,0.12);
+      --text:      #F1F5F9;
+      --muted:     #64748B;
+      --muted-2:   #94A3B8;
+      --red:       #F87171;
+      --green:     #34D399;
+
+      --font-display: 'Syne', sans-serif;
+      --font-body:    'Figtree', sans-serif;
+
+      --radius-sm: 6px;
+      --radius:    12px;
+      --radius-lg: 20px;
+
+      --shadow-glow-cyan:   0 0 30px rgba(34,211,238,0.15), 0 0 60px rgba(34,211,238,0.06);
+      --shadow-glow-violet: 0 0 30px rgba(167,139,250,0.15), 0 0 60px rgba(167,139,250,0.06);
+      --shadow-card:        0 4px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
     }
-    body { background-color: var(--wp-bg); color: var(--wp-text); font-family: 'Inter', system-ui, sans-serif; }
-    .btn-primary { background: var(--wp-primary); color: white; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: background 0.2s; }
-    .btn-primary:hover { background: var(--wp-primary-dark); }
-    .btn-secondary { background: var(--wp-surface); color: var(--wp-text); border: 1px solid var(--wp-border); padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 500; transition: border-color 0.2s; }
-    .btn-secondary:hover { border-color: var(--wp-primary); }
-    .card { background: var(--wp-surface); border: 1px solid var(--wp-border); border-radius: 0.75rem; }
-    .badge { display: inline-flex; align-items: center; padding: 0.15rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-    .badge-ready { background: #064e3b; color: #6ee7b7; }
-    .badge-processing { background: #1c3f6e; color: #93c5fd; }
-    .badge-pending { background: #2d2d44; color: #94a3b8; }
-    .badge-error { background: #450a0a; color: #fca5a5; }
-    .badge-libras { background: #1e3a5f; color: #93c5fd; }
-    .badge-ad { background: #2d1a4d; color: #c4b5fd; }
-    .badge-sub { background: #14532d; color: #86efac; }
-    input, textarea, select {
-      background: #0F0F1A;
-      border: 1px solid var(--wp-border);
-      border-radius: 0.5rem;
-      color: var(--wp-text);
-      padding: 0.5rem 0.75rem;
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* Dot grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Ambient glow orbs */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34,211,238,0.04) 0%, transparent 70%);
+      top: -200px;
+      right: -100px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    main, nav, footer { position: relative; z-index: 1; }
+
+    /* ── Typography ─────────────────────────────────── */
+    h1, h2, h3, h4, h5 { font-family: var(--font-display); font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+    .display { font-family: var(--font-display); font-weight: 800; }
+
+    .text-gradient {
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 22px; border-radius: var(--radius-sm);
+      font-family: var(--font-body); font-weight: 600; font-size: 14px;
+      cursor: pointer; border: none; text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--cyan); color: #07080D;
+      box-shadow: 0 0 20px rgba(34,211,238,0.3);
+    }
+    .btn-primary:hover {
+      background: #67E8F9;
+      box-shadow: 0 0 30px rgba(34,211,238,0.5);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted-2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+    .btn-danger {
+      background: rgba(248,113,113,0.12);
+      color: var(--red);
+      border: 1px solid rgba(248,113,113,0.2);
+    }
+    .btn-danger:hover { background: rgba(248,113,113,0.2); }
+
+    .btn-lg { padding: 14px 32px; font-size: 15px; border-radius: var(--radius-sm); }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+    /* ── Cards ───────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+    }
+    .card-glow {
+      border-color: var(--border-glow);
+      box-shadow: var(--shadow-glow-cyan);
+    }
+
+    /* ── Badges ──────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .badge-ready   { background: rgba(52,211,153,0.12); color: #34D399; border: 1px solid rgba(52,211,153,0.2); }
+    .badge-processing { background: rgba(34,211,238,0.12); color: var(--cyan); border: 1px solid rgba(34,211,238,0.2); }
+    .badge-pending { background: rgba(100,116,139,0.12); color: var(--muted-2); border: 1px solid var(--border); }
+    .badge-error   { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+    .badge-libras  { background: rgba(34,211,238,0.10); color: var(--cyan); border: 1px solid rgba(34,211,238,0.2); }
+    .badge-ad      { background: rgba(167,139,250,0.10); color: var(--violet); border: 1px solid rgba(167,139,250,0.2); }
+    .badge-sub     { background: rgba(251,191,36,0.10); color: var(--gold); border: 1px solid rgba(251,191,36,0.2); }
+
+    /* ── Form inputs ─────────────────────────────────── */
+    .input {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 10px 14px;
       width: 100%;
+      font-family: var(--font-body);
+      font-size: 14px;
       transition: border-color 0.2s;
+      outline: none;
     }
-    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--wp-primary); }
-    label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--wp-muted); margin-bottom: 0.25rem; }
+    .input:focus { border-color: rgba(34,211,238,0.4); box-shadow: 0 0 0 3px rgba(34,211,238,0.08); }
+    .input::placeholder { color: var(--muted); }
+    label { display: block; font-size: 13px; font-weight: 500; color: var(--muted-2); margin-bottom: 6px; letter-spacing: 0.01em; }
+    textarea.input { resize: vertical; min-height: 80px; }
+    input[type="file"].input { padding: 8px 12px; cursor: pointer; }
+
+    /* ── Divider ─────────────────────────────────────── */
+    .divider { height: 1px; background: var(--border); }
+
+    /* ── Animations ──────────────────────────────────── */
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+    @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(34,211,238,0.2); }
+      50%       { box-shadow: 0 0 40px rgba(34,211,238,0.4); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+
+    .animate-fade-up  { animation: fadeUp 0.5s ease both; }
+    .animate-fade-in  { animation: fadeIn 0.4s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+
+    /* ── Nav ─────────────────────────────────────────── */
+    .wp-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(7,8,13,0.85);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .wp-nav a { text-decoration: none; }
+
+    /* ── Misc ────────────────────────────────────────── */
+    .shimmer {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+    /* ── Mobile responsive — base ───────────────────── */
+    @media (max-width: 640px) {
+      .wp-nav {
+        padding: 0 16px;
+        height: 56px;
+        gap: 8px;
+      }
+      .wp-nav .flex.items-center.gap-3 {
+        gap: 6px;
+      }
+      .btn-lg { padding: 12px 22px; font-size: 14px; }
+      .btn-sm { padding: 5px 10px; font-size: 12px; }
+      main.max-w-7xl { padding-left: 16px; padding-right: 16px; padding-top: 24px; }
+    }
+
+    /* ── Skip link — WCAG 2.4.1 ─────────────────────── */
+    .skip-link {
+      position: absolute; left: -9999px; top: 4px;
+      background: var(--cyan); color: #07080D;
+      padding: 8px 16px; border-radius: 4px; font-weight: 700;
+      z-index: 9999; text-decoration: none;
+    }
+    .skip-link:focus { left: 4px; }
+
+    /* ── Focus visible — WCAG 2.4.11 ───────────────── */
+    :focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    /* Remove outline for mouse users */
+    :focus:not(:focus-visible) { outline: none; }
+
+    /* ── Reduced motion — WCAG 2.3.3 ───────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
   {% block head %}{% endblock %}
 </head>
-<body class="min-h-screen">
+<body>
+
+  <a href="#main-content" class="skip-link">Ir para o conteúdo principal</a>
+
   {% block navbar %}
-  <nav style="background: var(--wp-surface); border-bottom: 1px solid var(--wp-border);" class="px-6 py-3 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2">
-      <img src="/static/assets/logo-weplayer.png" alt="WePlayer" class="h-8 w-auto" />
+  <nav class="wp-nav" role="navigation" aria-label="Navegação principal">
+    <a href="/" class="flex items-center gap-3">
+      <img src="/static/assets/logo-weplayer.png" alt="WePlayer" style="height:28px; width:auto;" />
     </a>
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3">
       {% block nav_links %}{% endblock %}
     </div>
   </nav>
   {% endblock %}
 
-  <main class="{% block main_class %}max-w-7xl mx-auto px-6 py-8{% endblock %}">
+  <main id="main-content" tabindex="-1" class="{% block main_class %}max-w-7xl mx-auto px-6 py-10{% endblock %}">
     {% block content %}{% endblock %}
   </main>
+
 </body>
 </html>

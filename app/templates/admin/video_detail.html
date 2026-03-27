@@ -1,106 +1,504 @@
 {% extends "base.html" %}
 {% block title %}{{ video.title }} — WePlayer Admin{% endblock %}
 
+{% block head %}
+<style>
+  /* Focus rings WCAG 2.2 AA */
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Nav link muted */
+  .nav-link-muted {
+    font-size: 14px;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-link-muted:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  /* Section label */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-label-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Asset row */
+  .asset-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    transition: border-color 0.15s;
+  }
+  .asset-row:hover { border-color: rgba(255,255,255,0.1); }
+
+  .asset-type-tag {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--muted-2);
+    white-space: nowrap;
+  }
+
+  .asset-path {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 320px;
+    flex: 1;
+  }
+
+  /* Log details/summary */
+  .log-block {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .log-block:hover { border-color: rgba(255,255,255,0.1); }
+
+  .log-block summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted-2);
+    background: rgba(255,255,255,0.02);
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+  }
+  .log-block summary::-webkit-details-marker { display: none; }
+  .log-block summary:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .log-block summary:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: -2px;
+  }
+
+  .log-chevron {
+    margin-left: auto;
+    transition: transform 0.2s;
+    color: var(--muted);
+  }
+  .log-block[open] .log-chevron { transform: rotate(90deg); }
+  .log-block[open] summary { color: var(--text); border-bottom: 1px solid var(--border); }
+
+  .log-content {
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--muted-2);
+    padding: 16px;
+    overflow-x: auto;
+    max-height: 260px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.25);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Error message box */
+  .error-box {
+    background: rgba(248,113,113,0.06);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--red);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Processing spinner */
+  @keyframes spin-slow { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 1.5px solid rgba(34,211,238,0.3);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin-slow 0.8s linear infinite;
+    vertical-align: middle;
+  }
+
+  /* ID chip */
+  .id-chip {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    vertical-align: middle;
+  }
+
+  /* ── Mobile ─────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    /* Assets table: scrollable */
+    .card { overflow-x: auto; }
+    .detail-table { min-width: 480px; }
+    /* Header: stack title and actions */
+    .detail-header {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 12px !important;
+    }
+    /* Action buttons: wrap */
+    .detail-actions { flex-wrap: wrap; }
+    /* ID chip: hide on very small */
+    .id-chip { display: none; }
+  }
+</style>
+{% endblock %}
+
 {% block nav_links %}
-  <a href="/admin/dashboard" class="btn-secondary text-sm">← Dashboard</a>
-  <a href="/admin/logout" class="btn-secondary text-sm">Sair</a>
+  <a href="/admin/dashboard" class="nav-link-muted" aria-label="Voltar ao dashboard">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Dashboard
+  </a>
+  <a href="/admin/logout" class="btn btn-ghost btn-sm" aria-label="Sair do painel administrativo">
+    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+    Sair
+  </a>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto flex flex-col gap-6">
-  <!-- Header -->
-  <div class="flex items-start justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold">{{ video.title }}</h1>
-      <p class="text-sm mt-1" style="color: var(--wp-muted);">ID: {{ video.id }}</p>
+<main id="main-content">
+<div style="max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+
+  <!-- ── Header ──────────────────────────────────────── -->
+  <div class="animate-fade-up" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 0;">
+      <h1 style="font-size: 24px; font-weight: 800; font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.2; word-break: break-word;">
+        {{ video.title }}
+      </h1>
+      <p style="margin-top: 8px; font-size: 13px; color: var(--muted);">
+        ID: <span class="id-chip">{{ video.id }}</span>
+      </p>
     </div>
-    <div class="flex gap-2 flex-shrink-0">
+
+    <!-- Botões de ação -->
+    <div style="display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; align-items: center;">
+
       {% if video.status.value == 'ready' %}
-        <a href="/watch/{{ video.id }}" target="_blank" class="btn-secondary text-sm">▶ Assistir</a>
+      <a
+        href="/watch/{{ video.id }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-secondary btn-sm"
+        aria-label="Assistir o vídeo {{ video.title }} em nova aba"
+      >
+        <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" opacity="0.7"/>
+        </svg>
+        Assistir
+      </a>
       {% endif %}
-      <form method="post" action="/admin/videos/{{ video.id }}/reprocess">
-        <button type="submit" class="btn-secondary text-sm">⟳ Reprocessar</button>
+
+      <!-- Reprocessar -->
+      <form
+        method="post"
+        action="/admin/videos/{{ video.id }}/reprocess"
+        style="display: inline;"
+      >
+        <button
+          type="submit"
+          class="btn btn-secondary btn-sm"
+          aria-label="Reprocessar o vídeo {{ video.title }}"
+        >
+          <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+          </svg>
+          Reprocessar
+        </button>
       </form>
-      <form method="post" action="/admin/videos/{{ video.id }}/delete"
-            onsubmit="return confirm('Excluir permanentemente?')">
-        <button type="submit" class="text-sm px-3 py-1.5 rounded-lg font-medium"
-                style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d;">
+
+      <!-- Excluir -->
+      <form
+        method="post"
+        action="/admin/videos/{{ video.id }}/delete"
+        style="display: inline;"
+        onsubmit="return confirm('Excluir permanentemente o vídeo &quot;{{ video.title }}&quot;? Esta ação não pode ser desfeita.')"
+      >
+        <button
+          type="submit"
+          class="btn btn-danger btn-sm"
+          aria-label="Excluir permanentemente o vídeo {{ video.title }}"
+        >
+          <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
           Excluir
         </button>
       </form>
+
     </div>
   </div>
 
-  <!-- Status -->
-  <div class="card p-5 flex flex-col gap-3">
-    <div class="flex items-center gap-3">
-      <span class="font-semibold text-sm" style="color: var(--wp-muted);">STATUS</span>
+  <!-- ── Status ──────────────────────────────────────── -->
+  <div class="card animate-fade-up delay-1" style="padding: 24px;">
+    <div class="section-label">
+      <span class="section-label-dot" style="background: var(--muted);" aria-hidden="true"></span>
+      Status
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
       {% if video.status.value == 'ready' %}
-        <span class="badge badge-ready">✓ Pronto</span>
+        <span class="badge badge-ready" aria-label="Status do vídeo: Pronto para reprodução">
+          <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Pronto
+        </span>
       {% elif video.status.value == 'processing' %}
-        <span class="badge badge-processing">⟳ Processando…</span>
+        <span class="badge badge-processing" aria-label="Status do vídeo: Processando">
+          <span class="spinner" aria-hidden="true"></span>
+          Processando…
+        </span>
       {% elif video.status.value == 'error' %}
-        <span class="badge badge-error">✗ Erro</span>
+        <span class="badge badge-error" aria-label="Status do vídeo: Erro no processamento">
+          <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
+            <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Erro
+        </span>
       {% else %}
-        <span class="badge badge-pending">○ Pendente</span>
+        <span class="badge badge-pending" aria-label="Status do vídeo: Aguardando processamento">
+          <svg aria-hidden="true" width="8" height="8" viewBox="0 0 8 8">
+            <circle cx="4" cy="4" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          </svg>
+          Pendente
+        </span>
+      {% endif %}
+
+      <!-- Recursos disponíveis -->
+      {% if video.libras_available %}
+        <span class="badge badge-libras" aria-label="Recurso disponível: Libras">Libras</span>
+      {% endif %}
+      {% if video.ad_available %}
+        <span class="badge badge-ad" aria-label="Recurso disponível: Audiodescrição">Audiodescrição</span>
+      {% endif %}
+      {% if video.subtitle_available %}
+        <span class="badge badge-sub" aria-label="Recurso disponível: Legenda">Legenda</span>
       {% endif %}
     </div>
+
+    <!-- Mensagem de erro -->
     {% if video.error_message %}
-    <pre class="text-xs p-3 rounded-lg overflow-auto" style="background:#0F0F1A; color:#fca5a5;">{{ video.error_message }}</pre>
-    {% endif %}
-    <div class="flex gap-2 flex-wrap">
-      {% if video.libras_available %}<span class="badge badge-libras">Libras</span>{% endif %}
-      {% if video.ad_available %}<span class="badge badge-ad">Audiodescrição</span>{% endif %}
-      {% if video.subtitle_available %}<span class="badge badge-sub">Legenda</span>{% endif %}
+    <div
+      role="alert"
+      aria-live="polite"
+      aria-label="Mensagem de erro do processamento"
+    >
+      <p style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--red); margin-bottom: 8px;">
+        Detalhe do erro
+      </p>
+      <div class="error-box">{{ video.error_message }}</div>
     </div>
+    {% endif %}
   </div>
 
-  <!-- Description -->
+  <!-- ── Descrição ───────────────────────────────────── -->
   {% if video.description %}
-  <div class="card p-5">
-    <p class="text-sm font-semibold mb-2" style="color: var(--wp-muted);">DESCRIÇÃO</p>
-    <p class="text-sm leading-relaxed">{{ video.description }}</p>
+  <div class="card animate-fade-up delay-2" style="padding: 24px;">
+    <div class="section-label">
+      <span class="section-label-dot" style="background: var(--violet);" aria-hidden="true"></span>
+      Descrição
+    </div>
+    <p style="font-size: 14px; line-height: 1.7; color: var(--muted-2);">{{ video.description }}</p>
   </div>
   {% endif %}
 
-  <!-- Assets -->
-  <div class="card p-5">
-    <p class="text-sm font-semibold mb-3" style="color: var(--wp-muted);">ASSETS</p>
-    <div class="flex flex-col gap-2">
+  <!-- ── Assets ──────────────────────────────────────── -->
+  <div class="card animate-fade-up delay-2" style="padding: 24px;">
+    <div class="section-label">
+      <span class="section-label-dot" style="background: var(--cyan);" aria-hidden="true"></span>
+      Assets
+    </div>
+
+    {% if video.assets %}
+    <div
+      role="table"
+      aria-label="Lista de assets do vídeo {{ video.title }}"
+      style="display: flex; flex-direction: column; gap: 8px;"
+    >
       {% for asset in video.assets %}
-      <div class="flex items-center justify-between text-sm p-3 rounded-lg" style="background: #0F0F1A;">
-        <div class="flex items-center gap-3">
-          <span class="font-mono text-xs px-2 py-0.5 rounded" style="background: var(--wp-border);">{{ asset.asset_type.value }}</span>
-          <span class="text-xs font-mono truncate max-w-xs" style="color: var(--wp-muted);">{{ asset.file_path or '—' }}</span>
-        </div>
-        {% if asset.status.value == 'ready' %}
-          <span class="badge badge-ready text-xs">✓</span>
-        {% elif asset.status.value == 'error' %}
-          <span class="badge badge-error text-xs" title="{{ asset.error_message }}">✗</span>
-        {% else %}
-          <span class="badge badge-pending text-xs">○</span>
-        {% endif %}
+      <div class="asset-row" role="row" aria-label="Asset {{ asset.asset_type.value }}: {{ asset.file_path or 'sem arquivo' }}">
+
+        <!-- Tipo -->
+        <span class="asset-type-tag" role="cell">{{ asset.asset_type.value }}</span>
+
+        <!-- Path -->
+        <span class="asset-path" role="cell" title="{{ asset.file_path or '—' }}">
+          {{ asset.file_path or '—' }}
+        </span>
+
+        <!-- Status do asset -->
+        <span role="cell">
+          {% if asset.status.value == 'ready' %}
+            <span
+              class="badge badge-ready"
+              aria-label="Asset pronto"
+              style="font-size: 10px; padding: 2px 8px;"
+            >
+              <svg aria-hidden="true" width="8" height="8" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              OK
+            </span>
+          {% elif asset.status.value == 'error' %}
+            <span
+              class="badge badge-error"
+              aria-label="Asset com erro{% if asset.error_message %}: {{ asset.error_message }}{% endif %}"
+              title="{{ asset.error_message or '' }}"
+              style="font-size: 10px; padding: 2px 8px; cursor: help;"
+            >
+              <svg aria-hidden="true" width="8" height="8" viewBox="0 0 12 12" fill="none">
+                <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              Erro
+            </span>
+          {% elif asset.status.value == 'processing' %}
+            <span
+              class="badge badge-processing"
+              aria-label="Asset em processamento"
+              style="font-size: 10px; padding: 2px 8px;"
+            >
+              <span class="spinner" aria-hidden="true"></span>
+              Proc.
+            </span>
+          {% else %}
+            <span
+              class="badge badge-pending"
+              aria-label="Asset pendente"
+              style="font-size: 10px; padding: 2px 8px;"
+            >
+              Pendente
+            </span>
+          {% endif %}
+        </span>
+
       </div>
       {% endfor %}
     </div>
+
+    {% else %}
+    <p style="font-size: 13px; color: var(--muted); text-align: center; padding: 24px 0;">
+      Nenhum asset registrado para este vídeo.
+    </p>
+    {% endif %}
   </div>
 
-  <!-- Logs -->
+  <!-- ── Logs ────────────────────────────────────────── -->
   {% if logs %}
-  <div class="card p-5">
-    <p class="text-sm font-semibold mb-3" style="color: var(--wp-muted);">LOGS DE PROCESSAMENTO</p>
-    {% for name, content in logs.items() %}
-    <details class="mb-2">
-      <summary class="cursor-pointer text-sm font-medium py-1">{{ name }}.log</summary>
-      <pre class="text-xs mt-2 p-3 rounded-lg overflow-auto max-h-48" style="background:#0F0F1A; color: var(--wp-muted);">{{ content }}</pre>
-    </details>
-    {% endfor %}
+  <div class="card animate-fade-up delay-3" style="padding: 24px;">
+    <div class="section-label">
+      <span class="section-label-dot" style="background: var(--gold);" aria-hidden="true"></span>
+      Logs de Processamento
+    </div>
+
+    <div
+      style="display: flex; flex-direction: column; gap: 8px;"
+      aria-label="Logs de processamento do vídeo"
+    >
+      {% for name, content in logs.items() %}
+      <details class="log-block">
+        <summary aria-label="Log do arquivo {{ name }}.log — clique para expandir">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted); flex-shrink:0;">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          {{ name }}.log
+          <svg class="log-chevron" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </summary>
+        <div
+          class="log-content"
+          role="region"
+          aria-label="Conteúdo do log {{ name }}"
+        >{{ content }}</div>
+      </details>
+      {% endfor %}
+    </div>
   </div>
   {% endif %}
 
-  <p class="text-xs" style="color: var(--wp-muted);">
-    Criado em {{ video.created_at.strftime('%d/%m/%Y às %H:%M') }} •
-    Atualizado em {{ video.updated_at.strftime('%d/%m/%Y às %H:%M') }}
-  </p>
+  <!-- ── Timestamps ──────────────────────────────────── -->
+  <footer class="animate-fade-up delay-4" style="padding: 4px 0 16px;">
+    <p style="font-size: 12px; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+      <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Criado em
+      <time datetime="{{ video.created_at.strftime('%Y-%m-%dT%H:%M') }}" style="color: var(--muted-2);">
+        {{ video.created_at.strftime('%d/%m/%Y às %H:%M') }}
+      </time>
+      <span aria-hidden="true" style="color: var(--border);">•</span>
+      Atualizado em
+      <time datetime="{{ video.updated_at.strftime('%Y-%m-%dT%H:%M') }}" style="color: var(--muted-2);">
+        {{ video.updated_at.strftime('%d/%m/%Y às %H:%M') }}
+      </time>
+    </p>
+  </footer>
+
 </div>
+</main>
 {% endblock %}
