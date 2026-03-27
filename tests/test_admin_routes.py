@@ -137,6 +137,81 @@ def test_create_video_with_all_assets(auth_client, tmp_path, monkeypatch):
         )
     assert r.status_code == 200
 
+def test_initiate_chunk_upload(auth_client):
+    r = auth_client.post(
+        "/admin/uploads/initiate",
+        data={"field_name": "video_file", "filename": "video.mp4"},
+    )
+    assert r.status_code == 200
+    payload = r.json()
+    assert "upload_id" in payload
+    assert payload["chunk_size"] == 64 * 1024 * 1024
+
+
+def test_create_video_from_chunk_upload(auth_client, tmp_path, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+    (tmp_path / "weplayer" / "videos").mkdir(parents=True, exist_ok=True)
+
+    def push_chunked_upload(field_name, filename, chunks):
+        init = auth_client.post(
+            "/admin/uploads/initiate",
+            data={"field_name": field_name, "filename": filename},
+        )
+        upload_id = init.json()["upload_id"]
+        for index, chunk in enumerate(chunks):
+            auth_client.post(
+                f"/admin/uploads/{upload_id}/chunk",
+                data={"chunk_index": str(index)},
+                files={"chunk": (f"{filename}.part", io.BytesIO(chunk), "application/octet-stream")},
+            )
+        return upload_id, len(chunks), filename
+
+    video_upload_id, video_chunk_total, video_filename = push_chunked_upload(
+        "video_file",
+        "video.mp4",
+        [b"chunk-a", b"chunk-b"],
+    )
+    libras_upload_id, libras_chunk_total, libras_filename = push_chunked_upload(
+        "libras_file",
+        "libras.mp4",
+        [b"libras-a", b"libras-b"],
+    )
+    ad_upload_id, ad_chunk_total, ad_filename = push_chunked_upload(
+        "ad_file",
+        "ad.mp3",
+        [b"ad-a", b"ad-b"],
+    )
+
+    with patch("app.routes.admin._process_video"):
+        r = auth_client.post(
+            "/admin/videos/new",
+            data={
+                "title": "Chunked Video",
+                "description": "big upload",
+                "video_chunk_upload_id": video_upload_id,
+                "video_chunk_total": str(video_chunk_total),
+                "video_chunk_filename": video_filename,
+                "libras_chunk_upload_id": libras_upload_id,
+                "libras_chunk_total": str(libras_chunk_total),
+                "libras_chunk_filename": libras_filename,
+                "ad_chunk_upload_id": ad_upload_id,
+                "ad_chunk_total": str(ad_chunk_total),
+                "ad_chunk_filename": ad_filename,
+            },
+        )
+
+    assert r.status_code == 200
+    saved_main = list((tmp_path / "weplayer" / "videos").glob("*/input/main.mp4"))
+    saved_libras = list((tmp_path / "weplayer" / "videos").glob("*/input/libras.mp4"))
+    saved_ad = list((tmp_path / "weplayer" / "videos").glob("*/input/ad.mp3"))
+    assert len(saved_main) == 1
+    assert len(saved_libras) == 1
+    assert len(saved_ad) == 1
+    assert saved_main[0].read_bytes() == b"chunk-achunk-b"
+    assert saved_libras[0].read_bytes() == b"libras-alibras-b"
+    assert saved_ad[0].read_bytes() == b"ad-aad-b"
+
 
 # â”€â”€ Video Detail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

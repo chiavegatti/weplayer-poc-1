@@ -4,26 +4,21 @@ services:
     container_name: weplayer
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${HOST_BIND:-127.0.0.1}:${HOST_PORT:-8000}:8000"
     environment:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
-      DATABASE_URL: sqlite:////app/data/weplayer.db
-      STORAGE_DIR: /app/storage/weplayer
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/persist/data/weplayer.db}
+      STORAGE_DIR: ${STORAGE_DIR:-/app/persist/storage/weplayer}
       DEBUG: ${DEBUG:-false}
     volumes:
-      - weplayer_data:/app/data
-      - weplayer_storage:/app/storage
+      - type: bind
+        source: ${APP_BIND_ROOT:-../weplayer-data}
+        target: /app/persist
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-
-volumes:
-  weplayer_data:
-    driver: local
-  weplayer_storage:
-    driver: local

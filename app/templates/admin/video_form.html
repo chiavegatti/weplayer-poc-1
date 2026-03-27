@@ -645,15 +645,104 @@ function setupPicker(inputId, nameKey) {
 
 ['video_file','cover_file','libras_file','ad_file','subtitle_file'].forEach(setupPicker);
 
-// ── XHR Upload with progress ────────────────────────────────────────────
+// ── Chunked upload (64 MB) ──────────────────────────────────────────────
 const form = document.querySelector('form[action="/admin/videos/new"]');
 const overlay = document.getElementById('upload-overlay');
+const CHUNK_SIZE = 64 * 1024 * 1024;
+const CHUNKABLE_INPUTS = [
+  { inputId: 'video_file', fieldName: 'video_file', metaPrefix: 'video', label: 'Vídeo principal', required: true },
+  { inputId: 'libras_file', fieldName: 'libras_file', metaPrefix: 'libras', label: 'Vídeo de Libras', required: false },
+  { inputId: 'ad_file', fieldName: 'ad_file', metaPrefix: 'ad', label: 'Audiodescrição', required: false },
+];
 
-form.addEventListener('submit', function(e) {
+function parseMaybeJson(text) {
+  try { return JSON.parse(text); } catch { return null; }
+}
+
+function sendXHR(url, buildBody, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    if (onProgress && xhr.upload) {
+      xhr.upload.addEventListener('progress', onProgress);
+    }
+    xhr.addEventListener('load', () => {
+      resolve({
+        status: xhr.status,
+        text: xhr.responseText,
+        json: parseMaybeJson(xhr.responseText),
+      });
+    });
+    xhr.addEventListener('error', () => reject(new Error('network')));
+    xhr.open('POST', url);
+    xhr.send(buildBody());
+  });
+}
+
+function updateOverlayProgress(loaded, total, startTime) {
+  const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
+  document.getElementById('ov-bar').style.width  = pct+'%';
+  document.getElementById('ov-pct').textContent  = pct+'%';
+  document.getElementById('ov-bytes').textContent = fmtBytes(loaded)+' / '+fmtBytes(total);
+  const elapsed = (Date.now() - startTime) / 1000;
+  const speed   = elapsed > 0 ? loaded / elapsed : 0;
+  const eta     = speed > 0 ? (total - loaded) / speed : 0;
+  document.getElementById('ov-speed').textContent = fmtBytes(speed)+'/s';
+  document.getElementById('ov-eta').textContent   = fmtTime(eta);
+}
+
+async function initiateChunkedUpload(fieldName, file) {
+  const response = await sendXHR('/admin/uploads/initiate', () => {
+    const fd = new FormData();
+    fd.append('field_name', fieldName);
+    fd.append('filename', file.name);
+    return fd;
+  });
+  if (response.status !== 200 || !response.json?.upload_id) {
+    throw new Error('init');
+  }
+  return response.json.upload_id;
+}
+
+async function uploadFileInChunks(config, file, startTime, totalBytes, uploadedBytesBase) {
+  const uploadId = await initiateChunkedUpload(config.fieldName, file);
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  let uploadedBytes = 0;
+
+  for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+    const start = chunkIndex * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const chunkBlob = file.slice(start, end);
+    const chunkSize = end - start;
+
+    const response = await sendXHR(`/admin/uploads/${uploadId}/chunk`, () => {
+      const fd = new FormData();
+      fd.append('chunk_index', String(chunkIndex));
+      fd.append('chunk', chunkBlob, `${file.name}.part`);
+      return fd;
+    }, function(e) {
+      if (!e.lengthComputable) return;
+      updateOverlayProgress(uploadedBytesBase + uploadedBytes + e.loaded, totalBytes, startTime);
+    });
+
+    if (response.status !== 200) {
+      throw new Error('chunk');
+    }
+    uploadedBytes += chunkSize;
+    updateOverlayProgress(uploadedBytesBase + uploadedBytes, totalBytes, startTime);
+  }
+
+  return { uploadId, totalChunks, filename: file.name };
+}
+
+form.addEventListener('submit', async function(e) {
   e.preventDefault();
 
   const mainFile = document.getElementById('video_file').files[0];
   if (!mainFile) { form.reportValidity(); return; }
+  const selectedUploads = CHUNKABLE_INPUTS
+    .map(config => ({ config, file: document.getElementById(config.inputId).files[0] || null }))
+    .filter(item => item.file);
+  const totalChunkBytes = selectedUploads.reduce((sum, item) => sum + item.file.size, 0);
 
   // Reset overlay states
   document.getElementById('state-upload').style.display = '';
@@ -667,30 +756,42 @@ form.addEventListener('submit', function(e) {
   document.getElementById('ov-eta').textContent   = '—';
   overlay.classList.add('active');
 
-  const xhr = new XMLHttpRequest();
-  const startTime = Date.now();
+  try {
+    const startTime = Date.now();
+    let uploadedBytes = 0;
+    const chunkResults = {};
 
-  xhr.upload.addEventListener('progress', function(e) {
-    if (!e.lengthComputable) return;
-    const pct = Math.round((e.loaded / e.total) * 100);
-    document.getElementById('ov-bar').style.width  = pct+'%';
-    document.getElementById('ov-pct').textContent  = pct+'%';
-    document.getElementById('ov-bytes').textContent = fmtBytes(e.loaded)+' / '+fmtBytes(e.total);
-    const elapsed = (Date.now() - startTime) / 1000;
-    const speed   = elapsed > 0 ? e.loaded / elapsed : 0;
-    const eta     = speed > 0 ? (e.total - e.loaded) / speed : 0;
-    document.getElementById('ov-speed').textContent = fmtBytes(speed)+'/s';
-    document.getElementById('ov-eta').textContent   = fmtTime(eta);
-  });
+    for (const item of selectedUploads) {
+      document.getElementById('ov-filename').textContent = `${item.config.label}: ${item.file.name}`;
+      chunkResults[item.config.metaPrefix] = await uploadFileInChunks(
+        item.config,
+        item.file,
+        startTime,
+        totalChunkBytes,
+        uploadedBytes,
+      );
+      uploadedBytes += item.file.size;
+    }
 
-  xhr.addEventListener('load', function() {
-    if (xhr.status === 422) {
+    const finalResponse = await sendXHR(form.action, () => {
+      const fd = new FormData(form);
+      for (const item of selectedUploads) {
+        fd.delete(item.config.fieldName);
+        const result = chunkResults[item.config.metaPrefix];
+        fd.append(`${item.config.metaPrefix}_chunk_upload_id`, result.uploadId);
+        fd.append(`${item.config.metaPrefix}_chunk_total`, String(result.totalChunks));
+        fd.append(`${item.config.metaPrefix}_chunk_filename`, result.filename);
+      }
+      return fd;
+    });
+
+    if (finalResponse.status === 422) {
       // Validation error — extract message from response HTML
       const parser = new DOMParser();
-      const doc = parser.parseFromString(xhr.responseText, 'text/html');
+      const doc = parser.parseFromString(finalResponse.text, 'text/html');
       const errEl = doc.querySelector('[role="alert"] span');
       showOverlayError(errEl ? errEl.textContent : 'Arquivo inválido. Verifique os formatos aceitos.');
-    } else if (xhr.status >= 500) {
+    } else if (finalResponse.status >= 500 || finalResponse.status < 200 || finalResponse.status >= 400) {
       showOverlayError('Erro interno no servidor. Tente novamente.');
     } else {
       // Success — show done state and redirect
@@ -698,14 +799,9 @@ form.addEventListener('submit', function(e) {
       document.getElementById('state-done').style.display   = '';
       setTimeout(() => { window.location.href = '/admin/dashboard?uploaded=1'; }, 900);
     }
-  });
-
-  xhr.addEventListener('error', function() {
+  } catch (_err) {
     showOverlayError('Falha na conexão. Verifique sua internet e tente novamente.');
-  });
-
-  xhr.open('POST', form.action);
-  xhr.send(new FormData(form));
+  }
 });
 
 function showOverlayError(msg) {

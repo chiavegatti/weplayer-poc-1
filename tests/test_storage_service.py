@@ -61,6 +61,25 @@ async def test_save_upload(tmp_path):
     assert dest.read_bytes() == b"chunk1chunk2"
 
 
+@pytest.mark.asyncio
+async def test_save_upload_chunk_and_assemble(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+    upload_a = AsyncMock(spec=UploadFile)
+    upload_a.read = AsyncMock(side_effect=[b"hello ", b""])
+    upload_b = AsyncMock(spec=UploadFile)
+    upload_b.read = AsyncMock(side_effect=[b"world", b""])
+
+    await storage.save_upload_chunk("upload-1", 0, upload_a)
+    await storage.save_upload_chunk("upload-1", 1, upload_b)
+
+    destination = tmp_path / "weplayer" / "videos" / "vid-1" / "input" / "main.mp4"
+    result = storage.assemble_upload_chunks("upload-1", destination, 2)
+
+    assert result == destination
+    assert destination.read_bytes() == b"hello world"
+    assert not storage.get_multipart_dir("upload-1").exists()
+
+
 def test_delete_video_storage(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
     vid_dir = settings.video_dir("vid-del")

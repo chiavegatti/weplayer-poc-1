@@ -3,7 +3,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, Request, UploadFile, File, BackgroundTasks, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
@@ -21,6 +21,42 @@ router = APIRouter()
 
 # Max 1 FFmpeg job at a time â€” protects the server under concurrent uploads
 _encode_semaphore = threading.Semaphore(1)
+
+CHUNKABLE_FIELDS = {
+    "video_file": storage.ALLOWED_VIDEO_EXTENSIONS,
+    "libras_file": storage.ALLOWED_VIDEO_EXTENSIONS,
+    "ad_file": storage.ALLOWED_AUDIO_EXTENSIONS,
+}
+
+
+async def _save_uploaded_asset(
+    upload_file: UploadFile | None,
+    chunk_upload_id: str | None,
+    chunk_total: int | None,
+    chunk_filename: str | None,
+    allowed_extensions: set[str],
+    destination: Path,
+    invalid_message: str,
+) -> Path | None:
+    upload_filename = (upload_file.filename if upload_file else chunk_filename) or ""
+    if not upload_filename:
+        return None
+
+    if not storage.validate_extension(upload_filename, allowed_extensions):
+        raise ValueError(invalid_message)
+
+    if upload_file is not None:
+        await save_upload(upload_file, destination)
+        return destination
+
+    if not chunk_upload_id or not chunk_total:
+        raise ValueError("Upload em chunks incompleto.")
+
+    try:
+        return storage.assemble_upload_chunks(chunk_upload_id, destination, chunk_total)
+    except FileNotFoundError:
+        storage.cleanup_multipart_upload(chunk_upload_id)
+        raise ValueError("Upload em chunks incompleto.")
 
 
 # â”€â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -104,7 +140,16 @@ async def create_video(
     background_tasks: BackgroundTasks,
     title: str = Form(...),
     description: str = Form(""),
-    video_file: UploadFile = File(...),
+    video_chunk_upload_id: str | None = Form(None),
+    video_chunk_total: int | None = Form(None),
+    video_chunk_filename: str | None = Form(None),
+    libras_chunk_upload_id: str | None = Form(None),
+    libras_chunk_total: int | None = Form(None),
+    libras_chunk_filename: str | None = Form(None),
+    ad_chunk_upload_id: str | None = Form(None),
+    ad_chunk_total: int | None = Form(None),
+    ad_chunk_filename: str | None = Form(None),
+    video_file: UploadFile | None = File(None),
     libras_file: UploadFile | None = File(None),
     ad_file: UploadFile | None = File(None),
     subtitle_file: UploadFile | None = File(None),
@@ -112,37 +157,54 @@ async def create_video(
     db: Session = Depends(get_db),
     _admin: str = Depends(get_current_admin),
 ):
-    # Validate main video
-    if not storage.validate_extension(video_file.filename or "", storage.ALLOWED_VIDEO_EXTENSIONS):
+    video_id = str(uuid.uuid4())
+    try:
+        main_filename = (video_file.filename if video_file else video_chunk_filename) or ""
+        if not main_filename:
+            raise ValueError("Envie o vídeo principal para continuar.")
+        main_dest = await _save_uploaded_asset(
+            video_file,
+            video_chunk_upload_id,
+            video_chunk_total,
+            video_chunk_filename,
+            storage.ALLOWED_VIDEO_EXTENSIONS,
+            storage.get_input_path(video_id, f"main{Path(main_filename).suffix}"),
+            "Arquivo de vídeo inválido. Use MP4, MOV, AVI, MKV ou WEBM.",
+        )
+        if main_dest is None:
+            raise ValueError("Envie o vídeo principal para continuar.")
+
+        libras_filename = (libras_file.filename if libras_file else libras_chunk_filename) or ""
+        libras_path = await _save_uploaded_asset(
+            libras_file,
+            libras_chunk_upload_id,
+            libras_chunk_total,
+            libras_chunk_filename,
+            storage.ALLOWED_VIDEO_EXTENSIONS,
+            storage.get_input_path(video_id, f"libras{Path(libras_filename).suffix}") if libras_filename else Path(),
+            "Vídeo de Libras inválido. Use MP4, MOV, AVI, MKV ou WEBM.",
+        )
+
+        ad_filename = (ad_file.filename if ad_file else ad_chunk_filename) or ""
+        ad_path = await _save_uploaded_asset(
+            ad_file,
+            ad_chunk_upload_id,
+            ad_chunk_total,
+            ad_chunk_filename,
+            storage.ALLOWED_AUDIO_EXTENSIONS,
+            storage.get_input_path(video_id, f"ad{Path(ad_filename).suffix}") if ad_filename else Path(),
+            "Arquivo de audiodescrição inválido. Use MP3, AAC, WAV, OGG ou M4A.",
+        )
+
+    except ValueError as exc:
         return templates.TemplateResponse(
             "admin/video_form.html",
-            {"request": request, "error": "Arquivo de vÃ­deo invÃ¡lido. Use MP4, MOV, AVI, MKV ou WEBM."},
+            {"request": request, "error": str(exc)},
             status_code=422,
         )
 
-    video_id = str(uuid.uuid4())
-
-    # Save main video
-    main_dest = storage.get_input_path(video_id, f"main{Path(video_file.filename or '.mp4').suffix}")
-    await save_upload(video_file, main_dest)
-
-    # Optional assets
-    libras_path: Path | None = None
-    ad_path: Path | None = None
     subtitle_path: Path | None = None
     cover_path: Path | None = None
-
-    if libras_file and libras_file.filename:
-        if storage.validate_extension(libras_file.filename, storage.ALLOWED_VIDEO_EXTENSIONS):
-            libras_path = storage.get_input_path(
-                video_id, f"libras{Path(libras_file.filename).suffix}"
-            )
-            await save_upload(libras_file, libras_path)
-
-    if ad_file and ad_file.filename:
-        if storage.validate_extension(ad_file.filename, storage.ALLOWED_AUDIO_EXTENSIONS):
-            ad_path = storage.get_input_path(video_id, f"ad{Path(ad_file.filename).suffix}")
-            await save_upload(ad_file, ad_path)
 
     if subtitle_file and subtitle_file.filename:
         if storage.validate_extension(subtitle_file.filename, storage.ALLOWED_SUBTITLE_EXTENSIONS):
@@ -191,6 +253,41 @@ async def create_video(
     )
 
     return RedirectResponse(url="/admin/dashboard?uploaded=1", status_code=302)
+
+
+@router.post("/uploads/initiate")
+def initiate_upload(
+    field_name: str = Form(...),
+    filename: str = Form(...),
+    _admin: str = Depends(get_current_admin),
+):
+    allowed_extensions = CHUNKABLE_FIELDS.get(field_name)
+    if not allowed_extensions:
+        raise HTTPException(status_code=422, detail="Campo de upload inválido.")
+    if not storage.validate_extension(filename, allowed_extensions):
+        raise HTTPException(status_code=422, detail="Arquivo incompatível com o campo informado.")
+
+    upload_id = str(uuid.uuid4())
+    storage.get_multipart_dir(upload_id).mkdir(parents=True, exist_ok=True)
+    return JSONResponse(
+        {
+            "upload_id": upload_id,
+            "chunk_size": storage.UPLOAD_CHUNK_SIZE,
+        }
+    )
+
+
+@router.post("/uploads/{upload_id}/chunk")
+async def upload_chunk(
+    upload_id: str,
+    chunk_index: int = Form(...),
+    chunk: UploadFile = File(...),
+    _admin: str = Depends(get_current_admin),
+):
+    if chunk_index < 0:
+        raise HTTPException(status_code=422, detail="Chunk inválido.")
+    await storage.save_upload_chunk(upload_id, chunk_index, chunk)
+    return JSONResponse({"ok": True, "chunk_index": chunk_index})
 
 
 def _add_asset(db: Session, video_id: str, asset_type: AssetType, path: Path) -> VideoAsset:
