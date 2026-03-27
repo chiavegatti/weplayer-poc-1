@@ -1,6 +1,7 @@
-import asyncio
+﻿import asyncio
 import functools
 import logging
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -12,12 +13,16 @@ logger = logging.getLogger(__name__)
 HLS_SEGMENT_TIME = 6
 HLS_PLAYLIST_TYPE = "vod"
 
+# Pre-processing caps before HLS generation
+MAIN_MAX_WIDTH = 1980
+MAIN_MAX_HEIGHT = 1080
+LIBRAS_MAX_WIDTH = 854
+LIBRAS_MAX_HEIGHT = 480
+
 # Libras PIP defaults (bottom-right corner, 25% of video width)
 LIBRAS_SCALE = "iw*0.25"
 LIBRAS_POSITION = "W-w-20:H-h-20"  # 20px margin from bottom-right
 
-
-# ── Hardware acceleration detection ──────────────────────────────────────────
 
 @functools.lru_cache(maxsize=1)
 def detect_hwaccel() -> str:
@@ -25,13 +30,24 @@ def detect_hwaccel() -> str:
     Detect the best available hardware encoder.
     Returns 'nvenc', 'vaapi', or 'cpu'. Cached after first call.
     """
-    # Test NVIDIA NVENC
     try:
         r = subprocess.run(
-            ["ffmpeg", "-loglevel", "quiet",
-             "-f", "lavfi", "-i", "nullsrc=s=64x64:d=0.1",
-             "-c:v", "h264_nvenc", "-f", "null", "-"],
-            capture_output=True, timeout=8,
+            [
+                "ffmpeg",
+                "-loglevel",
+                "quiet",
+                "-f",
+                "lavfi",
+                "-i",
+                "nullsrc=s=64x64:d=0.1",
+                "-c:v",
+                "h264_nvenc",
+                "-f",
+                "null",
+                "-",
+            ],
+            capture_output=True,
+            timeout=8,
         )
         if r.returncode == 0:
             logger.info("hwaccel: NVENC (NVIDIA GPU) detected")
@@ -39,15 +55,28 @@ def detect_hwaccel() -> str:
     except Exception:
         pass
 
-    # Test VAAPI (Intel / AMD iGPU on Linux with /dev/dri)
     try:
         r = subprocess.run(
-            ["ffmpeg", "-loglevel", "quiet",
-             "-vaapi_device", "/dev/dri/renderD128",
-             "-f", "lavfi", "-i", "nullsrc=s=64x64:d=0.1",
-             "-vf", "format=nv12,hwupload",
-             "-c:v", "h264_vaapi", "-f", "null", "-"],
-            capture_output=True, timeout=8,
+            [
+                "ffmpeg",
+                "-loglevel",
+                "quiet",
+                "-vaapi_device",
+                "/dev/dri/renderD128",
+                "-f",
+                "lavfi",
+                "-i",
+                "nullsrc=s=64x64:d=0.1",
+                "-vf",
+                "format=nv12,hwupload",
+                "-c:v",
+                "h264_vaapi",
+                "-f",
+                "null",
+                "-",
+            ],
+            capture_output=True,
+            timeout=8,
         )
         if r.returncode == 0:
             logger.info("hwaccel: VAAPI (Intel/AMD GPU) detected")
@@ -61,16 +90,13 @@ def detect_hwaccel() -> str:
 
 def _video_encode_args(hwaccel: str) -> list[str]:
     if hwaccel == "nvenc":
-        # p5 = fast NVENC preset, good quality
         return ["-c:v", "h264_nvenc", "-preset", "p5", "-cq", "23"]
     if hwaccel == "vaapi":
         return ["-c:v", "h264_vaapi", "-qp", "23"]
-    # veryfast: ~3x faster than 'fast', negligible quality loss for EAD content
     return ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"]
 
 
 def _run(cmd: list[str], log_path: Path | None = None) -> subprocess.CompletedProcess:
-    """Run a subprocess command, optionally writing output to a log file."""
     logger.debug("FFmpeg cmd: %s", " ".join(cmd))
     result = subprocess.run(
         cmd,
@@ -89,9 +115,12 @@ def _run(cmd: list[str], log_path: Path | None = None) -> subprocess.CompletedPr
 def _hls_output_args(output_dir: Path, playlist_name: str = "index.m3u8") -> list[str]:
     output_dir.mkdir(parents=True, exist_ok=True)
     return [
-        "-hls_time", str(HLS_SEGMENT_TIME),
-        "-hls_playlist_type", HLS_PLAYLIST_TYPE,
-        "-hls_segment_filename", str(output_dir / "seg%03d.ts"),
+        "-hls_time",
+        str(HLS_SEGMENT_TIME),
+        "-hls_playlist_type",
+        HLS_PLAYLIST_TYPE,
+        "-hls_segment_filename",
+        str(output_dir / "seg%03d.ts"),
         str(output_dir / playlist_name),
     ]
 
@@ -99,27 +128,101 @@ def _hls_output_args(output_dir: Path, playlist_name: str = "index.m3u8") -> lis
 def _normalize_mp4(
     input_path: Path,
     output_path: Path,
+    max_width: int,
     max_height: int,
     hw: str,
+    audio_bitrate: str,
     log_path: Path | None = None,
 ) -> None:
-    """
-    Pre-encode input to a compressed MP4 capped at max_height.
-    Preserves aspect ratio; never upscales. Used as a pre-processing step
-    to bring oversized sources (e.g. 4K Libras recordings) to a manageable
-    size before the main encode / overlay.
-    """
-    # scale=-2:min(ih\,MAX) — keeps width even, caps height, never upscales
-    vf = f"scale=-2:min(ih\\,{max_height})"
+    # Cap dimensions, preserve aspect ratio, and force even output dimensions.
+    vf = (
+        f"scale={max_width}:{max_height}:force_original_aspect_ratio=decrease,"
+        "scale=trunc(iw/2)*2:trunc(ih/2)*2"
+    )
     cmd = [
-        "ffmpeg", "-y", "-i", str(input_path),
+        "ffmpeg",
+        "-y",
+        "-i",
+        str(input_path),
         *_video_encode_args(hw),
-        "-vf", vf,
-        "-c:a", "aac", "-b:a", "96k",
-        "-movflags", "+faststart",
+        "-vf",
+        vf,
+        "-c:a",
+        "aac",
+        "-b:a",
+        audio_bitrate,
+        "-movflags",
+        "+faststart",
         str(output_path),
     ]
     _run(cmd, log_path)
+
+
+def preprocess_main_input(video_id: str, input_path: Path) -> Path:
+    """
+    Normalize the main source video before HLS processing.
+    Output is capped to 1980x1080 while preserving aspect ratio.
+    """
+    output_dir = settings.video_processed_dir(video_id, "source")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "main_1080p.mp4"
+    log_path = settings.video_logs_dir(video_id) / "main_norm.log"
+    hw = detect_hwaccel()
+    _normalize_mp4(
+        input_path=input_path,
+        output_path=output_path,
+        max_width=MAIN_MAX_WIDTH,
+        max_height=MAIN_MAX_HEIGHT,
+        hw=hw,
+        audio_bitrate="128k",
+        log_path=log_path,
+    )
+    return output_path
+
+
+def preprocess_libras_input(video_id: str, input_path: Path) -> Path:
+    """
+    Normalize Libras source before overlay to reduce processing cost.
+    """
+    output_dir = settings.video_processed_dir(video_id, "source")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "libras_480p.mp4"
+    log_path = settings.video_logs_dir(video_id) / "libras_norm.log"
+    hw = detect_hwaccel()
+    _normalize_mp4(
+        input_path=input_path,
+        output_path=output_path,
+        max_width=LIBRAS_MAX_WIDTH,
+        max_height=LIBRAS_MAX_HEIGHT,
+        hw=hw,
+        audio_bitrate="96k",
+        log_path=log_path,
+    )
+    return output_path
+
+
+def extract_thumbnail(video_id: str, input_path: Path) -> Path:
+    """Extract a representative frame for catalog thumbnail fallback."""
+    output_dir = settings.video_covers_dir(video_id)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "auto-thumb.jpg"
+    log_path = settings.video_logs_dir(video_id) / "thumb.log"
+
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-ss",
+        "00:00:02",
+        "-i",
+        str(input_path),
+        "-frames:v",
+        "1",
+        "-q:v",
+        "3",
+        str(output_path),
+    ]
+    _run(cmd, log_path)
+    return output_path
 
 
 def process_original_hls(video_id: str, input_path: Path) -> Path:
@@ -128,23 +231,37 @@ def process_original_hls(video_id: str, input_path: Path) -> Path:
     log_path = settings.video_logs_dir(video_id) / "original.log"
     hw = detect_hwaccel()
 
-    # scale=-2:min(ih\,1080) — respects source if already ≤ 1080p, never upscales
     vf_scale = "scale=-2:min(ih\\,1080)"
     if hw == "vaapi":
         cmd = [
-            "ffmpeg", "-y", "-vaapi_device", "/dev/dri/renderD128",
-            "-i", str(input_path),
-            "-vf", f"{vf_scale},format=nv12,hwupload",
+            "ffmpeg",
+            "-y",
+            "-vaapi_device",
+            "/dev/dri/renderD128",
+            "-i",
+            str(input_path),
+            "-vf",
+            f"{vf_scale},format=nv12,hwupload",
             *_video_encode_args(hw),
-            "-c:a", "aac", "-b:a", "128k",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
             *_hls_output_args(output_dir),
         ]
     else:
         cmd = [
-            "ffmpeg", "-y", "-i", str(input_path),
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(input_path),
             *_video_encode_args(hw),
-            "-c:a", "aac", "-b:a", "128k",
-            "-vf", vf_scale,
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            "-vf",
+            vf_scale,
             *_hls_output_args(output_dir),
         ]
     _run(cmd, log_path)
@@ -157,40 +274,49 @@ def process_libras_hls(
     libras_input: Path,
     position: str = LIBRAS_POSITION,
     scale: str = LIBRAS_SCALE,
+    pre_normalized: bool = False,
 ) -> Path:
     """
     Overlay Libras video (PIP) on main video and transcode to HLS.
-    Pre-normalizes the Libras input to 480p to avoid processing huge source
-    files (interpreters often upload 1080p/4K recordings that are larger
-    than the main video itself).
     """
     output_dir = settings.video_processed_dir(video_id, "libras")
-    log_path   = settings.video_logs_dir(video_id) / "libras.log"
+    log_path = settings.video_logs_dir(video_id) / "libras.log"
     hw = detect_hwaccel()
 
-    # ── Pre-normalize Libras to 480p ─────────────────────────────────────
-    # Libras is displayed as ~25% PIP — 480p is more than enough and
-    # can reduce a 800 MB+ source to ~60 MB, cutting overlay time by 80%.
-    libras_norm = libras_input.parent / (libras_input.stem + "_480p.mp4")
-    if not libras_norm.exists():
-        _normalize_mp4(
-            libras_input, libras_norm, max_height=480, hw=hw,
-            log_path=settings.video_logs_dir(video_id) / "libras_norm.log",
-        )
+    if pre_normalized:
+        libras_norm = libras_input
+    else:
+        libras_norm = libras_input.parent / (libras_input.stem + "_480p.mp4")
+        if not libras_norm.exists():
+            _normalize_mp4(
+                input_path=libras_input,
+                output_path=libras_norm,
+                max_width=LIBRAS_MAX_WIDTH,
+                max_height=LIBRAS_MAX_HEIGHT,
+                hw=hw,
+                audio_bitrate="96k",
+                log_path=settings.video_logs_dir(video_id) / "libras_norm.log",
+            )
 
-    # ── Overlay (PIP) ────────────────────────────────────────────────────
-    filter_complex = (
-        f"[1:v]scale={scale}:-2[libras];"
-        f"[0:v][libras]overlay={position}[out]"
-    )
+    filter_complex = f"[1:v]scale={scale}:-2[libras];[0:v][libras]overlay={position}[out]"
     cmd = [
-        "ffmpeg", "-y",
-        "-i", str(main_input),
-        "-i", str(libras_norm),
-        "-filter_complex", filter_complex,
-        "-map", "[out]", "-map", "0:a",
+        "ffmpeg",
+        "-y",
+        "-i",
+        str(main_input),
+        "-i",
+        str(libras_norm),
+        "-filter_complex",
+        filter_complex,
+        "-map",
+        "[out]",
+        "-map",
+        "0:a",
         *_video_encode_args(hw),
-        "-c:a", "aac", "-b:a", "128k",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k",
         *_hls_output_args(output_dir),
     ]
     _run(cmd, log_path)
@@ -212,26 +338,50 @@ def process_ad_hls(video_id: str, main_input: Path, ad_input: Path) -> Path:
     vf_scale = "scale=-2:min(ih\\,1080)"
     if hw == "vaapi":
         cmd = [
-            "ffmpeg", "-y", "-vaapi_device", "/dev/dri/renderD128",
-            "-i", str(main_input),
-            "-i", str(ad_input),
-            "-filter_complex", filter_complex,
-            "-map", "0:v", "-map", "[aout]",
-            "-vf", f"{vf_scale},format=nv12,hwupload",
+            "ffmpeg",
+            "-y",
+            "-vaapi_device",
+            "/dev/dri/renderD128",
+            "-i",
+            str(main_input),
+            "-i",
+            str(ad_input),
+            "-filter_complex",
+            filter_complex,
+            "-map",
+            "0:v",
+            "-map",
+            "[aout]",
+            "-vf",
+            f"{vf_scale},format=nv12,hwupload",
             *_video_encode_args(hw),
-            "-c:a", "aac", "-b:a", "128k",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
             *_hls_output_args(output_dir),
         ]
     else:
         cmd = [
-            "ffmpeg", "-y",
-            "-i", str(main_input),
-            "-i", str(ad_input),
-            "-filter_complex", filter_complex,
-            "-map", "0:v", "-map", "[aout]",
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(main_input),
+            "-i",
+            str(ad_input),
+            "-filter_complex",
+            filter_complex,
+            "-map",
+            "0:v",
+            "-map",
+            "[aout]",
             *_video_encode_args(hw),
-            "-c:a", "aac", "-b:a", "128k",
-            "-vf", vf_scale,
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            "-vf",
+            vf_scale,
             *_hls_output_args(output_dir),
         ]
     _run(cmd, log_path)
@@ -245,7 +395,6 @@ def process_subtitle_vtt(video_id: str, srt_input: Path) -> Path:
     output_path = output_dir / "subtitle.vtt"
 
     if srt_input.suffix.lower() == ".vtt":
-        import shutil
         shutil.copy2(srt_input, output_path)
         return output_path
 
@@ -273,14 +422,13 @@ async def run_processing_pipeline(
     async def run_in_thread(fn, *args):
         return await loop.run_in_executor(None, fn, *args)
 
-    # Always process original
     results["hls_original"] = await run_in_thread(process_original_hls, video_id, main_input)
     if on_progress:
         await on_progress("original_done")
 
     if libras_input:
         results["hls_libras"] = await run_in_thread(
-            process_libras_hls, video_id, main_input, libras_input
+            process_libras_hls, video_id, main_input, libras_input, LIBRAS_POSITION, LIBRAS_SCALE, True
         )
         if on_progress:
             await on_progress("libras_done")
@@ -291,9 +439,7 @@ async def run_processing_pipeline(
             await on_progress("ad_done")
 
     if subtitle_input:
-        results["subtitle_vtt"] = await run_in_thread(
-            process_subtitle_vtt, video_id, subtitle_input
-        )
+        results["subtitle_vtt"] = await run_in_thread(process_subtitle_vtt, video_id, subtitle_input)
         if on_progress:
             await on_progress("subtitle_done")
 

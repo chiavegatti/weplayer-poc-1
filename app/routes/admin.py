@@ -272,7 +272,9 @@ def reprocess_video(
     def _get_input_path(asset_type: AssetType) -> Path | None:
         for a in video.assets:
             if a.asset_type == asset_type and a.file_path:
-                p = Path(a.file_path)
+                p = storage.resolve_media_path(a.file_path)
+                if p is None:
+                    return None
                 return p if p.exists() else None
         return None
 
@@ -336,10 +338,33 @@ def _process_video(
             db.commit()
 
             results = {}
+            normalized_main = main_input
+            normalized_libras = libras_input
+
+            # Always normalize main source before HLS generation.
+            try:
+                normalized_main = ffmpeg.preprocess_main_input(video_id, main_input)
+                _set_input_asset_path(db, video_id, AssetType.original_input, normalized_main)
+                if main_input != normalized_main and main_input.exists():
+                    main_input.unlink()
+            except Exception as exc:
+                _fail_video(db, video_id, f"Erro na normalizacao do video principal: {exc}")
+                return
+
+            # Always normalize Libras source before overlay processing.
+            if libras_input:
+                try:
+                    normalized_libras = ffmpeg.preprocess_libras_input(video_id, libras_input)
+                    _set_input_asset_path(db, video_id, AssetType.libras_input, normalized_libras)
+                    if libras_input != normalized_libras and libras_input.exists():
+                        libras_input.unlink()
+                except Exception as exc:
+                    _upsert_asset(db, video_id, AssetType.hls_libras, None, error=str(exc))
+                    normalized_libras = None
 
             # Original HLS
             try:
-                manifest = ffmpeg.process_original_hls(video_id, main_input)
+                manifest = ffmpeg.process_original_hls(video_id, normalized_main)
                 _upsert_asset(db, video_id, AssetType.hls_original, manifest)
                 results["original"] = True
             except Exception as exc:
@@ -347,9 +372,14 @@ def _process_video(
                 return
 
             # Libras HLS
-            if libras_input:
+            if normalized_libras:
                 try:
-                    manifest = ffmpeg.process_libras_hls(video_id, main_input, libras_input)
+                    manifest = ffmpeg.process_libras_hls(
+                        video_id,
+                        normalized_main,
+                        normalized_libras,
+                        pre_normalized=True,
+                    )
                     _upsert_asset(db, video_id, AssetType.hls_libras, manifest)
                     results["libras"] = True
                 except Exception as exc:
@@ -358,7 +388,7 @@ def _process_video(
             # AD HLS
             if ad_input:
                 try:
-                    manifest = ffmpeg.process_ad_hls(video_id, main_input, ad_input)
+                    manifest = ffmpeg.process_ad_hls(video_id, normalized_main, ad_input)
                     _upsert_asset(db, video_id, AssetType.hls_ad, manifest)
                     results["ad"] = True
                 except Exception as exc:
@@ -373,6 +403,14 @@ def _process_video(
                 except Exception as exc:
                     _upsert_asset(db, video_id, AssetType.subtitle_vtt, None, error=str(exc))
 
+            # Auto-thumbnail fallback when cover is not provided.
+            if not video.cover_path:
+                try:
+                    thumb_path = ffmpeg.extract_thumbnail(video_id, normalized_main)
+                    video.cover_path = storage.get_relative_media_path(thumb_path)
+                except Exception:
+                    pass
+
             # Refresh video object and update flags
             db.expire(video)
             video = db.query(Video).get(video_id)
@@ -386,6 +424,17 @@ def _process_video(
             _fail_video(db, video_id, str(exc))
         finally:
             db.close()
+
+
+def _set_input_asset_path(db: Session, video_id: str, asset_type: AssetType, path: Path) -> None:
+    asset = db.query(VideoAsset).filter_by(video_id=video_id, asset_type=asset_type).first()
+    if not asset:
+        asset = VideoAsset(video_id=video_id, asset_type=asset_type)
+        db.add(asset)
+    asset.file_path = str(path)
+    asset.status = AssetStatus.ready
+    asset.error_message = None
+    db.commit()
 
 
 def _upsert_asset(

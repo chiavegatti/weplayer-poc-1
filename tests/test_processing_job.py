@@ -111,7 +111,11 @@ def test_process_video_success(tmp_path, monkeypatch):
     fake_manifest = tmp_path / "index.m3u8"
     fake_manifest.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.routes.admin._upsert_asset"):
         _process_video(
             video_id=vid_id,
@@ -136,7 +140,11 @@ def test_process_video_ffmpeg_failure(tmp_path, monkeypatch):
     make_video_in_db(db, vid_id)
     db.close()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", side_effect=RuntimeError("boom")):
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.process_original_hls", side_effect=RuntimeError("boom")):
         _process_video(
             video_id=vid_id,
             main_input=tmp_path / "main.mp4",
@@ -164,7 +172,14 @@ def test_process_video_libras_failure_does_not_stop_pipeline(tmp_path, monkeypat
     fake_manifest = tmp_path / "index.m3u8"
     fake_manifest.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+    fake_libras = tmp_path / "libras_480p.mp4"
+    fake_libras.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.preprocess_libras_input", return_value=fake_libras), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_libras_hls", side_effect=RuntimeError("libras fail")), \
          patch("app.routes.admin._upsert_asset"):
         _process_video(
@@ -209,7 +224,11 @@ def test_process_video_ad_failure_continues(tmp_path, monkeypatch):
     fake_manifest = tmp_path / "index.m3u8"
     fake_manifest.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_ad_hls", side_effect=RuntimeError("ad fail")), \
          patch("app.routes.admin._upsert_asset"):
         _process_video(
@@ -240,7 +259,11 @@ def test_process_video_subtitle_failure_continues(tmp_path, monkeypatch):
     fake_manifest = tmp_path / "index.m3u8"
     fake_manifest.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_subtitle_vtt", side_effect=RuntimeError("sub fail")), \
          patch("app.routes.admin._upsert_asset"):
         _process_video(
@@ -273,7 +296,14 @@ def test_process_video_with_all_assets_success(tmp_path, monkeypatch):
     fake_manifest.touch()
     fake_vtt.touch()
 
-    with patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
+    fake_main = tmp_path / "main_1080p.mp4"
+    fake_main.touch()
+    fake_libras = tmp_path / "libras_480p.mp4"
+    fake_libras.touch()
+
+    with patch("app.services.ffmpeg_service.preprocess_main_input", return_value=fake_main), \
+         patch("app.services.ffmpeg_service.preprocess_libras_input", return_value=fake_libras), \
+         patch("app.services.ffmpeg_service.process_original_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_libras_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_ad_hls", return_value=fake_manifest), \
          patch("app.services.ffmpeg_service.process_subtitle_vtt", return_value=fake_vtt), \

@@ -90,3 +90,21 @@ def test_get_relative_media_path_outside_storage(tmp_path, monkeypatch):
     abs_path = Path("/some/other/path/file.m3u8")
     result = storage.get_relative_media_path(abs_path)
     assert "/" in result
+
+
+def test_resolve_media_path_relative(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+    resolved = storage.resolve_media_path("videos/abc/index.m3u8")
+    assert resolved == (tmp_path / "weplayer" / "videos" / "abc" / "index.m3u8")
+
+
+def test_resolve_media_path_absolute(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+    absolute = tmp_path / "x" / "file.txt"
+    resolved = storage.resolve_media_path(str(absolute))
+    assert resolved == absolute
+
+
+def test_resolve_media_path_none(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+    assert storage.resolve_media_path(None) is None
