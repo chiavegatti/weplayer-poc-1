@@ -1,0 +1,15 @@
+.git/
+.env
+*.db
+*.db-journal
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+requirements-dev.txt
+pytest.ini
+storage/weplayer/videos/*/
+ai.docs/
