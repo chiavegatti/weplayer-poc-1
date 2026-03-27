@@ -177,15 +177,17 @@
 
 #settings-panel {
   position: absolute;
-  right: 16px;
-  bottom: 86px;
+  left: 8px;
+  top: 8px;
   width: 260px;
+  max-width: min(300px, calc(100% - 16px));
   background: rgba(8, 11, 20, 0.96);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px;
   display: none;
-  z-index: 5;
+  z-index: 12;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.45);
 }
 #settings-panel.open { display: block; }
 .settings-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
@@ -460,38 +462,39 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
-    <div id="settings-panel" aria-label="Configuracoes do player">
-      <div class="settings-row">
-        <label for="pref-speed">Velocidade</label>
-        <select id="pref-speed" onchange="onPrefSpeedChange(this.value)">
-          <option value="0.75">0.75x</option>
-          <option value="1">1x</option>
-          <option value="1.25">1.25x</option>
-          <option value="1.5">1.5x</option>
-          <option value="2">2x</option>
-        </select>
-      </div>
-      <div class="settings-row">
-        <label for="pref-size">Tamanho da legenda</label>
-        <select id="pref-size" onchange="onPrefSizeChange(this.value)">
-          <option value="80">Pequeno</option>
-          <option value="100">Medio</option>
-          <option value="125">Grande</option>
-        </select>
-      </div>
-      <div class="settings-color-grid">
-        <div class="settings-row">
-          <label for="pref-text-color">Cor texto</label>
-          <input id="pref-text-color" type="color" onchange="onPrefTextColorChange(this.value)" />
+
+        <div id="settings-panel" aria-label="Configuracoes do player">
+          <div class="settings-row">
+            <label for="pref-speed">Velocidade</label>
+            <select id="pref-speed" onchange="onPrefSpeedChange(this.value)">
+              <option value="0.75">0.75x</option>
+              <option value="1">1x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label for="pref-size">Tamanho da legenda</label>
+            <select id="pref-size" onchange="onPrefSizeChange(this.value)">
+              <option value="80">Pequeno</option>
+              <option value="100">Medio</option>
+              <option value="125">Grande</option>
+            </select>
+          </div>
+          <div class="settings-color-grid">
+            <div class="settings-row">
+              <label for="pref-text-color">Cor texto</label>
+              <input id="pref-text-color" type="color" onchange="onPrefTextColorChange(this.value)" />
+            </div>
+            <div class="settings-row">
+              <label for="pref-bg-color">Cor fundo</label>
+              <input id="pref-bg-color" type="color" onchange="onPrefBgColorChange(this.value)" />
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="resetPlayerPrefs()">Restaurar padrao</button>
         </div>
-        <div class="settings-row">
-          <label for="pref-bg-color">Cor fundo</label>
-          <input id="pref-bg-color" type="color" onchange="onPrefBgColorChange(this.value)" />
-        </div>
       </div>
-      <button class="btn btn-ghost btn-sm" type="button" onclick="resetPlayerPrefs()">Restaurar padrao</button>
     </div>
 
     <!-- Video info -->
@@ -650,6 +653,7 @@ const buffering = document.getElementById('buffering');
 const flash     = document.getElementById('center-flash');
 const streamLbl = document.getElementById('stream-label');
 const settingsPanel = document.getElementById('settings-panel');
+const settingsBtn = document.getElementById('settings-btn');
 
 /* ─── Init ──────────────────────────────────────────── */
 async function initPlayer() {
@@ -769,8 +773,42 @@ function toggleMute() {
 function toggleSettingsPanel(event) {
   if (event) event.stopPropagation();
   if (!settingsPanel) return;
-  settingsPanel.classList.toggle('open');
+  const opening = !settingsPanel.classList.contains('open');
+  settingsPanel.classList.toggle('open', opening);
   wrap.classList.add('show-controls');
+  wrap.classList.remove('fullscreen-idle');
+  if (opening) {
+    requestAnimationFrame(positionSettingsPanel);
+  } else {
+    scheduleControlsHide();
+  }
+}
+
+function positionSettingsPanel() {
+  if (!settingsPanel || !settingsBtn || !wrap) return;
+
+  const wrapRect = wrap.getBoundingClientRect();
+  const btnRect = settingsBtn.getBoundingClientRect();
+  const panelW = settingsPanel.offsetWidth || 260;
+  const panelH = settingsPanel.offsetHeight || 220;
+  const gap = 10;
+  const edge = 8;
+
+  let left = btnRect.right - wrapRect.left - panelW;
+  let top = btnRect.top - wrapRect.top - panelH - gap;
+
+  if (left < edge) left = edge;
+  const maxLeft = Math.max(edge, wrapRect.width - panelW - edge);
+  if (left > maxLeft) left = maxLeft;
+
+  if (top < edge) {
+    top = btnRect.bottom - wrapRect.top + gap;
+  }
+  const maxTop = Math.max(edge, wrapRect.height - panelH - edge);
+  if (top > maxTop) top = maxTop;
+
+  settingsPanel.style.left = Math.round(left) + 'px';
+  settingsPanel.style.top = Math.round(top) + 'px';
 }
 function toggleFullscreen() {
   if (!document.fullscreenElement) wrap.requestFullscreen();
@@ -851,13 +889,22 @@ document.addEventListener('fullscreenchange', () => {
   }
   wrap.classList.add('show-controls');
   wrap.classList.remove('fullscreen-idle');
+  if (settingsPanel && settingsPanel.classList.contains('open')) {
+    requestAnimationFrame(positionSettingsPanel);
+  }
   scheduleControlsHide();
 });
 document.addEventListener('click', e => {
   if (settingsPanel && settingsPanel.classList.contains('open')) {
-    if (!settingsPanel.contains(e.target) && e.target.id !== 'settings-btn') {
+    if (!settingsPanel.contains(e.target) && !(settingsBtn && settingsBtn.contains(e.target))) {
       settingsPanel.classList.remove('open');
+      scheduleControlsHide();
     }
+  }
+});
+window.addEventListener('resize', () => {
+  if (settingsPanel && settingsPanel.classList.contains('open')) {
+    positionSettingsPanel();
   }
 });
 
@@ -967,4 +1014,3 @@ function restorePrefs() {
 initPlayer();
 </script>
 {% endblock %}
-
