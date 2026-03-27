@@ -1,5 +1,5 @@
-﻿{% extends "base.html" %}
-{% block title %}{{ video.title }} â€” WePlayer Admin{% endblock %}
+{% extends "base.html" %}
+{% block title %}{{ video.title }} — WePlayer Admin{% endblock %}
 
 {% block head %}
 <style>
@@ -176,7 +176,132 @@
     vertical-align: middle;
   }
 
-  /* â”€â”€ Mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted-2);
+    margin-bottom: 8px;
+  }
+
+  .field-hint {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 6px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font-body);
+  }
+  .form-input:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 4px rgba(34,211,238,0.10);
+  }
+  textarea.form-input {
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  .upload-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .file-field {
+    position: relative;
+  }
+  .file-drop {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: rgba(255,255,255,0.02);
+    min-height: 74px;
+  }
+  .file-drop:hover {
+    border-color: rgba(34,211,238,0.3);
+    background: rgba(34,211,238,0.03);
+  }
+  .file-drop:has(input:focus-visible) {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-color: var(--cyan);
+  }
+  .file-drop input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .file-drop-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-2);
+    flex-shrink: 0;
+  }
+  .file-drop-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .file-drop-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .file-drop-text span {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .file-drop.file-selected {
+    border-color: rgba(52,211,153,0.4);
+    background: rgba(52,211,153,0.04);
+  }
+  .file-drop.file-selected .file-drop-icon {
+    background: rgba(52,211,153,0.12);
+    border-color: rgba(52,211,153,0.25);
+    color: #34D399;
+  }
+  .file-drop.file-selected .file-drop-text span {
+    color: var(--muted-2);
+  }
+  .file-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid rgba(52,211,153,0.25);
+    flex-shrink: 0;
+  }
+
+  /* ── Mobile ─────────────────────────────────────────── */
   @media (max-width: 640px) {
     /* Assets table: scrollable */
     .card { overflow-x: auto; }
@@ -191,6 +316,7 @@
     .detail-actions { flex-wrap: wrap; }
     /* ID chip: hide on very small */
     .id-chip { display: none; }
+    .upload-grid { grid-template-columns: 1fr; }
   }
 </style>
 {% endblock %}
@@ -216,7 +342,7 @@
 <main id="main-content">
 <div style="max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
 
-  <!-- â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <!-- ── Header ──────────────────────────────────────── -->
   <div class="animate-fade-up" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 0;">
       <h1 style="font-size: 24px; font-weight: 800; font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.2; word-break: break-word;">
@@ -227,7 +353,7 @@
       </p>
     </div>
 
-    <!-- BotÃµes de aÃ§Ã£o -->
+    <!-- Botões de ação -->
     <div style="display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; align-items: center;">
 
       {% if video.status.value == 'ready' %}
@@ -236,7 +362,7 @@
         target="_blank"
         rel="noopener noreferrer"
         class="btn btn-secondary btn-sm"
-        aria-label="Assistir o vÃ­deo {{ video.title }} em nova aba"
+        aria-label="Assistir o vídeo {{ video.title }} em nova aba"
       >
         <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" opacity="0.7"/>
@@ -254,7 +380,7 @@
         <button
           type="submit"
           class="btn btn-secondary btn-sm"
-          aria-label="Reprocessar o vÃ­deo {{ video.title }}"
+          aria-label="Reprocessar o vídeo {{ video.title }}"
         >
           <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="1 4 1 10 7 10"/>
@@ -269,12 +395,12 @@
         method="post"
         action="/admin/videos/{{ video.id }}/delete"
         style="display: inline;"
-        onsubmit="return confirm('Excluir permanentemente o vÃ­deo &quot;{{ video.title }}&quot;? Esta aÃ§Ã£o nÃ£o pode ser desfeita.')"
+        onsubmit="return confirm('Excluir permanentemente o vídeo &quot;{{ video.title }}&quot;? Esta ação não pode ser desfeita.')"
       >
         <button
           type="submit"
           class="btn btn-danger btn-sm"
-          aria-label="Excluir permanentemente o vÃ­deo {{ video.title }}"
+          aria-label="Excluir permanentemente o vídeo {{ video.title }}"
         >
           <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="3 6 5 6 21 6"/>
@@ -289,7 +415,7 @@
     </div>
   </div>
 
-  <!-- â”€â”€ Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <!-- ── Status ──────────────────────────────────────── -->
   <div class="card animate-fade-up delay-1" style="padding: 24px;">
     <div class="section-label">
       <span class="section-label-dot" style="background: var(--muted);" aria-hidden="true"></span>
@@ -298,26 +424,26 @@
 
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
       {% if video.status.value == 'ready' %}
-        <span class="badge badge-ready" aria-label="Status do vÃ­deo: Pronto para reproduÃ§Ã£o">
+        <span class="badge badge-ready" aria-label="Status do vídeo: Pronto para reprodução">
           <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
             <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           Pronto
         </span>
       {% elif video.status.value == 'processing' %}
-        <span class="badge badge-processing" aria-label="Status do vÃ­deo: Processando">
+        <span class="badge badge-processing" aria-label="Status do vídeo: Processando">
           <span class="spinner" aria-hidden="true"></span>
-          Processandoâ€¦
+          Processando…
         </span>
       {% elif video.status.value == 'error' %}
-        <span class="badge badge-error" aria-label="Status do vÃ­deo: Erro no processamento">
+        <span class="badge badge-error" aria-label="Status do vídeo: Erro no processamento">
           <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
             <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
           Erro
         </span>
       {% else %}
-        <span class="badge badge-pending" aria-label="Status do vÃ­deo: Aguardando processamento">
+        <span class="badge badge-pending" aria-label="Status do vídeo: Aguardando processamento">
           <svg aria-hidden="true" width="8" height="8" viewBox="0 0 8 8">
             <circle cx="4" cy="4" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
           </svg>
@@ -325,15 +451,15 @@
         </span>
       {% endif %}
 
-      <!-- Recursos disponÃ­veis -->
+      <!-- Recursos disponíveis -->
       {% if video.libras_available %}
-        <span class="badge badge-libras" aria-label="Recurso disponÃ­vel: Libras">Libras</span>
+        <span class="badge badge-libras" aria-label="Recurso disponível: Libras">Libras</span>
       {% endif %}
       {% if video.ad_available %}
-        <span class="badge badge-ad" aria-label="Recurso disponÃ­vel: AudiodescriÃ§Ã£o">AudiodescriÃ§Ã£o</span>
+        <span class="badge badge-ad" aria-label="Recurso disponível: Audiodescrição">Audiodescrição</span>
       {% endif %}
       {% if video.subtitle_available %}
-        <span class="badge badge-sub" aria-label="Recurso disponÃ­vel: Legenda">Legenda</span>
+        <span class="badge badge-sub" aria-label="Recurso disponível: Legenda">Legenda</span>
       {% endif %}
     </div>
 
@@ -352,61 +478,129 @@
     {% endif %}
   </div>
 
-  <!-- â”€â”€ DescriÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <!-- ── Descrição ───────────────────────────────────── -->
 
   <div class="card animate-fade-up delay-2" style="padding: 24px;">
     <div class="section-label">
       <span class="section-label-dot" style="background: var(--gold);" aria-hidden="true"></span>
-      Atualizar Conteudo
+      Atualizar Conteúdo
     </div>
 
     {% if request.query_params.get('updated') %}
       <div class="badge badge-ready" style="margin-bottom: 14px;">
-        Alteracoes salvas{% if request.query_params.get('reprocess') %} e reprocessamento iniciado{% endif %}.
+        Alterações salvas{% if request.query_params.get('reprocess') %} e reprocessamento iniciado{% endif %}.
       </div>
     {% endif %}
     {% if update_error %}
       <div class="error-box" style="margin-bottom: 14px;">{{ update_error }}</div>
     {% endif %}
 
-    <form method="post" action="/admin/videos/{{ video.id }}/update" enctype="multipart/form-data"
-          style="display:flex; flex-direction:column; gap:12px;">
+        <form method="post" action="/admin/videos/{{ video.id }}/update" enctype="multipart/form-data"
+          style="display:flex; flex-direction:column; gap:16px;">
       <div>
-        <label for="title" style="font-size:12px; color: var(--muted);">Titulo</label>
-        <input id="title" name="title" class="input" value="{{ video.title }}" required />
+        <label for="title" class="field-label">Título</label>
+        <input id="title" name="title" class="form-input" value="{{ video.title }}" required />
       </div>
       <div>
-        <label for="description" style="font-size:12px; color: var(--muted);">Descricao</label>
-        <textarea id="description" name="description" class="input" rows="3">{{ video.description or '' }}</textarea>
+        <label for="description" class="field-label">Descrição</label>
+        <textarea id="description" name="description" class="form-input" rows="4">{{ video.description or '' }}</textarea>
       </div>
 
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:10px;">
-        <div>
-          <label for="video_file" style="font-size:12px; color: var(--muted);">Trocar video principal</label>
-          <input id="video_file" name="video_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" class="input" />
+      <div class="upload-grid">
+        <div class="file-field">
+          <label for="video_file" class="field-label">Trocar vídeo principal</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="video_file" name="video_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <polyline points="10 8 16 12 10 16 10 8"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar novo vídeo</strong>
+              <span>MP4, MOV, AVI, MKV ou WEBM</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <label for="libras_file" style="font-size:12px; color: var(--muted);">Trocar Libras</label>
-          <input id="libras_file" name="libras_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" class="input" />
+
+        <div class="file-field">
+          <label for="cover_file" class="field-label">Trocar capa</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="cover_file" name="cover_file" type="file" accept=".jpg,.jpeg,.png,.webp" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar nova capa</strong>
+              <span>JPG, PNG ou WEBP</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <label for="ad_file" style="font-size:12px; color: var(--muted);">Trocar AD</label>
-          <input id="ad_file" name="ad_file" type="file" accept=".mp3,.aac,.wav,.ogg,.m4a" class="input" />
+
+        <div class="file-field">
+          <label for="libras_file" class="field-label">Trocar Libras</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="libras_file" name="libras_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path d="M8 19h8"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar vídeo de Libras</strong>
+              <span>Opcional</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <label for="subtitle_file" style="font-size:12px; color: var(--muted);">Trocar legenda</label>
-          <input id="subtitle_file" name="subtitle_file" type="file" accept=".srt,.vtt" class="input" />
+
+        <div class="file-field">
+          <label for="ad_file" class="field-label">Trocar audiodescrição</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="ad_file" name="ad_file" type="file" accept=".mp3,.aac,.wav,.ogg,.m4a" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                <path d="M15.5 8.5a5 5 0 010 7"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar novo AD</strong>
+              <span>MP3, AAC, WAV, OGG ou M4A</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <label for="cover_file" style="font-size:12px; color: var(--muted);">Trocar capa</label>
-          <input id="cover_file" name="cover_file" type="file" accept=".jpg,.jpeg,.png,.webp" class="input" />
+
+        <div class="file-field" style="grid-column: 1 / -1;">
+          <label for="subtitle_file" class="field-label">Trocar legenda</label>
+          <div class="file-drop" aria-hidden="true">
+            <input id="subtitle_file" name="subtitle_file" type="file" accept=".srt,.vtt" />
+            <div class="file-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <line x1="6" y1="9" x2="18" y2="9"/>
+                <line x1="6" y1="13" x2="14" y2="13"/>
+              </svg>
+            </div>
+            <div class="file-drop-text">
+              <strong>Selecionar novo arquivo de legenda</strong>
+              <span>SRT ou VTT</span>
+            </div>
+          </div>
         </div>
       </div>
-      <p style="font-size:12px; color: var(--muted); margin:0;">
-        Troca de capa, titulo e descricao nao dispara reprocessamento. Troca de video, Libras, AD ou legenda dispara.
+
+      <p class="field-hint" style="margin: 0;">
+        Troca de capa, título e descrição não dispara reprocessamento. Troca de vídeo, Libras, AD ou legenda dispara.
       </p>
-      <div>
-        <button type="submit" class="btn btn-primary btn-sm">Salvar alteracoes</button>
+
+      <div style="display: flex; justify-content: flex-start;">
+        <button type="submit" class="btn btn-primary btn-sm">Salvar alterações</button>
       </div>
     </form>
   </div>
@@ -415,13 +609,13 @@
   <div class="card animate-fade-up delay-2" style="padding: 24px;">
     <div class="section-label">
       <span class="section-label-dot" style="background: var(--violet);" aria-hidden="true"></span>
-      DescriÃ§Ã£o
+      Descrição
     </div>
     <p style="font-size: 14px; line-height: 1.7; color: var(--muted-2);">{{ video.description }}</p>
   </div>
   {% endif %}
 
-  <!-- â”€â”€ Assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <!-- ── Assets ──────────────────────────────────────── -->
   <div class="card animate-fade-up delay-2" style="padding: 24px;">
     <div class="section-label">
       <span class="section-label-dot" style="background: var(--cyan);" aria-hidden="true"></span>
@@ -431,7 +625,7 @@
     {% if video.assets %}
     <div
       role="table"
-      aria-label="Lista de assets do vÃ­deo {{ video.title }}"
+      aria-label="Lista de assets do vídeo {{ video.title }}"
       style="display: flex; flex-direction: column; gap: 8px;"
     >
       {% for asset in video.assets %}
@@ -441,8 +635,8 @@
         <span class="asset-type-tag" role="cell">{{ asset.asset_type.value }}</span>
 
         <!-- Path -->
-        <span class="asset-path" role="cell" title="{{ asset.file_path or 'â€”' }}">
-          {{ asset.file_path or 'â€”' }}
+        <span class="asset-path" role="cell" title="{{ asset.file_path or '—' }}">
+          {{ asset.file_path or '—' }}
         </span>
 
         <!-- Status do asset -->
@@ -496,12 +690,12 @@
 
     {% else %}
     <p style="font-size: 13px; color: var(--muted); text-align: center; padding: 24px 0;">
-      Nenhum asset registrado para este vÃ­deo.
+      Nenhum asset registrado para este vídeo.
     </p>
     {% endif %}
   </div>
 
-  <!-- â”€â”€ Logs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <!-- ── Logs ────────────────────────────────────────── -->
   {% if logs %}
   <div class="card animate-fade-up delay-3" style="padding: 24px;">
     <div class="section-label">
@@ -511,11 +705,11 @@
 
     <div
       style="display: flex; flex-direction: column; gap: 8px;"
-      aria-label="Logs de processamento do vÃ­deo"
+      aria-label="Logs de processamento do vídeo"
     >
       {% for name, content in logs.items() %}
       <details class="log-block">
-        <summary aria-label="Log do arquivo {{ name }}.log â€” clique para expandir">
+        <summary aria-label="Log do arquivo {{ name }}.log — clique para expandir">
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted); flex-shrink:0;">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
@@ -531,7 +725,7 @@
         <div
           class="log-content"
           role="region"
-          aria-label="ConteÃºdo do log {{ name }}"
+          aria-label="Conteúdo do log {{ name }}"
         >{{ content }}</div>
       </details>
       {% endfor %}
@@ -539,7 +733,7 @@
   </div>
   {% endif %}
 
-  <!-- â”€â”€ Timestamps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <!-- ── Timestamps ──────────────────────────────────── -->
   <footer class="animate-fade-up delay-4" style="padding: 4px 0 16px;">
     <p style="font-size: 12px; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
       <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -547,18 +741,59 @@
       </svg>
       Criado em
       <time datetime="{{ video.created_at.strftime('%Y-%m-%dT%H:%M') }}" style="color: var(--muted-2);">
-        {{ video.created_at.strftime('%d/%m/%Y Ã s %H:%M') }}
+        {{ video.created_at.strftime('%d/%m/%Y às %H:%M') }}
       </time>
-      <span aria-hidden="true" style="color: var(--border);">â€¢</span>
+      <span aria-hidden="true" style="color: var(--border);">•</span>
       Atualizado em
       <time datetime="{{ video.updated_at.strftime('%Y-%m-%dT%H:%M') }}" style="color: var(--muted-2);">
-        {{ video.updated_at.strftime('%d/%m/%Y Ã s %H:%M') }}
+        {{ video.updated_at.strftime('%d/%m/%Y às %H:%M') }}
       </time>
     </p>
   </footer>
 
 </div>
 </main>
+
+<script>
+function formatFileBytes(bytes) {
+  if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+  if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+  if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return bytes + ' B';
+}
+
+function setupUpdatePicker(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  input.addEventListener('change', function() {
+    const file = this.files && this.files[0];
+    if (!file) return;
+
+    const drop = this.closest('.file-drop');
+    if (!drop) return;
+
+    const nameEl = drop.querySelector('.file-drop-text strong');
+    const hintEl = drop.querySelector('.file-drop-text span');
+    const iconEl = drop.querySelector('.file-drop-icon');
+
+    drop.classList.add('file-selected');
+    if (nameEl) nameEl.textContent = file.name;
+    if (hintEl) hintEl.textContent = formatFileBytes(file.size);
+
+    if (iconEl) {
+      if (file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        iconEl.innerHTML = '<img src="' + url + '" class="file-thumb" alt="" aria-hidden="true" />';
+      } else {
+        iconEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+      }
+    }
+  });
+}
+
+['video_file', 'cover_file', 'libras_file', 'ad_file', 'subtitle_file'].forEach(setupUpdatePicker);
+</script>
 {% endblock %}
 
 
