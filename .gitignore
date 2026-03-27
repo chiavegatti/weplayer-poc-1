@@ -15,3 +15,4 @@ build/
 storage/weplayer/videos/*/
 !storage/weplayer/videos/.gitkeep
 *.log
+ai.docs/

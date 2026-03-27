@@ -4,9 +4,9 @@
 {% block head %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.min.js"></script>
 <style>
-/* 
+/* ═══════════════════════════════════════════════════════
    PLAYER SHELL
- */
+   ═══════════════════════════════════════════════════════ */
 #player-wrap {
   position: relative;
   background: #000;
@@ -21,9 +21,9 @@
   display: block; background: #000;
 }
 
-/* 
+/* ═══════════════════════════════════════════════════════
    CONTROLS OVERLAY
- */
+   ═══════════════════════════════════════════════════════ */
 #wp-overlay {
   position: absolute; inset: 0;
   display: flex; flex-direction: column;
@@ -108,6 +108,10 @@
   flex-shrink: 0;
 }
 .ctrl-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.ctrl-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
 .ctrl-btn svg { width: 20px; height: 20px; display: block; }
 
 /* Volume slider */
@@ -137,73 +141,466 @@
 /* Spacer */
 .spacer { flex: 1; }
 
-/* ── Mode buttons ──────────────────────────────── */
-.mode-group {
-  display: flex; gap: 4px; align-items: center;
-}
-.mode-btn {
-  padding: 5px 14px; border-radius: 100px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
-  cursor: pointer; border: none;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.5);
-  transition: all 0.2s;
-  font-family: var(--font-body);
-}
-.mode-btn:hover:not(:disabled) {
-  background: rgba(255,255,255,0.14);
-  color: rgba(255,255,255,0.9);
-}
-.mode-btn.active-original {
-  background: rgba(255,255,255,0.15);
-  color: #fff;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
-}
-.mode-btn.active-libras {
-  background: rgba(34,211,238,0.2);
-  color: var(--cyan);
-  box-shadow: 0 0 12px rgba(34,211,238,0.3), 0 0 0 1px rgba(34,211,238,0.3);
-}
-.mode-btn.active-ad {
-  background: rgba(167,139,250,0.2);
-  color: var(--violet);
-  box-shadow: 0 0 12px rgba(167,139,250,0.3), 0 0 0 1px rgba(167,139,250,0.3);
-}
-.mode-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-
 /* CC button */
-#cc-btn { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; font-family: var(--font-display); min-width: 36px; }
+#cc-btn {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  font-family: var(--font-display); min-width: 36px;
+}
 #cc-btn.active { color: var(--gold); }
 
-#settings-panel {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  width: 260px;
-  max-width: min(300px, calc(100% - 16px));
-  background: rgba(8, 11, 20, 0.96);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  display: none;
-  z-index: 12;
-  box-shadow: 0 14px 36px rgba(0,0,0,0.45);
+/* Active state for a11y/settings buttons */
+.ctrl-btn[aria-expanded="true"] {
+  color: var(--cyan);
+  background: rgba(34,211,238,0.12);
 }
-#settings-panel.open { display: block; }
-.settings-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-.settings-row label { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
-.settings-row select,
-.settings-row input[type="color"] {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-2);
-  color: var(--text);
-  padding: 6px 8px;
-}
-.settings-color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-/* ── Buffering spinner ─────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   POPUP MENUS — shared styles
+   ═══════════════════════════════════════════════════════ */
+.wp-popup {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  width: 290px;
+  max-height: min(420px, 70vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(8, 11, 20, 0.96);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 0;
+  z-index: 20;
+  box-shadow:
+    0 -4px 24px rgba(0,0,0,0.5),
+    0 -12px 48px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+
+  /* Hidden by default */
+  display: none;
+  opacity: 0;
+  transform: translateY(8px);
+}
+.wp-popup.open {
+  display: block;
+  animation: popupIn 200ms ease-out forwards;
+}
+.wp-popup.closing {
+  animation: popupOut 150ms ease-in forwards;
+}
+
+@keyframes popupIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes popupOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-popup.open, .wp-popup.closing {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Scrollbar */
+.wp-popup::-webkit-scrollbar { width: 4px; }
+.wp-popup::-webkit-scrollbar-track { background: transparent; }
+.wp-popup::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+/* Section */
+.wp-popup-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.wp-popup-section:last-child { border-bottom: none; }
+
+/* Section header */
+.wp-popup-header {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wp-popup-header svg {
+  width: 12px; height: 12px;
+  opacity: 0.5;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ACCESSIBILITY POPUP — mode options
+   ═══════════════════════════════════════════════════════ */
+.a11y-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  transition: all 0.15s ease;
+  margin-bottom: 4px;
+  font-family: inherit;
+}
+.a11y-option:last-child { margin-bottom: 0; }
+.a11y-option:hover:not([disabled]) {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+}
+.a11y-option:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+.a11y-option[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Option icon circle */
+.a11y-option-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s ease;
+}
+
+/* Option text */
+.a11y-option-text {
+  flex: 1; min-width: 0;
+}
+.a11y-option-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgba(255,255,255,0.85);
+}
+.a11y-option-desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.3;
+  margin-top: 1px;
+}
+
+/* Radio indicator */
+.a11y-radio {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+.a11y-radio::after {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.2s ease;
+  transform: scale(0);
+}
+
+/* Active states by mode */
+.a11y-option.active-original {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+}
+.a11y-option.active-original .a11y-radio {
+  border-color: rgba(255,255,255,0.5);
+}
+.a11y-option.active-original .a11y-radio::after {
+  background: #fff;
+  transform: scale(1);
+}
+.a11y-option.active-original .a11y-option-icon {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.a11y-option.active-libras {
+  background: rgba(34,211,238,0.08);
+  border-color: rgba(34,211,238,0.2);
+}
+.a11y-option.active-libras .a11y-radio {
+  border-color: var(--cyan);
+}
+.a11y-option.active-libras .a11y-radio::after {
+  background: var(--cyan);
+  transform: scale(1);
+}
+.a11y-option.active-libras .a11y-option-icon {
+  background: rgba(34,211,238,0.12);
+  border-color: rgba(34,211,238,0.25);
+}
+.a11y-option.active-libras .a11y-option-name {
+  color: var(--cyan);
+}
+
+.a11y-option.active-ad {
+  background: rgba(167,139,250,0.08);
+  border-color: rgba(167,139,250,0.2);
+}
+.a11y-option.active-ad .a11y-radio {
+  border-color: var(--violet);
+}
+.a11y-option.active-ad .a11y-radio::after {
+  background: var(--violet);
+  transform: scale(1);
+}
+.a11y-option.active-ad .a11y-option-icon {
+  background: rgba(167,139,250,0.12);
+  border-color: rgba(167,139,250,0.25);
+}
+.a11y-option.active-ad .a11y-option-name {
+  color: var(--violet);
+}
+
+/* ── Caption toggle row ────────────────────────── */
+.caption-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: all 0.15s ease;
+}
+.caption-toggle-row:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+}
+.caption-toggle-row:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+.caption-toggle-row.active {
+  background: rgba(251,191,36,0.06);
+  border-color: rgba(251,191,36,0.15);
+}
+
+.caption-toggle-info {
+  display: flex; align-items: center; gap: 10px;
+}
+.caption-toggle-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+.caption-toggle-row.active .caption-toggle-icon {
+  background: rgba(251,191,36,0.12);
+  border-color: rgba(251,191,36,0.25);
+  color: var(--gold);
+}
+
+/* Toggle switch */
+.wp-toggle {
+  position: relative;
+  width: 38px; height: 20px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  border: none; cursor: pointer;
+  padding: 0;
+}
+.wp-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.wp-toggle.on {
+  background: rgba(251,191,36,0.3);
+}
+.wp-toggle.on::after {
+  background: var(--gold);
+  transform: translateX(18px);
+}
+.wp-toggle:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS POPUP
+   ═══════════════════════════════════════════════════════ */
+
+/* Speed pills */
+.speed-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.speed-pill {
+  padding: 7px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+.speed-pill:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+  border-color: rgba(255,255,255,0.1);
+}
+.speed-pill:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+.speed-pill.active {
+  background: rgba(34,211,238,0.12);
+  border-color: rgba(34,211,238,0.3);
+  color: var(--cyan);
+  box-shadow: 0 0 12px rgba(34,211,238,0.1);
+}
+
+/* Subtitle settings */
+.settings-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.settings-sub-row:last-child { margin-bottom: 0; }
+.settings-sub-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+}
+.settings-sub-control {
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Size pills */
+.size-pills {
+  display: flex; gap: 3px;
+}
+.size-pill {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-body);
+}
+.size-pill:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+}
+.size-pill:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+.size-pill.active {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+/* Color swatch */
+.color-swatch-wrap {
+  position: relative;
+  width: 28px; height: 28px;
+}
+.color-swatch-wrap input[type="color"] {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none; padding: 0;
+}
+.color-swatch {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.1);
+  pointer-events: none;
+  transition: border-color 0.15s;
+}
+.color-swatch-wrap:hover .color-swatch {
+  border-color: rgba(255,255,255,0.25);
+}
+
+/* Reset button */
+.settings-reset-btn {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.45);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-body);
+  letter-spacing: 0.02em;
+}
+.settings-reset-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.7);
+  border-color: rgba(255,255,255,0.1);
+}
+.settings-reset-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   POPUP ANCHOR WRAPPERS
+   ═══════════════════════════════════════════════════════ */
+.popup-anchor {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUFFERING SPINNER
+   ═══════════════════════════════════════════════════════ */
 #buffering {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -218,7 +615,9 @@
 }
 #buffering.hidden { display: none; }
 
-/* ── Center play flash ─────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   CENTER PLAY FLASH
+   ═══════════════════════════════════════════════════════ */
 #center-flash {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%) scale(0.5);
@@ -238,9 +637,9 @@
   opacity: 0; transform: translate(-50%,-50%) scale(1.3);
 }
 
-/* 
+/* ═══════════════════════════════════════════════════════
    SIDEBAR / META PANEL
- */
+   ═══════════════════════════════════════════════════════ */
 .meta-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -257,39 +656,6 @@
   text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
 }
 
-/* Accessibility pills in sidebar */
-.a11y-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px; border-radius: 8px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  margin-bottom: 6px; cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-}
-.a11y-row:hover { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); }
-.a11y-row.row-on { border-color: rgba(34,211,238,0.25); background: rgba(34,211,238,0.05); }
-.a11y-row.row-violet { border-color: rgba(167,139,250,0.25); background: rgba(167,139,250,0.05); }
-.a11y-row.row-gold { border-color: rgba(251,191,36,0.25); background: rgba(251,191,36,0.05); }
-
-/* Toggle switch */
-.toggle {
-  width: 34px; height: 18px; border-radius: 9px;
-  background: rgba(255,255,255,0.1); position: relative;
-  transition: background 0.2s; flex-shrink: 0;
-}
-.toggle::after {
-  content: ''; position: absolute; top: 2px; left: 2px;
-  width: 14px; height: 14px; border-radius: 50%;
-  background: rgba(255,255,255,0.4);
-  transition: transform 0.2s, background 0.2s;
-}
-.toggle.on-cyan { background: rgba(34,211,238,0.3); }
-.toggle.on-cyan::after { background: var(--cyan); transform: translateX(16px); }
-.toggle.on-violet { background: rgba(167,139,250,0.3); }
-.toggle.on-violet::after { background: var(--violet); transform: translateX(16px); }
-.toggle.on-gold { background: rgba(251,191,36,0.3); }
-.toggle.on-gold::after { background: var(--gold); transform: translateX(16px); }
-
 /* Keyboard shortcuts */
 .kbd {
   display: inline-flex; align-items: center; justify-content: center;
@@ -299,9 +665,9 @@
   min-width: 20px;
 }
 
-/* 
+/* ═══════════════════════════════════════════════════════
    LAYOUT
- */
+   ═══════════════════════════════════════════════════════ */
 .watch-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -312,52 +678,66 @@
   .watch-layout { grid-template-columns: 1fr; }
 }
 
-/* 
-   MOBILE — touch targets, compact controls
- */
+/* ═══════════════════════════════════════════════════════
+   BADGES (video info)
+   ═══════════════════════════════════════════════════════ */
+.badge-libras { background: rgba(34,211,238,0.12); color: var(--cyan); border: 1px solid rgba(34,211,238,0.2); }
+.badge-ad { background: rgba(167,139,250,0.12); color: var(--violet); border: 1px solid rgba(167,139,250,0.2); }
+.badge-sub { background: rgba(251,191,36,0.12); color: var(--gold); border: 1px solid rgba(251,191,36,0.2); }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE
+   ═══════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  /* Bigger touch targets */
   .ctrl-btn {
     padding: 10px;
     min-width: 44px; min-height: 44px;
   }
   .ctrl-btn svg { width: 22px; height: 22px; }
 
-  /* Hide volume slider on mobile — use system volume */
   .vol-wrap #volume-bar { display: none; }
 
-  /* Seek bar taller for fat fingers */
   .seek-wrap { height: 28px; }
   .seek-wrap:hover .seek-track,
   .seek-track { height: 5px; }
 
-  /* Controls padding */
   #controls { padding: 0 12px 14px; gap: 8px; }
 
-  /* Mode buttons: smaller text, still tappable */
-  .mode-btn {
-    padding: 8px 10px;
-    font-size: 10px;
-    min-height: 36px;
-  }
-
-  /* Wrap mode group if needed */
-  .mode-group { flex-wrap: wrap; gap: 4px; }
-
-  /* Meta panel: compact sections */
   .meta-section { padding: 14px 16px; }
-
-  /* Watch layout gap */
   .watch-layout { gap: 16px; }
 
-  /* Sidebar keyboard shortcuts: hide on mobile */
   .kbd-section { display: none; }
+
+  /* Popups go full-width on mobile */
+  .wp-popup {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    width: 100%;
+    max-height: 60vh;
+    border-radius: 14px 14px 0 0;
+    z-index: 100;
+  }
+  .wp-popup.open {
+    animation: popupSlideUp 250ms ease-out forwards;
+  }
+  .wp-popup.closing {
+    animation: popupSlideDown 200ms ease-in forwards;
+  }
+
+  @keyframes popupSlideUp {
+    from { opacity: 0; transform: translateY(100%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popupSlideDown {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(100%); }
+  }
 }
 </style>
 {% endblock %}
 
 {% block nav_links %}
-  <a href="/catalog" class="btn btn-ghost btn-sm"> Catálogo</a>
+  <a href="/catalog" class="btn btn-ghost btn-sm">&larr; Catálogo</a>
 {% endblock %}
 
 {% block content %}
@@ -378,7 +758,7 @@
         <div class="spinner"></div>
       </div>
 
-      <!-- Center flash feedback (decorativo) -->
+      <!-- Center flash feedback -->
       <div id="center-flash" aria-hidden="true">
         <svg id="center-icon" width="28" height="28" viewBox="0 0 24 24" fill="var(--cyan)">
           <path d="M8 5v14l11-7z"/>
@@ -399,10 +779,10 @@
                    step="0.1" aria-label="Progresso do vídeo" aria-valuetext="0:00 de 0:00" />
           </div>
 
-          <!-- Row 1: playback + volume + time + spacer + modes + cc + fullscreen -->
+          <!-- Row: playback + volume + time + spacer + CC + a11y + settings + fullscreen -->
           <div class="ctrl-row">
             <!-- Play/Pause -->
-            <button class="ctrl-btn" id="play-btn" aria-label="Play/Pause" onclick="togglePlay()">
+            <button class="ctrl-btn" id="play-btn" aria-label="Play/Pause">
               <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M8 5v14l11-7z"/>
               </svg>
@@ -410,7 +790,7 @@
 
             <!-- Volume -->
             <div class="vol-wrap">
-              <button class="ctrl-btn" id="mute-btn" onclick="toggleMute()" aria-label="Mudo">
+              <button class="ctrl-btn" id="mute-btn" aria-label="Mudo">
                 <svg id="vol-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
                 </svg>
@@ -423,76 +803,176 @@
 
             <div class="spacer"></div>
 
-            <!-- Mode selector -->
-            <div class="mode-group" role="group" aria-label="Modo de acessibilidade">
-              <button class="mode-btn active-original" id="btn-original"
-                      onclick="switchMode('original')" aria-pressed="true">
-                Original
-              </button>
-              <button class="mode-btn" id="btn-libras"
-                      onclick="switchMode('libras')" aria-pressed="false"
-                      {% if not manifests.libras %}disabled title="Libras não disponível"{% endif %}>
-                🤟 Libras
-              </button>
-              <button class="mode-btn" id="btn-ad"
-                      onclick="switchMode('ad')" aria-pressed="false"
-                      {% if not manifests.ad %}disabled title="AD não disponível"{% endif %}>
-                🎙 AD
-              </button>
-            </div>
-
-            <!-- CC -->
+            <!-- CC quick toggle -->
             {% if subtitle_path %}
-            <button class="ctrl-btn" id="cc-btn" onclick="toggleCaptions()"
+            <button class="ctrl-btn" id="cc-btn"
                     aria-label="Legendas" title="Legendas (C)">CC</button>
             {% endif %}
 
-            <button class="ctrl-btn" id="settings-btn" onclick="toggleSettingsPanel(event)"
-                    aria-label="Preferencias de reproducao" title="Preferencias">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M19.14 12.94a7.43 7.43 0 0 0 .05-.94 7.43 7.43 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.14 7.14 0 0 0-1.63-.94l-.36-2.54a.49.49 0 0 0-.49-.42h-3.84a.49.49 0 0 0-.49.42L8.2 5.32a7.14 7.14 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L1.66 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.43 7.43 0 0 0-.05.94c0 .32.02.63.05.94L1.78 14.5a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.69.22l2.39-.96c.5.39 1.05.71 1.63.94l.36 2.54c.05.24.25.42.49.42h3.84c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.13-.55 1.63-.94l2.39.96c.26.12.55.02.69-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.56zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
-              </svg>
-            </button>
+            <!-- Accessibility popup -->
+            <div class="popup-anchor" id="a11y-anchor">
+              <button class="ctrl-btn" id="a11y-btn"
+                      aria-label="Acessibilidade"
+                      aria-expanded="false"
+                      aria-haspopup="true"
+                      title="Acessibilidade">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm8 7h-5.5l-1 5.2 3.1 4.7a1 1 0 1 1-1.7 1.1L12 15.7 9.1 20a1 1 0 1 1-1.7-1.1l3.1-4.7-1-5.2H4a1 1 0 1 1 0-2h16a1 1 0 1 1 0 2z"/>
+                </svg>
+              </button>
+
+              <div class="wp-popup" id="a11y-popup" role="dialog"
+                   aria-label="Opções de acessibilidade">
+                <!-- Video mode section -->
+                <div class="wp-popup-section">
+                  <div class="wp-popup-header">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+                    Faixa de vídeo
+                  </div>
+
+                  <button class="a11y-option active-original" id="opt-original"
+                          role="radio" aria-checked="true"
+                          data-mode="original">
+                    <div class="a11y-option-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM10 8l6 4-6 4V8z"/></svg>
+                    </div>
+                    <div class="a11y-option-text">
+                      <div class="a11y-option-name">Original</div>
+                      <div class="a11y-option-desc">Vídeo principal</div>
+                    </div>
+                    <div class="a11y-radio" aria-hidden="true"></div>
+                  </button>
+
+                  <button class="a11y-option" id="opt-libras"
+                          role="radio" aria-checked="false"
+                          data-mode="libras"
+                          {% if not manifests.libras %}disabled aria-disabled="true"{% endif %}>
+                    <div class="a11y-option-icon">🤟</div>
+                    <div class="a11y-option-text">
+                      <div class="a11y-option-name">Libras</div>
+                      <div class="a11y-option-desc">{% if manifests.libras %}Janela picture-in-picture{% else %}Não disponível{% endif %}</div>
+                    </div>
+                    <div class="a11y-radio" aria-hidden="true"></div>
+                  </button>
+
+                  <button class="a11y-option" id="opt-ad"
+                          role="radio" aria-checked="false"
+                          data-mode="ad"
+                          {% if not manifests.ad %}disabled aria-disabled="true"{% endif %}>
+                    <div class="a11y-option-icon">🎙</div>
+                    <div class="a11y-option-text">
+                      <div class="a11y-option-name">Audiodescrição</div>
+                      <div class="a11y-option-desc">{% if manifests.ad %}Narração de cenas{% else %}Não disponível{% endif %}</div>
+                    </div>
+                    <div class="a11y-radio" aria-hidden="true"></div>
+                  </button>
+                </div>
+
+                <!-- Caption toggle section -->
+                {% if subtitle_path %}
+                <div class="wp-popup-section">
+                  <div class="wp-popup-header">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6v-2zm0 4h8v2H6v-2zm10 0h2v2h-2v-2zm-6-4h8v2h-8v-2z"/></svg>
+                    Legenda
+                  </div>
+                  <div class="caption-toggle-row" id="caption-row"
+                       role="switch" aria-checked="false"
+                       aria-label="Legenda em Português"
+                       tabindex="0">
+                    <div class="caption-toggle-info">
+                      <div class="caption-toggle-icon">CC</div>
+                      <div class="a11y-option-text">
+                        <div class="a11y-option-name">Legenda</div>
+                        <div class="a11y-option-desc">Português</div>
+                      </div>
+                    </div>
+                    <div class="wp-toggle" id="toggle-cc-popup" aria-hidden="true"></div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Settings popup -->
+            <div class="popup-anchor" id="settings-anchor">
+              <button class="ctrl-btn" id="settings-btn"
+                      aria-label="Configurações"
+                      aria-expanded="false"
+                      aria-haspopup="true"
+                      title="Configurações">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M19.14 12.94a7.43 7.43 0 0 0 .05-.94 7.43 7.43 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.14 7.14 0 0 0-1.63-.94l-.36-2.54a.49.49 0 0 0-.49-.42h-3.84a.49.49 0 0 0-.49.42L8.2 5.32a7.14 7.14 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L1.66 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.43 7.43 0 0 0-.05.94c0 .32.02.63.05.94L1.78 14.5a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.69.22l2.39-.96c.5.39 1.05.71 1.63.94l.36 2.54c.05.24.25.42.49.42h3.84c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.13-.55 1.63-.94l2.39.96c.26.12.55.02.69-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.56zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+                </svg>
+              </button>
+
+              <div class="wp-popup" id="settings-popup" role="dialog"
+                   aria-label="Configurações do player">
+                <!-- Speed section -->
+                <div class="wp-popup-section">
+                  <div class="wp-popup-header">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.85-1.23A10 10 0 0 0 3.35 19a2 2 0 0 0 1.72 1h13.85a2 2 0 0 0 1.74-1 10 10 0 0 0-.27-10.44zM10.59 15.41a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z"/></svg>
+                    Velocidade
+                  </div>
+                  <div class="speed-grid" role="radiogroup" aria-label="Velocidade de reprodução">
+                    {% for speed in ['0.5', '0.75', '1', '1.25', '1.5', '2'] %}
+                    <button class="speed-pill{% if speed == '1' %} active{% endif %}"
+                            role="radio" aria-checked="{{ 'true' if speed == '1' else 'false' }}"
+                            data-speed="{{ speed }}">{{ speed }}x</button>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Subtitle appearance -->
+                <div class="wp-popup-section">
+                  <div class="wp-popup-header">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z"/></svg>
+                    Aparência da legenda
+                  </div>
+
+                  <div class="settings-sub-row">
+                    <span class="settings-sub-label">Tamanho</span>
+                    <div class="size-pills" role="radiogroup" aria-label="Tamanho da legenda">
+                      <button class="size-pill" role="radio" aria-checked="false" data-size="80">P</button>
+                      <button class="size-pill active" role="radio" aria-checked="true" data-size="100">M</button>
+                      <button class="size-pill" role="radio" aria-checked="false" data-size="125">G</button>
+                    </div>
+                  </div>
+
+                  <div class="settings-sub-row">
+                    <span class="settings-sub-label">Cor do texto</span>
+                    <div class="color-swatch-wrap">
+                      <input type="color" id="pref-text-color" value="#ffffff"
+                             aria-label="Cor do texto da legenda" />
+                      <div class="color-swatch" id="swatch-text" style="background:#ffffff;"></div>
+                    </div>
+                  </div>
+
+                  <div class="settings-sub-row">
+                    <span class="settings-sub-label">Cor do fundo</span>
+                    <div class="color-swatch-wrap">
+                      <input type="color" id="pref-bg-color" value="#000000"
+                             aria-label="Cor de fundo da legenda" />
+                      <div class="color-swatch" id="swatch-bg" style="background:#000000;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Reset -->
+                <div class="wp-popup-section">
+                  <button class="settings-reset-btn" id="reset-prefs-btn">
+                    Restaurar padrões
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <!-- Fullscreen -->
-            <button class="ctrl-btn" onclick="toggleFullscreen()" aria-label="Tela cheia (F)">
+            <button class="ctrl-btn" id="fs-btn" aria-label="Tela cheia (F)">
               <svg id="fs-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
               </svg>
             </button>
           </div>
-        </div>
-
-        <div id="settings-panel" aria-label="Configuracoes do player">
-          <div class="settings-row">
-            <label for="pref-speed">Velocidade</label>
-            <select id="pref-speed" onchange="onPrefSpeedChange(this.value)">
-              <option value="0.75">0.75x</option>
-              <option value="1">1x</option>
-              <option value="1.25">1.25x</option>
-              <option value="1.5">1.5x</option>
-              <option value="2">2x</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label for="pref-size">Tamanho da legenda</label>
-            <select id="pref-size" onchange="onPrefSizeChange(this.value)">
-              <option value="80">Pequeno</option>
-              <option value="100">Medio</option>
-              <option value="125">Grande</option>
-            </select>
-          </div>
-          <div class="settings-color-grid">
-            <div class="settings-row">
-              <label for="pref-text-color">Cor texto</label>
-              <input id="pref-text-color" type="color" onchange="onPrefTextColorChange(this.value)" />
-            </div>
-            <div class="settings-row">
-              <label for="pref-bg-color">Cor fundo</label>
-              <input id="pref-bg-color" type="color" onchange="onPrefBgColorChange(this.value)" />
-            </div>
-          </div>
-          <button class="btn btn-ghost btn-sm" type="button" onclick="resetPlayerPrefs()">Restaurar padrao</button>
         </div>
       </div>
     </div>
@@ -511,80 +991,8 @@
     </div>
   </div>
 
-  <!--  RIGHT: Panel  -->
+  <!--  RIGHT: Sidebar (simplified)  -->
   <div class="meta-panel animate-fade-up delay-2">
-
-    <!-- Accessibility controls -->
-    <div class="meta-section">
-      <div class="meta-label">Acessibilidade</div>
-
-      <!-- Libras -->
-      <div class="a11y-row {% if manifests.libras %}row-on{% endif %}" id="row-libras"
-           role="switch" aria-checked="{{ 'true' if manifests.libras else 'false' }}"
-           tabindex="{{ '0' if manifests.libras else '-1' }}"
-           onclick="{% if manifests.libras %}switchMode(currentMode==='libras'?'original':'libras'){% endif %}"
-           onkeydown="{% if manifests.libras %}if(event.key==='Enter'||event.key===' '){event.preventDefault();switchMode(currentMode==='libras'?'original':'libras');}{% endif %}"
-           aria-label="Libras — Picture-in-picture"
-           style="{% if not manifests.libras %}opacity:0.4; cursor:default;{% endif %}">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">🤟</span>
-          <div>
-            <div style="font-size:13px; font-weight:600;">Libras</div>
-            <div style="font-size:11px; color:var(--muted);">Picture-in-picture</div>
-          </div>
-        </div>
-        <div class="toggle {% if manifests.libras %}on-cyan{% endif %}" id="toggle-libras" aria-hidden="true"></div>
-      </div>
-
-      <!-- AD -->
-      <div class="a11y-row {% if manifests.ad %}row-violet{% endif %}" id="row-ad"
-           role="switch" aria-checked="{{ 'true' if manifests.ad else 'false' }}"
-           tabindex="{{ '0' if manifests.ad else '-1' }}"
-           onclick="{% if manifests.ad %}switchMode(currentMode==='ad'?'original':'ad'){% endif %}"
-           onkeydown="{% if manifests.ad %}if(event.key==='Enter'||event.key===' '){event.preventDefault();switchMode(currentMode==='ad'?'original':'ad');}{% endif %}"
-           aria-label="Audiodescrição — Narração de cenas"
-           style="{% if not manifests.ad %}opacity:0.4; cursor:default;{% endif %}">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">🎙</span>
-          <div>
-            <div style="font-size:13px; font-weight:600;">Audiodescrição</div>
-            <div style="font-size:11px; color:var(--muted);">Narração de cenas</div>
-          </div>
-        </div>
-        <div class="toggle {% if manifests.ad %}on-violet{% endif %}" id="toggle-ad" aria-hidden="true"></div>
-      </div>
-
-      <!-- Subtitles -->
-      {% if subtitle_path %}
-      <div class="a11y-row" id="row-cc"
-           role="switch" aria-checked="false"
-           tabindex="0"
-           onclick="toggleCaptions()"
-           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCaptions();}"
-           aria-label="Legenda — Português">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">💬</span>
-          <div>
-            <div style="font-size:13px; font-weight:600;">Legenda</div>
-            <div style="font-size:11px; color:var(--muted);">Português</div>
-          </div>
-        </div>
-        <div class="toggle" id="toggle-cc" aria-hidden="true"></div>
-      </div>
-      {% else %}
-      <div class="a11y-row" role="switch" aria-checked="false" aria-disabled="true"
-           aria-label="Legenda — Não disponível" style="opacity:0.4; cursor:default;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">💬</span>
-          <div>
-            <div style="font-size:13px; font-weight:600;">Legenda</div>
-            <div style="font-size:11px; color:var(--muted);">Não disponível</div>
-          </div>
-        </div>
-        <div class="toggle" aria-hidden="true"></div>
-      </div>
-      {% endif %}
-    </div>
 
     <!-- Stream info -->
     <div class="meta-section">
@@ -596,12 +1004,12 @@
     </div>
 
     <!-- Keyboard shortcuts -->
-    <div class="meta-section">
+    <div class="meta-section kbd-section">
       <div class="meta-label" id="shortcuts-label">Atalhos de teclado</div>
       <dl aria-labelledby="shortcuts-label" style="display:flex; flex-direction:column; gap:8px; margin:0;">
         {% for shortcut in [
           ('Espaço / K', 'Play / Pause'),
-          (' / →', 'Retroceder / Avançar 10s'),
+          ('← / →', 'Retroceder / Avançar 10s'),
           ('↑ / ↓', 'Volume'),
           ('M', 'Mudo'),
           ('F', 'Tela cheia'),
@@ -620,6 +1028,9 @@
 
 <!--  SCRIPT  -->
 <script>
+/* ═══════════════════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════════════════ */
 const MANIFESTS = {
   original: {{ manifests.original | tojson }},
   libras:   {{ manifests.libras   | tojson }},
@@ -642,20 +1053,162 @@ let userPrefs = {
   playbackRate: '1',
 };
 
-const wrap      = document.getElementById('player-wrap');
-const videoEl   = document.getElementById('main-video');
-const seekBar   = document.getElementById('seek-bar');
-const seekFill  = document.getElementById('seek-fill');
-const playIcon  = document.getElementById('play-icon');
-const volIcon   = document.getElementById('vol-icon');
-const timeEl    = document.getElementById('time-display');
-const buffering = document.getElementById('buffering');
-const flash     = document.getElementById('center-flash');
-const streamLbl = document.getElementById('stream-label');
-const settingsPanel = document.getElementById('settings-panel');
-const settingsBtn = document.getElementById('settings-btn');
+/* ── DOM refs ────────────────────────────────────────── */
+const wrap         = document.getElementById('player-wrap');
+const videoEl      = document.getElementById('main-video');
+const seekBar      = document.getElementById('seek-bar');
+const seekFill     = document.getElementById('seek-fill');
+const playIcon     = document.getElementById('play-icon');
+const volIcon      = document.getElementById('vol-icon');
+const timeEl       = document.getElementById('time-display');
+const buffering    = document.getElementById('buffering');
+const flash        = document.getElementById('center-flash');
+const streamLbl    = document.getElementById('stream-label');
 
-/* ─── Init ──────────────────────────────────────────── */
+/* Popup refs */
+const a11yBtn      = document.getElementById('a11y-btn');
+const a11yPopup    = document.getElementById('a11y-popup');
+const settingsBtn  = document.getElementById('settings-btn');
+const settingsPopup= document.getElementById('settings-popup');
+
+/* ═══════════════════════════════════════════════════════
+   POPUP MANAGER
+   ═══════════════════════════════════════════════════════ */
+const popups = {
+  _active: null,
+
+  open(popup, btn) {
+    if (this._active === popup) { this.closeAll(); return; }
+    this.closeAll();
+    popup.classList.remove('closing');
+    popup.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    this._active = popup;
+    /* keep controls visible while popup is open */
+    wrap.classList.add('show-controls');
+    wrap.classList.remove('fullscreen-idle');
+    clearTimeout(hideTimer);
+  },
+
+  close(popup) {
+    if (!popup || !popup.classList.contains('open')) return;
+    const btn = popup === a11yPopup ? a11yBtn : settingsBtn;
+    popup.classList.remove('open');
+    popup.classList.add('closing');
+    btn.setAttribute('aria-expanded', 'false');
+    setTimeout(() => { popup.classList.remove('closing'); }, 200);
+    if (this._active === popup) this._active = null;
+    scheduleControlsHide();
+  },
+
+  closeAll() {
+    this.close(a11yPopup);
+    this.close(settingsPopup);
+  },
+
+  isAnyOpen() {
+    return this._active !== null;
+  }
+};
+
+/* Button click handlers */
+a11yBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  popups.open(a11yPopup, a11yBtn);
+});
+settingsBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  popups.open(settingsPopup, settingsBtn);
+});
+
+/* Close on outside click */
+document.addEventListener('click', (e) => {
+  if (!popups.isAnyOpen()) return;
+  if (a11yPopup.contains(e.target) || a11yBtn.contains(e.target)) return;
+  if (settingsPopup.contains(e.target) || settingsBtn.contains(e.target)) return;
+  popups.closeAll();
+});
+
+/* Close on Escape */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && popups.isAnyOpen()) {
+    const wasA11y = popups._active === a11yPopup;
+    popups.closeAll();
+    (wasA11y ? a11yBtn : settingsBtn).focus();
+  }
+});
+
+/* Prevent popup clicks from toggling play */
+a11yPopup.addEventListener('click', (e) => e.stopPropagation());
+settingsPopup.addEventListener('click', (e) => e.stopPropagation());
+
+/* ═══════════════════════════════════════════════════════
+   A11Y POPUP — mode selection
+   ═══════════════════════════════════════════════════════ */
+document.querySelectorAll('.a11y-option[data-mode]').forEach(opt => {
+  opt.addEventListener('click', () => {
+    if (opt.disabled) return;
+    const mode = opt.dataset.mode;
+    switchMode(mode);
+  });
+});
+
+/* Caption toggle row */
+const captionRow = document.getElementById('caption-row');
+if (captionRow) {
+  captionRow.addEventListener('click', () => toggleCaptions());
+  captionRow.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleCaptions();
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS POPUP — speed pills
+   ═══════════════════════════════════════════════════════ */
+document.querySelectorAll('.speed-pill[data-speed]').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.speed-pill').forEach(p => {
+      p.classList.remove('active');
+      p.setAttribute('aria-checked', 'false');
+    });
+    pill.classList.add('active');
+    pill.setAttribute('aria-checked', 'true');
+    onPrefSpeedChange(pill.dataset.speed);
+  });
+});
+
+/* Size pills */
+document.querySelectorAll('.size-pill[data-size]').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.size-pill').forEach(p => {
+      p.classList.remove('active');
+      p.setAttribute('aria-checked', 'false');
+    });
+    pill.classList.add('active');
+    pill.setAttribute('aria-checked', 'true');
+    onPrefSizeChange(pill.dataset.size);
+  });
+});
+
+/* Color inputs */
+document.getElementById('pref-text-color').addEventListener('input', (e) => {
+  document.getElementById('swatch-text').style.background = e.target.value;
+  onPrefTextColorChange(e.target.value);
+});
+document.getElementById('pref-bg-color').addEventListener('input', (e) => {
+  document.getElementById('swatch-bg').style.background = e.target.value;
+  onPrefBgColorChange(e.target.value);
+});
+
+/* Reset */
+document.getElementById('reset-prefs-btn').addEventListener('click', resetPlayerPrefs);
+
+/* ═══════════════════════════════════════════════════════
+   PLAYER INIT
+   ═══════════════════════════════════════════════════════ */
 async function initPlayer() {
   shaka.polyfill.installAll();
   if (!shaka.Player.isBrowserSupported()) return;
@@ -684,27 +1237,27 @@ async function loadManifest(path) {
   } catch(e) { console.error('Load error:', e); }
 }
 
-/* ─── Mode switch ───────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   MODE SWITCH
+   ═══════════════════════════════════════════════════════ */
 async function switchMode(mode) {
   if (mode === currentMode) return;
 
   savedTime  = videoEl.currentTime;
   wasPlaying = !videoEl.paused;
 
-  // Update mode buttons
-  ['original','libras','ad'].forEach(m => {
-    const btn = document.getElementById('btn-' + m);
-    if (!btn) return;
-    btn.className = 'mode-btn';
-    if (m === mode) btn.classList.add('active-' + mode);
-    btn.setAttribute('aria-pressed', m === mode ? 'true' : 'false');
+  /* Update a11y popup radio options */
+  document.querySelectorAll('.a11y-option[data-mode]').forEach(opt => {
+    const m = opt.dataset.mode;
+    opt.className = 'a11y-option';
+    opt.setAttribute('aria-checked', 'false');
+    if (m === mode) {
+      opt.classList.add('active-' + mode);
+      opt.setAttribute('aria-checked', 'true');
+    }
   });
 
-  // Update sidebar toggles
-  updateToggle('toggle-libras', mode === 'libras', 'on-cyan',   'row-libras', 'row-on');
-  updateToggle('toggle-ad',     mode === 'ad',     'on-violet', 'row-ad',     'row-violet');
-
-  // Update stream label
+  /* Update stream label */
   const labels = { original:'Original · HLS', libras:'Libras (PIP) · HLS', ad:'Audiodescrição · HLS' };
   if (streamLbl) streamLbl.textContent = labels[mode] || mode;
 
@@ -717,29 +1270,24 @@ async function switchMode(mode) {
   if (wasPlaying) videoEl.play();
 }
 
-function updateToggle(toggleId, isOn, onClass, rowId, rowClass) {
-  const t = document.getElementById(toggleId);
-  const r = document.getElementById(rowId);
-  if (!t) return;
-  t.className = 'toggle' + (isOn ? ' ' + onClass : '');
-  if (r) {
-    r.className = 'a11y-row' + (isOn ? ' ' + rowClass : '');
-    r.setAttribute('aria-checked', isOn ? 'true' : 'false');
-  }
-}
-
-/* ─── Captions ──────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   CAPTIONS
+   ═══════════════════════════════════════════════════════ */
 function toggleCaptions() {
   captionsOn = !captionsOn;
-  const btn  = document.getElementById('cc-btn');
-  const tog  = document.getElementById('toggle-cc');
-  const row  = document.getElementById('row-cc');
-  if (btn) btn.classList.toggle('active', captionsOn);
-  if (tog) tog.className = 'toggle' + (captionsOn ? ' on-gold' : '');
+
+  /* CC button in controls bar */
+  const ccBtn = document.getElementById('cc-btn');
+  if (ccBtn) ccBtn.classList.toggle('active', captionsOn);
+
+  /* Caption toggle in a11y popup */
+  const row = document.getElementById('caption-row');
+  const tog = document.getElementById('toggle-cc-popup');
   if (row) {
-    row.className = 'a11y-row' + (captionsOn ? ' row-gold' : '');
+    row.classList.toggle('active', captionsOn);
     row.setAttribute('aria-checked', captionsOn ? 'true' : 'false');
   }
+  if (tog) tog.classList.toggle('on', captionsOn);
 
   if (captionsOn) applySubtitle();
   else if (videoEl.textTracks[0]) videoEl.textTracks[0].mode = 'hidden';
@@ -760,7 +1308,9 @@ function applySubtitle() {
   if (captionsOn && videoEl.textTracks[0]) videoEl.textTracks[0].mode = 'showing';
 }
 
-/* ─── Playback controls ─────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   PLAYBACK CONTROLS
+   ═══════════════════════════════════════════════════════ */
 function togglePlay() {
   if (videoEl.paused) { videoEl.play(); showFlash('play'); }
   else { videoEl.pause(); showFlash('pause'); }
@@ -770,52 +1320,12 @@ function toggleMute() {
   document.getElementById('volume-bar').value = videoEl.muted ? 0 : videoEl.volume;
   updateVolIcon();
 }
-function toggleSettingsPanel(event) {
-  if (event) event.stopPropagation();
-  if (!settingsPanel) return;
-  const opening = !settingsPanel.classList.contains('open');
-  settingsPanel.classList.toggle('open', opening);
-  wrap.classList.add('show-controls');
-  wrap.classList.remove('fullscreen-idle');
-  if (opening) {
-    requestAnimationFrame(positionSettingsPanel);
-  } else {
-    scheduleControlsHide();
-  }
-}
-
-function positionSettingsPanel() {
-  if (!settingsPanel || !settingsBtn || !wrap) return;
-
-  const wrapRect = wrap.getBoundingClientRect();
-  const btnRect = settingsBtn.getBoundingClientRect();
-  const panelW = settingsPanel.offsetWidth || 260;
-  const panelH = settingsPanel.offsetHeight || 220;
-  const gap = 10;
-  const edge = 8;
-
-  let left = btnRect.right - wrapRect.left - panelW;
-  let top = btnRect.top - wrapRect.top - panelH - gap;
-
-  if (left < edge) left = edge;
-  const maxLeft = Math.max(edge, wrapRect.width - panelW - edge);
-  if (left > maxLeft) left = maxLeft;
-
-  if (top < edge) {
-    top = btnRect.bottom - wrapRect.top + gap;
-  }
-  const maxTop = Math.max(edge, wrapRect.height - panelH - edge);
-  if (top > maxTop) top = maxTop;
-
-  settingsPanel.style.left = Math.round(left) + 'px';
-  settingsPanel.style.top = Math.round(top) + 'px';
-}
 function toggleFullscreen() {
   if (!document.fullscreenElement) wrap.requestFullscreen();
   else document.exitFullscreen();
 }
 
-/* ─── Flash feedback ────────────────────────────────── */
+/* ── Flash feedback ────────────────────────────────── */
 function showFlash(type) {
   const icon = document.getElementById('center-icon');
   icon.innerHTML = type === 'play'
@@ -829,10 +1339,10 @@ function showFlash(type) {
 function scheduleControlsHide() {
   clearTimeout(hideTimer);
   wrap.classList.remove('fullscreen-idle');
-  if (videoEl.paused) return;
+  if (videoEl.paused || popups.isAnyOpen()) return;
   const timeoutMs = document.fullscreenElement ? 4000 : 2500;
   hideTimer = setTimeout(() => {
-    if (!videoEl.paused && (!settingsPanel || !settingsPanel.classList.contains('open'))) {
+    if (!videoEl.paused && !popups.isAnyOpen()) {
       wrap.classList.remove('show-controls');
       if (document.fullscreenElement) {
         wrap.classList.add('fullscreen-idle');
@@ -841,7 +1351,9 @@ function scheduleControlsHide() {
   }, timeoutMs);
 }
 
-/* ─── Events ────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   EVENTS
+   ═══════════════════════════════════════════════════════ */
 videoEl.addEventListener('timeupdate', () => {
   if (!videoEl.duration) return;
   const pct = (videoEl.currentTime / videoEl.duration) * 100;
@@ -856,7 +1368,7 @@ seekBar.addEventListener('input', () => {
   seekFill.style.width = seekBar.value + '%';
   seekBar.setAttribute('aria-valuetext', fmt(videoEl.currentTime) + ' de ' + fmt(videoEl.duration));
 });
-videoEl.addEventListener('play',  () => {
+videoEl.addEventListener('play', () => {
   playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
   wrap.classList.add('show-controls');
   scheduleControlsHide();
@@ -889,28 +1401,26 @@ document.addEventListener('fullscreenchange', () => {
   }
   wrap.classList.add('show-controls');
   wrap.classList.remove('fullscreen-idle');
-  if (settingsPanel && settingsPanel.classList.contains('open')) {
-    requestAnimationFrame(positionSettingsPanel);
-  }
   scheduleControlsHide();
 });
-document.addEventListener('click', e => {
-  if (settingsPanel && settingsPanel.classList.contains('open')) {
-    if (!settingsPanel.contains(e.target) && !(settingsBtn && settingsBtn.contains(e.target))) {
-      settingsPanel.classList.remove('open');
-      scheduleControlsHide();
-    }
-  }
-});
-window.addEventListener('resize', () => {
-  if (settingsPanel && settingsPanel.classList.contains('open')) {
-    positionSettingsPanel();
-  }
-});
 
-/* ─── Keyboard ──────────────────────────────────────── */
+/* ── Button click handlers (delegated) ─────────────── */
+document.getElementById('play-btn').addEventListener('click', togglePlay);
+document.getElementById('mute-btn').addEventListener('click', toggleMute);
+document.getElementById('fs-btn').addEventListener('click', toggleFullscreen);
+if (document.getElementById('cc-btn')) {
+  document.getElementById('cc-btn').addEventListener('click', toggleCaptions);
+}
+
+/* ═══════════════════════════════════════════════════════
+   KEYBOARD
+   ═══════════════════════════════════════════════════════ */
 document.addEventListener('keydown', e => {
+  /* Skip if typing in form elements */
   if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  /* Skip if a popup is open (let popup handle its own keys) */
+  if (popups.isAnyOpen() && e.key !== 'Escape') return;
+
   const map = {
     ' ': () => { e.preventDefault(); togglePlay(); },
     'k': togglePlay,
@@ -925,7 +1435,9 @@ document.addEventListener('keydown', e => {
   if (map[e.key]) map[e.key]();
 });
 
-/* ─── Helpers ───────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════ */
 function updateVolIcon() {
   const muted = videoEl.muted || videoEl.volume === 0;
   volIcon.innerHTML = muted
@@ -949,7 +1461,9 @@ function fmt(s) {
   return m + ':' + Math.floor(s % 60).toString().padStart(2,'0');
 }
 
-/* ─── Prefs ─────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   USER PREFERENCES
+   ═══════════════════════════════════════════════════════ */
 function saveUserPrefs() {
   localStorage.setItem(USER_PREF_KEY, JSON.stringify(userPrefs));
 }
@@ -958,14 +1472,28 @@ function restoreUserPrefs() {
     const raw = localStorage.getItem(USER_PREF_KEY);
     if (raw) userPrefs = { ...userPrefs, ...JSON.parse(raw) };
   } catch (_) {}
-  const speed = document.getElementById('pref-speed');
-  const size = document.getElementById('pref-size');
-  const text = document.getElementById('pref-text-color');
-  const bg = document.getElementById('pref-bg-color');
-  if (speed) speed.value = String(userPrefs.playbackRate);
-  if (size) size.value = String(userPrefs.subtitleSize);
-  if (text) text.value = userPrefs.subtitleText;
-  if (bg) bg.value = userPrefs.subtitleBg;
+
+  /* Sync speed pills */
+  document.querySelectorAll('.speed-pill').forEach(p => {
+    const active = p.dataset.speed === String(userPrefs.playbackRate);
+    p.classList.toggle('active', active);
+    p.setAttribute('aria-checked', active ? 'true' : 'false');
+  });
+  /* Sync size pills */
+  document.querySelectorAll('.size-pill').forEach(p => {
+    const active = p.dataset.size === String(userPrefs.subtitleSize);
+    p.classList.toggle('active', active);
+    p.setAttribute('aria-checked', active ? 'true' : 'false');
+  });
+  /* Sync color swatches */
+  const textInput = document.getElementById('pref-text-color');
+  const bgInput   = document.getElementById('pref-bg-color');
+  const swText    = document.getElementById('swatch-text');
+  const swBg      = document.getElementById('swatch-bg');
+  if (textInput) textInput.value = userPrefs.subtitleText;
+  if (bgInput)   bgInput.value   = userPrefs.subtitleBg;
+  if (swText)    swText.style.background = userPrefs.subtitleText;
+  if (swBg)      swBg.style.background   = userPrefs.subtitleBg;
 }
 function applyUserPrefs() {
   videoEl.playbackRate = parseFloat(userPrefs.playbackRate || '1');
@@ -975,7 +1503,7 @@ function applyUserPrefs() {
     cueStyle.id = 'wp-cue-style';
     document.head.appendChild(cueStyle);
   }
-  cueStyle.textContent = `#main-video::cue { color: ${userPrefs.subtitleText}; background: ${userPrefs.subtitleBg}; font-size: ${userPrefs.subtitleSize}% !important; }`;
+  cueStyle.textContent = '#main-video::cue { color: ' + userPrefs.subtitleText + '; background: ' + userPrefs.subtitleBg + '; font-size: ' + userPrefs.subtitleSize + '% !important; }';
 }
 function onPrefSpeedChange(value) { userPrefs.playbackRate = String(value); saveUserPrefs(); applyUserPrefs(); }
 function onPrefSizeChange(value) { userPrefs.subtitleSize = String(value); saveUserPrefs(); applyUserPrefs(); }
@@ -988,6 +1516,9 @@ function resetPlayerPrefs() {
   applyUserPrefs();
 }
 
+/* ═══════════════════════════════════════════════════════
+   PLAYBACK STATE PREFS (mode + captions per video)
+   ═══════════════════════════════════════════════════════ */
 function savePrefs() {
   localStorage.setItem('wp_mode_'    + VIDEO_ID, currentMode);
   localStorage.setItem('wp_captions_'+ VIDEO_ID, captionsOn ? '1' : '0');
@@ -997,20 +1528,26 @@ function restorePrefs() {
   const c = localStorage.getItem('wp_captions_' + VIDEO_ID);
   if (m && MANIFESTS[m]) { currentMode = m; }
   if (c === '1') { captionsOn = false; /* toggleCaptions will flip it */ }
-  // Apply mode button state without switching stream (stream loads in initPlayer)
-  ['original','libras','ad'].forEach(k => {
-    const btn = document.getElementById('btn-' + k);
-    if (!btn) return;
-    btn.className = 'mode-btn';
-    if (k === currentMode) btn.classList.add('active-' + currentMode);
+
+  /* Apply mode state to a11y popup options */
+  document.querySelectorAll('.a11y-option[data-mode]').forEach(opt => {
+    const k = opt.dataset.mode;
+    opt.className = 'a11y-option';
+    if (opt.disabled) return;
+    if (k === currentMode) {
+      opt.classList.add('active-' + currentMode);
+      opt.setAttribute('aria-checked', 'true');
+    }
   });
-  updateToggle('toggle-libras', currentMode==='libras','on-cyan','row-libras','row-on');
-  updateToggle('toggle-ad',     currentMode==='ad','on-violet','row-ad','row-violet');
+
   const labels = { original:'Original · HLS', libras:'Libras (PIP) · HLS', ad:'Audiodescrição · HLS' };
   if (streamLbl) streamLbl.textContent = labels[currentMode] || currentMode;
   if (c === '1') toggleCaptions();
 }
 
+/* ═══════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════ */
 initPlayer();
 </script>
 {% endblock %}
