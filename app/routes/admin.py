@@ -256,7 +256,7 @@ def video_detail(
     log_content = _read_logs(video_id)
     return templates.TemplateResponse(
         "admin/video_detail.html",
-        {"request": request, "video": video, "logs": log_content},
+        {"request": request, "video": video, "logs": log_content, "update_error": None},
     )
 
 
@@ -269,16 +269,7 @@ def reprocess_video(
 ):
     video = _get_video_or_404(db, video_id)
 
-    def _get_input_path(asset_type: AssetType) -> Path | None:
-        for a in video.assets:
-            if a.asset_type == asset_type and a.file_path:
-                p = storage.resolve_media_path(a.file_path)
-                if p is None:
-                    return None
-                return p if p.exists() else None
-        return None
-
-    main_input = _get_input_path(AssetType.original_input)
+    main_input = _get_input_path_from_assets(video, AssetType.original_input)
     if not main_input:
         raise HTTPException(status_code=400, detail="Vídeo original não encontrado no storage.")
 
@@ -290,9 +281,9 @@ def reprocess_video(
         _process_video,
         video_id=video_id,
         main_input=main_input,
-        libras_input=_get_input_path(AssetType.libras_input),
-        ad_input=_get_input_path(AssetType.ad_input),
-        subtitle_input=_get_input_path(AssetType.subtitle_input),
+        libras_input=_get_input_path_from_assets(video, AssetType.libras_input),
+        ad_input=_get_input_path_from_assets(video, AssetType.ad_input),
+        subtitle_input=_get_input_path_from_assets(video, AssetType.subtitle_input),
     )
     return RedirectResponse(url=f"/admin/videos/{video_id}", status_code=302)
 
@@ -308,6 +299,111 @@ def delete_video(
     db.delete(video)
     db.commit()
     return RedirectResponse(url="/admin/dashboard", status_code=302)
+
+
+@router.post("/videos/{video_id}/update")
+async def update_video(
+    video_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    title: str = Form(...),
+    description: str = Form(""),
+    video_file: UploadFile | None = File(None),
+    libras_file: UploadFile | None = File(None),
+    ad_file: UploadFile | None = File(None),
+    subtitle_file: UploadFile | None = File(None),
+    cover_file: UploadFile | None = File(None),
+    db: Session = Depends(get_db),
+    _admin: str = Depends(get_current_admin),
+):
+    video = _get_video_or_404(db, video_id)
+
+    def _invalid_file(upload: UploadFile | None, allowed: set[str]) -> bool:
+        return bool(upload and upload.filename and not storage.validate_extension(upload.filename, allowed))
+
+    if _invalid_file(video_file, storage.ALLOWED_VIDEO_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de video principal invalido.", db, status_code=422
+        )
+    if _invalid_file(libras_file, storage.ALLOWED_VIDEO_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de Libras invalido.", db, status_code=422
+        )
+    if _invalid_file(ad_file, storage.ALLOWED_AUDIO_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de audiodescricao invalido.", db, status_code=422
+        )
+    if _invalid_file(subtitle_file, storage.ALLOWED_SUBTITLE_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de legenda invalido.", db, status_code=422
+        )
+    if _invalid_file(cover_file, storage.ALLOWED_IMAGE_EXTENSIONS):
+        return _video_detail_with_error(
+            request, video, "Arquivo de capa invalido.", db, status_code=422
+        )
+
+    video.title = title.strip()
+    video.description = description.strip() or None
+
+    main_input = _get_input_path_from_assets(video, AssetType.original_input)
+    libras_input = _get_input_path_from_assets(video, AssetType.libras_input)
+    ad_input = _get_input_path_from_assets(video, AssetType.ad_input)
+    subtitle_input = _get_input_path_from_assets(video, AssetType.subtitle_input)
+    needs_reprocess = False
+
+    if video_file and video_file.filename:
+        main_input = storage.get_input_path(video_id, f"main{Path(video_file.filename).suffix}")
+        await save_upload(video_file, main_input)
+        _set_input_asset_path(db, video_id, AssetType.original_input, main_input)
+        needs_reprocess = True
+
+    if libras_file and libras_file.filename:
+        libras_input = storage.get_input_path(video_id, f"libras{Path(libras_file.filename).suffix}")
+        await save_upload(libras_file, libras_input)
+        _set_input_asset_path(db, video_id, AssetType.libras_input, libras_input)
+        needs_reprocess = True
+
+    if ad_file and ad_file.filename:
+        ad_input = storage.get_input_path(video_id, f"ad{Path(ad_file.filename).suffix}")
+        await save_upload(ad_file, ad_input)
+        _set_input_asset_path(db, video_id, AssetType.ad_input, ad_input)
+        needs_reprocess = True
+
+    if subtitle_file and subtitle_file.filename:
+        subtitle_input = storage.get_input_path(video_id, f"subtitle{Path(subtitle_file.filename).suffix}")
+        await save_upload(subtitle_file, subtitle_input)
+        _set_input_asset_path(db, video_id, AssetType.subtitle_input, subtitle_input)
+        needs_reprocess = True
+
+    if cover_file and cover_file.filename:
+        cover_path = storage.get_cover_path(video_id, f"cover{Path(cover_file.filename).suffix}")
+        await save_upload(cover_file, cover_path)
+        video.cover_path = storage.get_relative_media_path(cover_path)
+
+    if needs_reprocess:
+        if not main_input or not main_input.exists():
+            return _video_detail_with_error(
+                request, video, "Nao foi possivel localizar o video principal para reprocessar.", db, status_code=400
+            )
+        video.status = VideoStatus.pending
+        video.error_message = None
+        video.libras_available = False
+        video.ad_available = False
+        video.subtitle_available = False
+        db.commit()
+
+        background_tasks.add_task(
+            _process_video,
+            video_id=video_id,
+            main_input=main_input,
+            libras_input=libras_input,
+            ad_input=ad_input,
+            subtitle_input=subtitle_input,
+        )
+        return RedirectResponse(url=f"/admin/videos/{video_id}?updated=1&reprocess=1", status_code=302)
+
+    db.commit()
+    return RedirectResponse(url=f"/admin/videos/{video_id}?updated=1", status_code=302)
 
 
 # ─── Background processing ───────────────────────────────────────────────────
@@ -435,6 +531,35 @@ def _set_input_asset_path(db: Session, video_id: str, asset_type: AssetType, pat
     asset.status = AssetStatus.ready
     asset.error_message = None
     db.commit()
+
+
+def _get_input_path_from_assets(video: Video, asset_type: AssetType) -> Path | None:
+    for asset in video.assets:
+        if asset.asset_type == asset_type and asset.file_path:
+            p = storage.resolve_media_path(asset.file_path)
+            if p and p.exists():
+                return p
+    return None
+
+
+def _video_detail_with_error(
+    request: Request,
+    video: Video,
+    message: str,
+    db: Session,
+    status_code: int,
+):
+    db.refresh(video)
+    return templates.TemplateResponse(
+        "admin/video_detail.html",
+        {
+            "request": request,
+            "video": video,
+            "logs": _read_logs(video.id),
+            "update_error": message,
+        },
+        status_code=status_code,
+    )
 
 
 def _upsert_asset(

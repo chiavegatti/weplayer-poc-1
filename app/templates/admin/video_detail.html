@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}{{ video.title }} — WePlayer Admin{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}{{ video.title }} â€” WePlayer Admin{% endblock %}
 
 {% block head %}
 <style>
@@ -176,7 +176,7 @@
     vertical-align: middle;
   }
 
-  /* ── Mobile ─────────────────────────────────────────── */
+  /* â”€â”€ Mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   @media (max-width: 640px) {
     /* Assets table: scrollable */
     .card { overflow-x: auto; }
@@ -216,7 +216,7 @@
 <main id="main-content">
 <div style="max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
 
-  <!-- ── Header ──────────────────────────────────────── -->
+  <!-- â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
   <div class="animate-fade-up" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 0;">
       <h1 style="font-size: 24px; font-weight: 800; font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.2; word-break: break-word;">
@@ -227,7 +227,7 @@
       </p>
     </div>
 
-    <!-- Botões de ação -->
+    <!-- BotÃµes de aÃ§Ã£o -->
     <div style="display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; align-items: center;">
 
       {% if video.status.value == 'ready' %}
@@ -236,7 +236,7 @@
         target="_blank"
         rel="noopener noreferrer"
         class="btn btn-secondary btn-sm"
-        aria-label="Assistir o vídeo {{ video.title }} em nova aba"
+        aria-label="Assistir o vÃ­deo {{ video.title }} em nova aba"
       >
         <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" opacity="0.7"/>
@@ -254,7 +254,7 @@
         <button
           type="submit"
           class="btn btn-secondary btn-sm"
-          aria-label="Reprocessar o vídeo {{ video.title }}"
+          aria-label="Reprocessar o vÃ­deo {{ video.title }}"
         >
           <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="1 4 1 10 7 10"/>
@@ -269,12 +269,12 @@
         method="post"
         action="/admin/videos/{{ video.id }}/delete"
         style="display: inline;"
-        onsubmit="return confirm('Excluir permanentemente o vídeo &quot;{{ video.title }}&quot;? Esta ação não pode ser desfeita.')"
+        onsubmit="return confirm('Excluir permanentemente o vÃ­deo &quot;{{ video.title }}&quot;? Esta aÃ§Ã£o nÃ£o pode ser desfeita.')"
       >
         <button
           type="submit"
           class="btn btn-danger btn-sm"
-          aria-label="Excluir permanentemente o vídeo {{ video.title }}"
+          aria-label="Excluir permanentemente o vÃ­deo {{ video.title }}"
         >
           <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="3 6 5 6 21 6"/>
@@ -289,7 +289,7 @@
     </div>
   </div>
 
-  <!-- ── Status ──────────────────────────────────────── -->
+  <!-- â”€â”€ Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
   <div class="card animate-fade-up delay-1" style="padding: 24px;">
     <div class="section-label">
       <span class="section-label-dot" style="background: var(--muted);" aria-hidden="true"></span>
@@ -298,26 +298,26 @@
 
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
       {% if video.status.value == 'ready' %}
-        <span class="badge badge-ready" aria-label="Status do vídeo: Pronto para reprodução">
+        <span class="badge badge-ready" aria-label="Status do vÃ­deo: Pronto para reproduÃ§Ã£o">
           <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
             <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           Pronto
         </span>
       {% elif video.status.value == 'processing' %}
-        <span class="badge badge-processing" aria-label="Status do vídeo: Processando">
+        <span class="badge badge-processing" aria-label="Status do vÃ­deo: Processando">
           <span class="spinner" aria-hidden="true"></span>
-          Processando…
+          Processandoâ€¦
         </span>
       {% elif video.status.value == 'error' %}
-        <span class="badge badge-error" aria-label="Status do vídeo: Erro no processamento">
+        <span class="badge badge-error" aria-label="Status do vÃ­deo: Erro no processamento">
           <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
             <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
           Erro
         </span>
       {% else %}
-        <span class="badge badge-pending" aria-label="Status do vídeo: Aguardando processamento">
+        <span class="badge badge-pending" aria-label="Status do vÃ­deo: Aguardando processamento">
           <svg aria-hidden="true" width="8" height="8" viewBox="0 0 8 8">
             <circle cx="4" cy="4" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
           </svg>
@@ -325,15 +325,15 @@
         </span>
       {% endif %}
 
-      <!-- Recursos disponíveis -->
+      <!-- Recursos disponÃ­veis -->
       {% if video.libras_available %}
-        <span class="badge badge-libras" aria-label="Recurso disponível: Libras">Libras</span>
+        <span class="badge badge-libras" aria-label="Recurso disponÃ­vel: Libras">Libras</span>
       {% endif %}
       {% if video.ad_available %}
-        <span class="badge badge-ad" aria-label="Recurso disponível: Audiodescrição">Audiodescrição</span>
+        <span class="badge badge-ad" aria-label="Recurso disponÃ­vel: AudiodescriÃ§Ã£o">AudiodescriÃ§Ã£o</span>
       {% endif %}
       {% if video.subtitle_available %}
-        <span class="badge badge-sub" aria-label="Recurso disponível: Legenda">Legenda</span>
+        <span class="badge badge-sub" aria-label="Recurso disponÃ­vel: Legenda">Legenda</span>
       {% endif %}
     </div>
 
@@ -352,18 +352,76 @@
     {% endif %}
   </div>
 
-  <!-- ── Descrição ───────────────────────────────────── -->
+  <!-- â”€â”€ DescriÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+
+  <div class="card animate-fade-up delay-2" style="padding: 24px;">
+    <div class="section-label">
+      <span class="section-label-dot" style="background: var(--gold);" aria-hidden="true"></span>
+      Atualizar Conteudo
+    </div>
+
+    {% if request.query_params.get('updated') %}
+      <div class="badge badge-ready" style="margin-bottom: 14px;">
+        Alteracoes salvas{% if request.query_params.get('reprocess') %} e reprocessamento iniciado{% endif %}.
+      </div>
+    {% endif %}
+    {% if update_error %}
+      <div class="error-box" style="margin-bottom: 14px;">{{ update_error }}</div>
+    {% endif %}
+
+    <form method="post" action="/admin/videos/{{ video.id }}/update" enctype="multipart/form-data"
+          style="display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <label for="title" style="font-size:12px; color: var(--muted);">Titulo</label>
+        <input id="title" name="title" class="input" value="{{ video.title }}" required />
+      </div>
+      <div>
+        <label for="description" style="font-size:12px; color: var(--muted);">Descricao</label>
+        <textarea id="description" name="description" class="input" rows="3">{{ video.description or '' }}</textarea>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:10px;">
+        <div>
+          <label for="video_file" style="font-size:12px; color: var(--muted);">Trocar video principal</label>
+          <input id="video_file" name="video_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" class="input" />
+        </div>
+        <div>
+          <label for="libras_file" style="font-size:12px; color: var(--muted);">Trocar Libras</label>
+          <input id="libras_file" name="libras_file" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" class="input" />
+        </div>
+        <div>
+          <label for="ad_file" style="font-size:12px; color: var(--muted);">Trocar AD</label>
+          <input id="ad_file" name="ad_file" type="file" accept=".mp3,.aac,.wav,.ogg,.m4a" class="input" />
+        </div>
+        <div>
+          <label for="subtitle_file" style="font-size:12px; color: var(--muted);">Trocar legenda</label>
+          <input id="subtitle_file" name="subtitle_file" type="file" accept=".srt,.vtt" class="input" />
+        </div>
+        <div>
+          <label for="cover_file" style="font-size:12px; color: var(--muted);">Trocar capa</label>
+          <input id="cover_file" name="cover_file" type="file" accept=".jpg,.jpeg,.png,.webp" class="input" />
+        </div>
+      </div>
+      <p style="font-size:12px; color: var(--muted); margin:0;">
+        Troca de capa, titulo e descricao nao dispara reprocessamento. Troca de video, Libras, AD ou legenda dispara.
+      </p>
+      <div>
+        <button type="submit" class="btn btn-primary btn-sm">Salvar alteracoes</button>
+      </div>
+    </form>
+  </div>
+
   {% if video.description %}
   <div class="card animate-fade-up delay-2" style="padding: 24px;">
     <div class="section-label">
       <span class="section-label-dot" style="background: var(--violet);" aria-hidden="true"></span>
-      Descrição
+      DescriÃ§Ã£o
     </div>
     <p style="font-size: 14px; line-height: 1.7; color: var(--muted-2);">{{ video.description }}</p>
   </div>
   {% endif %}
 
-  <!-- ── Assets ──────────────────────────────────────── -->
+  <!-- â”€â”€ Assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
   <div class="card animate-fade-up delay-2" style="padding: 24px;">
     <div class="section-label">
       <span class="section-label-dot" style="background: var(--cyan);" aria-hidden="true"></span>
@@ -373,7 +431,7 @@
     {% if video.assets %}
     <div
       role="table"
-      aria-label="Lista de assets do vídeo {{ video.title }}"
+      aria-label="Lista de assets do vÃ­deo {{ video.title }}"
       style="display: flex; flex-direction: column; gap: 8px;"
     >
       {% for asset in video.assets %}
@@ -383,8 +441,8 @@
         <span class="asset-type-tag" role="cell">{{ asset.asset_type.value }}</span>
 
         <!-- Path -->
-        <span class="asset-path" role="cell" title="{{ asset.file_path or '—' }}">
-          {{ asset.file_path or '—' }}
+        <span class="asset-path" role="cell" title="{{ asset.file_path or 'â€”' }}">
+          {{ asset.file_path or 'â€”' }}
         </span>
 
         <!-- Status do asset -->
@@ -438,12 +496,12 @@
 
     {% else %}
     <p style="font-size: 13px; color: var(--muted); text-align: center; padding: 24px 0;">
-      Nenhum asset registrado para este vídeo.
+      Nenhum asset registrado para este vÃ­deo.
     </p>
     {% endif %}
   </div>
 
-  <!-- ── Logs ────────────────────────────────────────── -->
+  <!-- â”€â”€ Logs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
   {% if logs %}
   <div class="card animate-fade-up delay-3" style="padding: 24px;">
     <div class="section-label">
@@ -453,11 +511,11 @@
 
     <div
       style="display: flex; flex-direction: column; gap: 8px;"
-      aria-label="Logs de processamento do vídeo"
+      aria-label="Logs de processamento do vÃ­deo"
     >
       {% for name, content in logs.items() %}
       <details class="log-block">
-        <summary aria-label="Log do arquivo {{ name }}.log — clique para expandir">
+        <summary aria-label="Log do arquivo {{ name }}.log â€” clique para expandir">
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted); flex-shrink:0;">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
@@ -473,7 +531,7 @@
         <div
           class="log-content"
           role="region"
-          aria-label="Conteúdo do log {{ name }}"
+          aria-label="ConteÃºdo do log {{ name }}"
         >{{ content }}</div>
       </details>
       {% endfor %}
@@ -481,7 +539,7 @@
   </div>
   {% endif %}
 
-  <!-- ── Timestamps ──────────────────────────────────── -->
+  <!-- â”€â”€ Timestamps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
   <footer class="animate-fade-up delay-4" style="padding: 4px 0 16px;">
     <p style="font-size: 12px; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
       <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -489,12 +547,12 @@
       </svg>
       Criado em
       <time datetime="{{ video.created_at.strftime('%Y-%m-%dT%H:%M') }}" style="color: var(--muted-2);">
-        {{ video.created_at.strftime('%d/%m/%Y às %H:%M') }}
+        {{ video.created_at.strftime('%d/%m/%Y Ã s %H:%M') }}
       </time>
-      <span aria-hidden="true" style="color: var(--border);">•</span>
+      <span aria-hidden="true" style="color: var(--border);">â€¢</span>
       Atualizado em
       <time datetime="{{ video.updated_at.strftime('%Y-%m-%dT%H:%M') }}" style="color: var(--muted-2);">
-        {{ video.updated_at.strftime('%d/%m/%Y às %H:%M') }}
+        {{ video.updated_at.strftime('%d/%m/%Y Ã s %H:%M') }}
       </time>
     </p>
   </footer>
@@ -502,3 +560,6 @@
 </div>
 </main>
 {% endblock %}
+
+
+
