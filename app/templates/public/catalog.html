@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Catálogo — WePlayer{% endblock %}
+{% block title %}CatÃ¡logo â€” WePlayer{% endblock %}
 
 {% block head %}
 <style>
-  /* ── Filter bar ──────────────────────────────────────── */
+  /* â”€â”€ Filter bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .filter-bar {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   }
@@ -23,7 +23,7 @@
   .filter-btn.active-ad     { background:var(--violet-dim); border-color:rgba(167,139,250,0.3); color:var(--violet); }
   .filter-btn.active-sub    { background:var(--gold-dim); border-color:rgba(251,191,36,0.3); color:var(--gold); }
 
-  /* ── Video card ──────────────────────────────────────── */
+  /* â”€â”€ Video card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .video-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -89,7 +89,7 @@
   .card-desc  { font-size: 13px; color: var(--muted-2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex:1; }
   .card-meta  { display:flex; align-items:center; justify-content:space-between; padding-top:8px; border-top: 1px solid var(--border); }
 
-  /* ── Empty state ─────────────────────────────────────── */
+  /* â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .empty-state {
     text-align:center; padding: 120px 32px;
     display:flex; flex-direction:column; align-items:center; gap:16px;
@@ -101,14 +101,14 @@
     margin-bottom:8px;
   }
 
-  /* ── Grid ────────────────────────────────────────────── */
+  /* â”€â”€ Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .catalog-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
   }
 
-  /* ── Stagger animation ───────────────────────────────── */
+  /* â”€â”€ Stagger animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .video-card { animation: fadeUp 0.5s ease both; }
   .video-card:nth-child(1) { animation-delay: 0.05s; }
   .video-card:nth-child(2) { animation-delay: 0.10s; }
@@ -118,7 +118,7 @@
   .video-card:nth-child(6) { animation-delay: 0.30s; }
   .video-card:nth-child(n+7) { animation-delay: 0.35s; }
 
-  /* ── Mobile ───────────────────────────────────────────── */
+  /* â”€â”€ Mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   @media (max-width: 640px) {
     .catalog-grid {
       grid-template-columns: 1fr;
@@ -136,7 +136,7 @@
 {% endblock %}
 
 {% block nav_links %}
-  <a href="/" class="btn btn-ghost btn-sm">Início</a>
+  <a href="/" class="btn btn-ghost btn-sm">InÃ­cio</a>
 {% endblock %}
 
 {% block content %}
@@ -145,35 +145,35 @@
 <div class="animate-fade-up" style="margin-bottom: 40px;">
   <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
     <div>
-      <p style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:var(--cyan); text-transform:uppercase; margin-bottom:8px;">Biblioteca de conteúdo</p>
-      <h1 style="font-size:2rem;">Catálogo</h1>
+      <p style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:var(--cyan); text-transform:uppercase; margin-bottom:8px;">Biblioteca de conteÃºdo</p>
+      <h1 style="font-size:2rem;">CatÃ¡logo</h1>
     </div>
     <span style="font-size:14px; color:var(--muted);">
-      {{ videos|length }} vídeo{% if videos|length != 1 %}s{% endif %} disponíve{% if videos|length != 1 %}is{% endif %}
+      {{ videos|length }} vÃ­deo{% if videos|length != 1 %}s{% endif %} disponÃ­ve{% if videos|length != 1 %}is{% endif %}
     </span>
   </div>
 
   <!-- Filter bar -->
   {% if videos %}
-  <div class="filter-bar" id="filterBar" role="group" aria-label="Filtros de conteúdo">
+  <div class="filter-bar" id="filterBar" role="group" aria-label="Filtros de conteÃºdo">
     <button class="filter-btn active" data-filter="all" onclick="filter(this,'all')" aria-pressed="true">Todos</button>
-    <button class="filter-btn" data-filter="libras" onclick="filter(this,'libras')" aria-pressed="false">🤟 Libras</button>
-    <button class="filter-btn" data-filter="ad" onclick="filter(this,'ad')" aria-pressed="false">🎙️ Audiodescrição</button>
-    <button class="filter-btn" data-filter="sub" onclick="filter(this,'sub')" aria-pressed="false">💬 Legenda</button>
+    <button class="filter-btn" data-filter="libras" onclick="filter(this,'libras')" aria-pressed="false">ðŸ¤Ÿ Libras</button>
+    <button class="filter-btn" data-filter="ad" onclick="filter(this,'ad')" aria-pressed="false">ðŸŽ™ï¸ AudiodescriÃ§Ã£o</button>
+    <button class="filter-btn" data-filter="sub" onclick="filter(this,'sub')" aria-pressed="false">ðŸ’¬ Legenda</button>
   </div>
   {% endif %}
 </div>
 
 <!-- Grid -->
 {% if videos %}
-<div class="catalog-grid" id="catalogGrid" role="list" aria-live="polite" aria-label="Vídeos disponíveis">
+<div class="catalog-grid" id="catalogGrid" role="list" aria-live="polite" aria-label="VÃ­deos disponÃ­veis">
   {% for v in videos %}
   <a href="/watch/{{ v.id }}" class="video-card"
      role="listitem"
      data-libras="{{ 'true' if v.libras_available else 'false' }}"
      data-ad="{{ 'true' if v.ad_available else 'false' }}"
      data-sub="{{ 'true' if v.subtitle_available else 'false' }}"
-     aria-label="Assistir: {{ v.title }}{% if v.libras_available %} — Libras disponível{% endif %}{% if v.ad_available %} — Audiodescrição disponível{% endif %}{% if v.subtitle_available %} — Legenda disponível{% endif %}">
+     aria-label="Assistir: {{ v.title }}{% if v.libras_available %} â€” Libras disponÃ­vel{% endif %}{% if v.ad_available %} â€” AudiodescriÃ§Ã£o disponÃ­vel{% endif %}{% if v.subtitle_available %} â€” Legenda disponÃ­vel{% endif %}">
 
     <!-- Thumbnail -->
     <div class="card-thumb">
@@ -195,13 +195,13 @@
       <div class="thumb-gradient"></div>
       <div class="thumb-badges">
         {% if v.libras_available %}
-          <span class="badge badge-libras" style="font-size:10px; padding:2px 8px;">🤟 Libras</span>
+          <span class="badge badge-libras" style="font-size:10px; padding:2px 8px;">ðŸ¤Ÿ Libras</span>
         {% endif %}
         {% if v.ad_available %}
-          <span class="badge badge-ad" style="font-size:10px; padding:2px 8px;">🎙️ AD</span>
+          <span class="badge badge-ad" style="font-size:10px; padding:2px 8px;">ðŸŽ™ï¸ AD</span>
         {% endif %}
         {% if v.subtitle_available %}
-          <span class="badge badge-sub" style="font-size:10px; padding:2px 8px;">💬 CC</span>
+          <span class="badge badge-sub" style="font-size:10px; padding:2px 8px;">ðŸ’¬ CC</span>
         {% endif %}
       </div>
     </div>
@@ -243,10 +243,10 @@ function filter(btn, type) {
 
 {% else %}
 <div class="empty-state animate-fade-up">
-  <div class="empty-icon">🎬</div>
-  <h2 style="font-size:1.5rem;">Nenhum vídeo disponível</h2>
+  <div class="empty-icon">ðŸŽ¬</div>
+  <h2 style="font-size:1.5rem;">Nenhum vÃ­deo disponÃ­vel</h2>
   <p style="color:var(--muted-2); max-width:380px;">
-    Em breve novos conteúdos estarão disponíveis aqui.
+    Em breve novos conteÃºdos estarÃ£o disponÃ­veis aqui.
   </p>
 </div>
 {% endif %}

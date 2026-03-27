@@ -15,7 +15,7 @@ def make_asset(video_id: str, asset_type: AssetType, **kwargs) -> VideoAsset:
     return VideoAsset(**defaults)
 
 
-# ── Video model ────────────────────────────────────────────────────────────────
+# â”€â”€ Video model â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_video_repr():
     v = make_video(title="Foo")
@@ -94,7 +94,7 @@ def test_get_subtitle_path_not_ready():
     assert v.get_subtitle_path() is None
 
 
-# ── VideoAsset model ───────────────────────────────────────────────────────────
+# â”€â”€ VideoAsset model â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_asset_repr():
     vid_id = str(uuid.uuid4())
@@ -115,7 +115,7 @@ def test_asset_default_status(db_session):
     assert a.status == AssetStatus.pending
 
 
-# ── Enum values ────────────────────────────────────────────────────────────────
+# â”€â”€ Enum values â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_video_status_values():
     assert VideoStatus.pending == "pending"
@@ -131,7 +131,7 @@ def test_asset_type_values():
     assert AssetType.subtitle_vtt == "subtitle_vtt"
 
 
-# ── AdminUser model ────────────────────────────────────────────────────────────
+# â”€â”€ AdminUser model â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_admin_user_repr(db_session):
     from app.models.models import AdminUser

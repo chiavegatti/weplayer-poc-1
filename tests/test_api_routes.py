@@ -16,7 +16,7 @@ def make_video(db, **kwargs) -> Video:
     return v
 
 
-# ── Authenticated API ──────────────────────────────────────────────────────────
+# â”€â”€ Authenticated API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_api_list_videos_requires_auth(client):
     r = client.get("/api/videos", follow_redirects=False)
@@ -57,7 +57,7 @@ def test_api_get_video_not_found(auth_client):
     assert r.status_code == 404
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
+# â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_api_public_videos_empty(client):
     r = client.get("/api/public/videos")

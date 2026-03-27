@@ -19,11 +19,11 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 router = APIRouter()
 
-# Max 1 FFmpeg job at a time — protects the server under concurrent uploads
+# Max 1 FFmpeg job at a time â€” protects the server under concurrent uploads
 _encode_semaphore = threading.Semaphore(1)
 
 
-# ─── Auth ────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
@@ -40,7 +40,7 @@ def login(
     if not check_credentials(username, password, db):
         return templates.TemplateResponse(
             "admin/login.html",
-            {"request": request, "error": "Usuário ou senha inválidos."},
+            {"request": request, "error": "UsuÃ¡rio ou senha invÃ¡lidos."},
             status_code=401,
         )
     token = create_session_token(username)
@@ -62,7 +62,7 @@ def logout():
     return response
 
 
-# ─── Dashboard ───────────────────────────────────────────────────────────────
+# â”€â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(
@@ -76,7 +76,7 @@ def dashboard(
     )
 
 
-# ─── Docs ─────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Docs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/docs", response_class=HTMLResponse)
 def admin_docs(
@@ -88,7 +88,7 @@ def admin_docs(
     )
 
 
-# ─── New Video ───────────────────────────────────────────────────────────────
+# â”€â”€â”€ New Video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/videos/new", response_class=HTMLResponse)
 def new_video_form(
@@ -116,7 +116,7 @@ async def create_video(
     if not storage.validate_extension(video_file.filename or "", storage.ALLOWED_VIDEO_EXTENSIONS):
         return templates.TemplateResponse(
             "admin/video_form.html",
-            {"request": request, "error": "Arquivo de vídeo inválido. Use MP4, MOV, AVI, MKV ou WEBM."},
+            {"request": request, "error": "Arquivo de vÃ­deo invÃ¡lido. Use MP4, MOV, AVI, MKV ou WEBM."},
             status_code=422,
         )
 
@@ -204,7 +204,7 @@ def _add_asset(db: Session, video_id: str, asset_type: AssetType, path: Path) ->
     return asset
 
 
-# ─── Video Status JSON ────────────────────────────────────────────────────────
+# â”€â”€â”€ Video Status JSON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/videos/{video_id}/status")
 def video_status_api(
@@ -243,7 +243,7 @@ def video_status_api(
     })
 
 
-# ─── Video Detail ─────────────────────────────────────────────────────────────
+# â”€â”€â”€ Video Detail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/videos/{video_id}", response_class=HTMLResponse)
 def video_detail(
@@ -271,7 +271,7 @@ def reprocess_video(
 
     main_input = _get_input_path_from_assets(video, AssetType.original_input)
     if not main_input:
-        raise HTTPException(status_code=400, detail="Vídeo original não encontrado no storage.")
+        raise HTTPException(status_code=400, detail="VÃ­deo original nÃ£o encontrado no storage.")
 
     video.status = VideoStatus.pending
     video.error_message = None
@@ -406,7 +406,7 @@ async def update_video(
     return RedirectResponse(url=f"/admin/videos/{video_id}?updated=1", status_code=302)
 
 
-# ─── Background processing ───────────────────────────────────────────────────
+# â”€â”€â”€ Background processing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _process_video(
     video_id: str,
@@ -416,13 +416,13 @@ def _process_video(
     subtitle_input: Path | None,
     _session_factory=None,
 ) -> None:
-    """Synchronous processing job — runs in BackgroundTasks thread."""
+    """Synchronous processing job â€” runs in BackgroundTasks thread."""
     from app.database import SessionLocal
     from app.services import ffmpeg_service as ffmpeg
 
     session_factory = _session_factory or SessionLocal
 
-    # Wait for the semaphore — video stays 'pending' while queued
+    # Wait for the semaphore â€” video stays 'pending' while queued
     with _encode_semaphore:
         db = session_factory()
         try:
@@ -599,7 +599,7 @@ def _fail_video(db: Session, video_id: str, message: str) -> None:
 def _get_video_or_404(db: Session, video_id: str) -> Video:
     video = db.query(Video).get(video_id)
     if not video:
-        raise HTTPException(status_code=404, detail="Vídeo não encontrado.")
+        raise HTTPException(status_code=404, detail="VÃ­deo nÃ£o encontrado.")
     return video
 
 

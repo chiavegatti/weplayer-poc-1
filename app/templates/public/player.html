@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}{{ video.title }} â€” WePlayer{% endblock %}
 
 {% block head %}
@@ -32,10 +32,12 @@
   transition: opacity 0.25s ease;
   pointer-events: none;
 }
-#player-wrap.show-controls #wp-overlay,
-#player-wrap:focus-within #wp-overlay {
+#player-wrap.show-controls #wp-overlay {
   opacity: 1;
   pointer-events: auto;
+}
+#player-wrap.fullscreen-idle {
+  cursor: none;
 }
 
 /* Top gradient */
@@ -429,13 +431,13 @@
               </button>
               <button class="mode-btn" id="btn-libras"
                       onclick="switchMode('libras')" aria-pressed="false"
-                      {% if not manifests.libras %}disabled title="Libras nÃ£o disponÃ­vel"{% endif %}>
-                ðŸ¤Ÿ Libras
+                      {% if not manifests.libras %}disabled title="Libras nao disponivel"{% endif %}>
+                Libras
               </button>
               <button class="mode-btn" id="btn-ad"
                       onclick="switchMode('ad')" aria-pressed="false"
-                      {% if not manifests.ad %}disabled title="AD nÃ£o disponÃ­vel"{% endif %}>
-                ðŸŽ™ï¸ AD
+                      {% if not manifests.ad %}disabled title="AD nao disponivel"{% endif %}>
+                AD
               </button>
             </div>
 
@@ -501,9 +503,9 @@
         <p style="color:var(--muted-2); font-size:14px; line-height:1.7;">{{ video.description }}</p>
       {% endif %}
       <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;">
-        {% if video.libras_available %}<span class="badge badge-libras">ðŸ¤Ÿ Libras disponÃ­vel</span>{% endif %}
-        {% if video.ad_available %}<span class="badge badge-ad">ðŸŽ™ï¸ AudiodescriÃ§Ã£o</span>{% endif %}
-        {% if video.subtitle_available %}<span class="badge badge-sub">ðŸ’¬ Legenda</span>{% endif %}
+        {% if video.libras_available %}<span class="badge badge-libras">Libras disponivel</span>{% endif %}
+        {% if video.ad_available %}<span class="badge badge-ad">Audiodescricao</span>{% endif %}
+        {% if video.subtitle_available %}<span class="badge badge-sub">Legenda</span>{% endif %}
       </div>
     </div>
   </div>
@@ -521,10 +523,10 @@
            tabindex="{{ '0' if manifests.libras else '-1' }}"
            onclick="{% if manifests.libras %}switchMode(currentMode==='libras'?'original':'libras'){% endif %}"
            onkeydown="{% if manifests.libras %}if(event.key==='Enter'||event.key===' '){event.preventDefault();switchMode(currentMode==='libras'?'original':'libras');}{% endif %}"
-           aria-label="Libras â€” Picture-in-picture"
+           aria-label="Libras - Picture-in-picture"
            style="{% if not manifests.libras %}opacity:0.4; cursor:default;{% endif %}">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">ðŸ¤Ÿ</span>
+          <span style="font-size:18px;" aria-hidden="true">L</span>
           <div>
             <div style="font-size:13px; font-weight:600;">Libras</div>
             <div style="font-size:11px; color:var(--muted);">Picture-in-picture</div>
@@ -539,13 +541,13 @@
            tabindex="{{ '0' if manifests.ad else '-1' }}"
            onclick="{% if manifests.ad %}switchMode(currentMode==='ad'?'original':'ad'){% endif %}"
            onkeydown="{% if manifests.ad %}if(event.key==='Enter'||event.key===' '){event.preventDefault();switchMode(currentMode==='ad'?'original':'ad');}{% endif %}"
-           aria-label="AudiodescriÃ§Ã£o â€” NarraÃ§Ã£o de cenas"
+           aria-label="Audiodescricao - Narracao de cenas"
            style="{% if not manifests.ad %}opacity:0.4; cursor:default;{% endif %}">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">ðŸŽ™ï¸</span>
+          <span style="font-size:18px;" aria-hidden="true">AD</span>
           <div>
-            <div style="font-size:13px; font-weight:600;">AudiodescriÃ§Ã£o</div>
-            <div style="font-size:11px; color:var(--muted);">NarraÃ§Ã£o de cenas</div>
+            <div style="font-size:13px; font-weight:600;">Audiodescricao</div>
+            <div style="font-size:11px; color:var(--muted);">Narracao de cenas</div>
           </div>
         </div>
         <div class="toggle {% if manifests.ad %}on-violet{% endif %}" id="toggle-ad" aria-hidden="true"></div>
@@ -558,24 +560,24 @@
            tabindex="0"
            onclick="toggleCaptions()"
            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCaptions();}"
-           aria-label="Legenda â€” PortuguÃªs">
+           aria-label="Legenda - Portugues">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">ðŸ’¬</span>
+          <span style="font-size:18px;" aria-hidden="true">CC</span>
           <div>
             <div style="font-size:13px; font-weight:600;">Legenda</div>
-            <div style="font-size:11px; color:var(--muted);">PortuguÃªs</div>
+            <div style="font-size:11px; color:var(--muted);">Portugues</div>
           </div>
         </div>
         <div class="toggle" id="toggle-cc" aria-hidden="true"></div>
       </div>
       {% else %}
       <div class="a11y-row" role="switch" aria-checked="false" aria-disabled="true"
-           aria-label="Legenda â€” NÃ£o disponÃ­vel" style="opacity:0.4; cursor:default;">
+           aria-label="Legenda - Nao disponivel" style="opacity:0.4; cursor:default;">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px;" aria-hidden="true">ðŸ’¬</span>
+          <span style="font-size:18px;" aria-hidden="true">CC</span>
           <div>
             <div style="font-size:13px; font-weight:600;">Legenda</div>
-            <div style="font-size:11px; color:var(--muted);">NÃ£o disponÃ­vel</div>
+            <div style="font-size:11px; color:var(--muted);">Nao disponivel</div>
           </div>
         </div>
         <div class="toggle" aria-hidden="true"></div>
@@ -587,7 +589,7 @@
     <div class="meta-section">
       <div class="meta-label">Stream ativo</div>
       <div style="display:flex; align-items:center; justify-content:space-between;">
-        <span style="font-size:13px; color:var(--muted-2);" id="stream-label">Original Â· HLS</span>
+        <span style="font-size:13px; color:var(--muted-2);" id="stream-label">Original - HLS</span>
         <span class="badge badge-ready" style="font-size:10px;" id="stream-quality">HD</span>
       </div>
     </div>
@@ -597,9 +599,9 @@
       <div class="meta-label" id="shortcuts-label">Atalhos de teclado</div>
       <dl aria-labelledby="shortcuts-label" style="display:flex; flex-direction:column; gap:8px; margin:0;">
         {% for shortcut in [
-          ('EspaÃ§o / K', 'Play / Pause'),
-          ('â† / â†’', 'Retroceder / AvanÃ§ar 10s'),
-          ('â†‘ / â†“', 'Volume'),
+          ('Espaco / K', 'Play / Pause'),
+          ('<- / ->', 'Retroceder / Avancar 10s'),
+          ('^ / v', 'Volume'),
           ('M', 'Mudo'),
           ('F', 'Tela cheia'),
           ('C', 'Legendas'),
@@ -701,7 +703,7 @@ async function switchMode(mode) {
   updateToggle('toggle-ad',     mode === 'ad',     'on-violet', 'row-ad',     'row-violet');
 
   // Update stream label
-  const labels = { original:'Original Â· HLS', libras:'Libras (PIP) Â· HLS', ad:'AudiodescriÃ§Ã£o Â· HLS' };
+  const labels = { original:'Original - HLS', libras:'Libras (PIP) - HLS', ad:'Audiodescricao - HLS' };
   if (streamLbl) streamLbl.textContent = labels[mode] || mode;
 
   currentMode = mode;
@@ -748,7 +750,7 @@ function applySubtitle() {
   if (existing) existing.remove();
   const track   = document.createElement('track');
   track.kind    = 'subtitles';
-  track.label   = 'PortuguÃªs';
+  track.label   = 'Portugues';
   track.srclang = 'pt';
   track.src     = '/media/' + SUBTITLE;
   if (captionsOn) track.default = true;
@@ -790,11 +792,15 @@ function showFlash(type) {
 
 function scheduleControlsHide() {
   clearTimeout(hideTimer);
+  wrap.classList.remove('fullscreen-idle');
   if (videoEl.paused) return;
   const timeoutMs = document.fullscreenElement ? 4000 : 2500;
   hideTimer = setTimeout(() => {
     if (!videoEl.paused && (!settingsPanel || !settingsPanel.classList.contains('open'))) {
       wrap.classList.remove('show-controls');
+      if (document.fullscreenElement) {
+        wrap.classList.add('fullscreen-idle');
+      }
     }
   }, timeoutMs);
 }
@@ -822,6 +828,7 @@ videoEl.addEventListener('play',  () => {
 videoEl.addEventListener('pause', () => {
   playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
   wrap.classList.add('show-controls');
+  wrap.classList.remove('fullscreen-idle');
   clearTimeout(hideTimer);
 });
 document.getElementById('volume-bar').addEventListener('input', e => {
@@ -831,6 +838,7 @@ document.getElementById('volume-bar').addEventListener('input', e => {
 });
 wrap.addEventListener('mousemove', () => {
   wrap.classList.add('show-controls');
+  wrap.classList.remove('fullscreen-idle');
   scheduleControlsHide();
 });
 wrap.addEventListener('click', e => {
@@ -844,6 +852,7 @@ document.addEventListener('fullscreenchange', () => {
     icon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
   }
   wrap.classList.add('show-controls');
+  wrap.classList.remove('fullscreen-idle');
   scheduleControlsHide();
 });
 document.addEventListener('click', e => {
@@ -952,7 +961,7 @@ function restorePrefs() {
   });
   updateToggle('toggle-libras', currentMode==='libras','on-cyan','row-libras','row-on');
   updateToggle('toggle-ad',     currentMode==='ad','on-violet','row-ad','row-violet');
-  const labels = { original:'Original Â· HLS', libras:'Libras (PIP) Â· HLS', ad:'AudiodescriÃ§Ã£o Â· HLS' };
+  const labels = { original:'Original - HLS', libras:'Libras (PIP) - HLS', ad:'Audiodescricao - HLS' };
   if (streamLbl) streamLbl.textContent = labels[currentMode] || currentMode;
   if (c === '1') toggleCaptions();
 }

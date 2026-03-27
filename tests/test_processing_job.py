@@ -18,7 +18,7 @@ def make_video_in_db(db, video_id: str, status=VideoStatus.pending) -> Video:
     return v
 
 
-# ── _upsert_asset ─────────────────────────────────────────────────────────────
+# â”€â”€ _upsert_asset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_upsert_asset_creates_new(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
@@ -75,7 +75,7 @@ def test_upsert_asset_error(tmp_path, monkeypatch):
     db.close()
 
 
-# ── _fail_video ───────────────────────────────────────────────────────────────
+# â”€â”€ _fail_video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_fail_video(tmp_path, monkeypatch):
     db = TestingSessionLocal()
@@ -98,7 +98,7 @@ def test_fail_video_nonexistent():
     db.close()
 
 
-# ── _process_video ────────────────────────────────────────────────────────────
+# â”€â”€ _process_video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_process_video_success(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
@@ -213,7 +213,7 @@ def test_process_video_nonexistent_id(tmp_path, monkeypatch):
 
 
 def test_process_video_ad_failure_continues(tmp_path, monkeypatch):
-    """AD failure should not stop pipeline — video ends as ready with ad_available=False."""
+    """AD failure should not stop pipeline â€” video ends as ready with ad_available=False."""
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
 
     db = TestingSessionLocal()
@@ -326,7 +326,7 @@ def test_process_video_with_all_assets_success(tmp_path, monkeypatch):
     db.close()
 
 
-# ── _read_logs ────────────────────────────────────────────────────────────────
+# â”€â”€ _read_logs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_read_logs(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")

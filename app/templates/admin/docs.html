@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Documentação — WePlayer Admin{% endblock %}
+{% block title %}DocumentaÃ§Ã£o â€” WePlayer Admin{% endblock %}
 
 {% block head %}
 <style>
@@ -11,7 +11,7 @@
   }
   .nav-link-muted:hover { color: var(--text); background: rgba(255,255,255,0.05); }
 
-  /* ── Sidebar nav ─────────────────────────────────────── */
+  /* â”€â”€ Sidebar nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .docs-layout {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -46,7 +46,7 @@
   .sidebar-link:hover { color: var(--text); background: rgba(255,255,255,0.04); }
   .sidebar-link.active { color: var(--cyan); background: var(--cyan-dim); }
 
-  /* ── Doc content ─────────────────────────────────────── */
+  /* â”€â”€ Doc content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .doc-content { min-width: 0; }
 
   .doc-section {
@@ -151,7 +151,7 @@
     font-family: var(--font-display); color: var(--muted-2);
   }
 
-  /* ── Mobile ─────────────────────────────────────────── */
+  /* â”€â”€ Mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   @media (max-width: 860px) {
     .docs-layout { grid-template-columns: 1fr; }
     .docs-sidebar { position: static; display: flex; flex-wrap: wrap;
@@ -170,12 +170,12 @@
 {% endblock %}
 
 {% block nav_links %}
-  <a href="/admin/dashboard" class="nav-link-muted" aria-label="Voltar ao dashboard">← Dashboard</a>
-  <a href="/admin/videos/new" class="btn btn-primary btn-sm" aria-label="Adicionar novo vídeo">
+  <a href="/admin/dashboard" class="nav-link-muted" aria-label="Voltar ao dashboard">â† Dashboard</a>
+  <a href="/admin/videos/new" class="btn btn-primary btn-sm" aria-label="Adicionar novo vÃ­deo">
     <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
     </svg>
-    Novo vídeo
+    Novo vÃ­deo
   </a>
   <a href="/admin/logout" class="btn btn-ghost btn-sm">Sair</a>
 {% endblock %}
@@ -187,20 +187,20 @@
 <div class="animate-fade-up" style="margin-bottom: 40px;">
   <p style="font-size:12px; font-weight:700; letter-spacing:0.12em; color:var(--cyan); text-transform:uppercase; margin-bottom:8px;">Painel Administrativo</p>
   <h1 style="font-size: 26px; font-weight: 800; font-family: var(--font-display); letter-spacing: -0.02em; margin-bottom: 8px;">
-    Documentação &amp; Tutorial
+    DocumentaÃ§Ã£o &amp; Tutorial
   </h1>
   <p style="font-size: 14px; color: var(--muted); max-width: 560px;">
-    Tudo que você precisa saber para publicar, gerenciar e acompanhar vídeos acessíveis no WePlayer.
+    Tudo que vocÃª precisa saber para publicar, gerenciar e acompanhar vÃ­deos acessÃ­veis no WePlayer.
   </p>
 </div>
 
 <div class="docs-layout animate-fade-up delay-1">
 
-  <!-- ══════════════ SIDEBAR ══════════════ -->
-  <nav class="docs-sidebar" aria-label="Navegação da documentação">
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• SIDEBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <nav class="docs-sidebar" aria-label="NavegaÃ§Ã£o da documentaÃ§Ã£o">
     <div class="sidebar-section">
-      <p class="sidebar-label">Início</p>
-      <a href="#visao-geral" class="sidebar-link active">Visão geral</a>
+      <p class="sidebar-label">InÃ­cio</p>
+      <a href="#visao-geral" class="sidebar-link active">VisÃ£o geral</a>
       <a href="#como-funciona" class="sidebar-link">Como funciona</a>
     </div>
     <div class="sidebar-section">
@@ -210,117 +210,117 @@
       <a href="#acessibilidade" class="sidebar-link">Recursos de acessibilidade</a>
     </div>
     <div class="sidebar-section">
-      <p class="sidebar-label">Referência</p>
-      <a href="#status" class="sidebar-link">Status do vídeo</a>
-      <a href="#player" class="sidebar-link">Player público</a>
+      <p class="sidebar-label">ReferÃªncia</p>
+      <a href="#status" class="sidebar-link">Status do vÃ­deo</a>
+      <a href="#player" class="sidebar-link">Player pÃºblico</a>
       <a href="#atalhos" class="sidebar-link">Atalhos de teclado</a>
       <a href="#faq" class="sidebar-link">FAQ</a>
     </div>
   </nav>
 
-  <!-- ══════════════ CONTENT ══════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• CONTENT â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="doc-content">
 
-    <!-- ── Visão geral ── -->
+    <!-- â”€â”€ VisÃ£o geral â”€â”€ -->
     <section class="doc-section" id="visao-geral">
       <h2>
-        <span class="sec-icon" style="background:var(--cyan-dim);">🎬</span>
-        Visão geral
+        <span class="sec-icon" style="background:var(--cyan-dim);">ðŸŽ¬</span>
+        VisÃ£o geral
       </h2>
       <p>
-        O <strong style="color:var(--text);">WePlayer</strong> é uma plataforma SaaS de vídeo acessível que automatiza a geração de três camadas de acessibilidade a partir dos seus arquivos de entrada:
+        O <strong style="color:var(--text);">WePlayer</strong> Ã© uma plataforma SaaS de vÃ­deo acessÃ­vel que automatiza a geraÃ§Ã£o de trÃªs camadas de acessibilidade a partir dos seus arquivos de entrada:
       </p>
       <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:12px; margin:20px 0;">
         <div class="card" style="padding:20px;">
-          <div style="font-size:24px; margin-bottom:8px;">🤟</div>
+          <div style="font-size:24px; margin-bottom:8px;">ðŸ¤Ÿ</div>
           <p style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px;">Libras</p>
-          <p style="font-size:12px; color:var(--muted-2);">Janela de intérprete de Língua Brasileira de Sinais em PIP (picture-in-picture) sobreposta ao vídeo principal.</p>
+          <p style="font-size:12px; color:var(--muted-2);">Janela de intÃ©rprete de LÃ­ngua Brasileira de Sinais em PIP (picture-in-picture) sobreposta ao vÃ­deo principal.</p>
         </div>
         <div class="card" style="padding:20px;">
-          <div style="font-size:24px; margin-bottom:8px;">🎙️</div>
-          <p style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px;">Audiodescrição</p>
-          <p style="font-size:12px; color:var(--muted-2);">Mixagem de áudio do vídeo principal com trilha de audiodescrição narrada, sem alterar o visual.</p>
+          <div style="font-size:24px; margin-bottom:8px;">ðŸŽ™ï¸</div>
+          <p style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px;">AudiodescriÃ§Ã£o</p>
+          <p style="font-size:12px; color:var(--muted-2);">Mixagem de Ã¡udio do vÃ­deo principal com trilha de audiodescriÃ§Ã£o narrada, sem alterar o visual.</p>
         </div>
         <div class="card" style="padding:20px;">
-          <div style="font-size:24px; margin-bottom:8px;">💬</div>
+          <div style="font-size:24px; margin-bottom:8px;">ðŸ’¬</div>
           <p style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px;">Legendas</p>
-          <p style="font-size:12px; color:var(--muted-2);">Conversão automática de SRT ou VTT para WebVTT exibido pelo player com controle de ativação/desativação.</p>
+          <p style="font-size:12px; color:var(--muted-2);">ConversÃ£o automÃ¡tica de SRT ou VTT para WebVTT exibido pelo player com controle de ativaÃ§Ã£o/desativaÃ§Ã£o.</p>
         </div>
       </div>
       <p>
-        Todo o processamento é feito via <strong style="color:var(--text);">FFmpeg</strong> em background após o upload, sem intervenção manual.
+        Todo o processamento Ã© feito via <strong style="color:var(--text);">FFmpeg</strong> em background apÃ³s o upload, sem intervenÃ§Ã£o manual.
       </p>
     </section>
 
-    <!-- ── Como funciona ── -->
+    <!-- â”€â”€ Como funciona â”€â”€ -->
     <section class="doc-section" id="como-funciona">
       <h2>
-        <span class="sec-icon" style="background:var(--violet-dim);">⚙️</span>
+        <span class="sec-icon" style="background:var(--violet-dim);">âš™ï¸</span>
         Como funciona
       </h2>
-      <p>O pipeline do WePlayer processa cada vídeo em quatro etapas paralelas:</p>
+      <p>O pipeline do WePlayer processa cada vÃ­deo em quatro etapas paralelas:</p>
       <div style="display:flex; flex-direction:column; gap:0; margin:16px 0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
         <div style="padding:16px 20px; display:flex; gap:14px; align-items:center; border-bottom:1px solid var(--border);">
-          <span style="font-size:20px;">1️⃣</span>
+          <span style="font-size:20px;">1ï¸âƒ£</span>
           <div>
             <p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 2px;">HLS original</p>
-            <p style="font-size:12px; color:var(--muted-2); margin:0;">Segmentação do vídeo principal em HLS (HTTP Live Streaming) para streaming adaptativo.</p>
+            <p style="font-size:12px; color:var(--muted-2); margin:0;">SegmentaÃ§Ã£o do vÃ­deo principal em HLS (HTTP Live Streaming) para streaming adaptativo.</p>
           </div>
         </div>
         <div style="padding:16px 20px; display:flex; gap:14px; align-items:center; border-bottom:1px solid var(--border);">
-          <span style="font-size:20px;">2️⃣</span>
+          <span style="font-size:20px;">2ï¸âƒ£</span>
           <div>
             <p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 2px;">HLS Libras (condicional)</p>
-            <p style="font-size:12px; color:var(--muted-2); margin:0;">Geração de variante com overlay PIP do vídeo de intérprete, se fornecido.</p>
+            <p style="font-size:12px; color:var(--muted-2); margin:0;">GeraÃ§Ã£o de variante com overlay PIP do vÃ­deo de intÃ©rprete, se fornecido.</p>
           </div>
         </div>
         <div style="padding:16px 20px; display:flex; gap:14px; align-items:center; border-bottom:1px solid var(--border);">
-          <span style="font-size:20px;">3️⃣</span>
+          <span style="font-size:20px;">3ï¸âƒ£</span>
           <div>
-            <p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 2px;">HLS Audiodescrição (condicional)</p>
-            <p style="font-size:12px; color:var(--muted-2); margin:0;">Mixagem de áudio com amix do FFmpeg, resultando em nova variante HLS.</p>
+            <p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 2px;">HLS AudiodescriÃ§Ã£o (condicional)</p>
+            <p style="font-size:12px; color:var(--muted-2); margin:0;">Mixagem de Ã¡udio com amix do FFmpeg, resultando em nova variante HLS.</p>
           </div>
         </div>
         <div style="padding:16px 20px; display:flex; gap:14px; align-items:center;">
-          <span style="font-size:20px;">4️⃣</span>
+          <span style="font-size:20px;">4ï¸âƒ£</span>
           <div>
             <p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 2px;">WebVTT (condicional)</p>
-            <p style="font-size:12px; color:var(--muted-2); margin:0;">Conversão de .srt para .vtt (ou cópia direta se já for .vtt) para exibição de legendas.</p>
+            <p style="font-size:12px; color:var(--muted-2); margin:0;">ConversÃ£o de .srt para .vtt (ou cÃ³pia direta se jÃ¡ for .vtt) para exibiÃ§Ã£o de legendas.</p>
           </div>
         </div>
       </div>
       <div class="callout callout-tip">
-        <span class="callout-icon">💡</span>
-        <div>Os recursos de Libras, AD e Legenda são <strong>opcionais e independentes</strong>. Você pode publicar um vídeo com apenas um deles, com todos ou com nenhum — o player adapta a interface automaticamente.</div>
+        <span class="callout-icon">ðŸ’¡</span>
+        <div>Os recursos de Libras, AD e Legenda sÃ£o <strong>opcionais e independentes</strong>. VocÃª pode publicar um vÃ­deo com apenas um deles, com todos ou com nenhum â€” o player adapta a interface automaticamente.</div>
       </div>
     </section>
 
-    <!-- ── Passo a passo ── -->
+    <!-- â”€â”€ Passo a passo â”€â”€ -->
     <section class="doc-section" id="passo-a-passo">
       <h2>
-        <span class="sec-icon" style="background:rgba(52,211,153,0.1);">📋</span>
-        Tutorial: publicar um vídeo
+        <span class="sec-icon" style="background:rgba(52,211,153,0.1);">ðŸ“‹</span>
+        Tutorial: publicar um vÃ­deo
       </h2>
       <div class="step-list">
         <div class="step-card">
           <div class="step-num">1</div>
           <div class="step-body">
-            <p class="step-title">Acesse "Novo vídeo"</p>
-            <p class="step-desc">No dashboard, clique em <strong style="color:var(--text);">+ Novo vídeo</strong> (canto superior direito ou botão central). Você será levado ao formulário de upload.</p>
+            <p class="step-title">Acesse "Novo vÃ­deo"</p>
+            <p class="step-desc">No dashboard, clique em <strong style="color:var(--text);">+ Novo vÃ­deo</strong> (canto superior direito ou botÃ£o central). VocÃª serÃ¡ levado ao formulÃ¡rio de upload.</p>
           </div>
         </div>
         <div class="step-card">
           <div class="step-num">2</div>
           <div class="step-body">
-            <p class="step-title">Preencha título e descrição</p>
-            <p class="step-desc">O <strong style="color:var(--text);">título</strong> é obrigatório e será exibido no catálogo público. A descrição é opcional mas melhora a descoberta do conteúdo.</p>
+            <p class="step-title">Preencha tÃ­tulo e descriÃ§Ã£o</p>
+            <p class="step-desc">O <strong style="color:var(--text);">tÃ­tulo</strong> Ã© obrigatÃ³rio e serÃ¡ exibido no catÃ¡logo pÃºblico. A descriÃ§Ã£o Ã© opcional mas melhora a descoberta do conteÃºdo.</p>
           </div>
         </div>
         <div class="step-card">
           <div class="step-num">3</div>
           <div class="step-body">
-            <p class="step-title">Faça upload do vídeo principal</p>
-            <p class="step-desc">Arraste ou selecione o arquivo principal (<span class="fmt fmt-vid">MP4 · MOV · MKV · AVI · WEBM</span>). Este é o único campo obrigatório de arquivo. O tamanho máximo recomendado é 2 GB.</p>
+            <p class="step-title">FaÃ§a upload do vÃ­deo principal</p>
+            <p class="step-desc">Arraste ou selecione o arquivo principal (<span class="fmt fmt-vid">MP4 Â· MOV Â· MKV Â· AVI Â· WEBM</span>). Este Ã© o Ãºnico campo obrigatÃ³rio de arquivo. O tamanho mÃ¡ximo recomendado Ã© 2 GB.</p>
           </div>
         </div>
         <div class="step-card">
@@ -328,10 +328,10 @@
           <div class="step-body">
             <p class="step-title">(Opcional) Adicione recursos de acessibilidade</p>
             <p class="step-desc">
-              Na seção <em>Acessibilidade</em>, você pode incluir:<br>
-              • <strong style="color:var(--cyan);">Vídeo Libras</strong> — arquivo MP4/MOV do intérprete (sem áudio necessário)<br>
-              • <strong style="color:var(--violet);">Áudio AD</strong> — trilha <span class="fmt fmt-aud">MP3 · AAC · WAV · OGG</span> com audiodescrição<br>
-              • <strong style="color:var(--gold);">Legenda</strong> — arquivo <span class="fmt fmt-sub">SRT · VTT</span>
+              Na seÃ§Ã£o <em>Acessibilidade</em>, vocÃª pode incluir:<br>
+              â€¢ <strong style="color:var(--cyan);">VÃ­deo Libras</strong> â€” arquivo MP4/MOV do intÃ©rprete (sem Ã¡udio necessÃ¡rio)<br>
+              â€¢ <strong style="color:var(--violet);">Ãudio AD</strong> â€” trilha <span class="fmt fmt-aud">MP3 Â· AAC Â· WAV Â· OGG</span> com audiodescriÃ§Ã£o<br>
+              â€¢ <strong style="color:var(--gold);">Legenda</strong> â€” arquivo <span class="fmt fmt-sub">SRT Â· VTT</span>
             </p>
           </div>
         </div>
@@ -339,34 +339,34 @@
           <div class="step-num">5</div>
           <div class="step-body">
             <p class="step-title">(Opcional) Adicione uma capa</p>
-            <p class="step-desc">Imagens JPG, PNG ou WEBP são aceitas. A capa aparece no catálogo público como thumbnail do vídeo. Resolução recomendada: <strong style="color:var(--text);">1280 × 720 px</strong>.</p>
+            <p class="step-desc">Imagens JPG, PNG ou WEBP sÃ£o aceitas. A capa aparece no catÃ¡logo pÃºblico como thumbnail do vÃ­deo. ResoluÃ§Ã£o recomendada: <strong style="color:var(--text);">1280 Ã— 720 px</strong>.</p>
           </div>
         </div>
         <div class="step-card">
           <div class="step-num">6</div>
           <div class="step-body">
             <p class="step-title">Envie e aguarde o processamento</p>
-            <p class="step-desc">Após clicar em <strong style="color:var(--text);">Criar vídeo</strong>, o sistema fará o upload e iniciará o processamento em background. O status será <span class="badge badge-processing" style="font-size:10px;">Processando</span> até concluir, então mudará para <span class="badge badge-ready" style="font-size:10px;">Pronto</span>.</p>
+            <p class="step-desc">ApÃ³s clicar em <strong style="color:var(--text);">Criar vÃ­deo</strong>, o sistema farÃ¡ o upload e iniciarÃ¡ o processamento em background. O status serÃ¡ <span class="badge badge-processing" style="font-size:10px;">Processando</span> atÃ© concluir, entÃ£o mudarÃ¡ para <span class="badge badge-ready" style="font-size:10px;">Pronto</span>.</p>
           </div>
         </div>
         <div class="step-card">
           <div class="step-num">7</div>
           <div class="step-body">
-            <p class="step-title">Confira o vídeo publicado</p>
-            <p class="step-desc">Clique em <strong style="color:var(--text);">Detalhes</strong> no dashboard para ver o vídeo. Use o botão <strong style="color:var(--text);">Assistir</strong> para abrir o player público e verificar todos os recursos de acessibilidade.</p>
+            <p class="step-title">Confira o vÃ­deo publicado</p>
+            <p class="step-desc">Clique em <strong style="color:var(--text);">Detalhes</strong> no dashboard para ver o vÃ­deo. Use o botÃ£o <strong style="color:var(--text);">Assistir</strong> para abrir o player pÃºblico e verificar todos os recursos de acessibilidade.</p>
           </div>
         </div>
       </div>
       <div class="callout callout-warn">
-        <span class="callout-icon">⚠️</span>
-        <div>Se o status ficar em <span class="badge badge-error" style="font-size:10px;">Erro</span>, abra os detalhes do vídeo e expanda a seção <strong>Logs de processamento</strong> para ver a causa. O botão <strong>Reprocessar</strong> tentará novamente.</div>
+        <span class="callout-icon">âš ï¸</span>
+        <div>Se o status ficar em <span class="badge badge-error" style="font-size:10px;">Erro</span>, abra os detalhes do vÃ­deo e expanda a seÃ§Ã£o <strong>Logs de processamento</strong> para ver a causa. O botÃ£o <strong>Reprocessar</strong> tentarÃ¡ novamente.</div>
       </div>
     </section>
 
-    <!-- ── Formatos aceitos ── -->
+    <!-- â”€â”€ Formatos aceitos â”€â”€ -->
     <section class="doc-section" id="formatos">
       <h2>
-        <span class="sec-icon" style="background:var(--cyan-dim);">📁</span>
+        <span class="sec-icon" style="background:var(--cyan-dim);">ðŸ“</span>
         Formatos aceitos
       </h2>
       <div class="card" style="overflow:hidden;">
@@ -375,93 +375,93 @@
             <tr>
               <th scope="col">Campo</th>
               <th scope="col">Formatos</th>
-              <th scope="col">Observação</th>
+              <th scope="col">ObservaÃ§Ã£o</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Vídeo principal</td>
+              <td>VÃ­deo principal</td>
               <td><span class="fmt fmt-vid">MP4</span> <span class="fmt fmt-vid">MOV</span> <span class="fmt fmt-vid">MKV</span> <span class="fmt fmt-vid">AVI</span> <span class="fmt fmt-vid">WEBM</span></td>
-              <td>Obrigatório. H.264 recomendado para melhor compatibilidade.</td>
+              <td>ObrigatÃ³rio. H.264 recomendado para melhor compatibilidade.</td>
             </tr>
             <tr>
-              <td>Vídeo Libras</td>
+              <td>VÃ­deo Libras</td>
               <td><span class="fmt fmt-vid">MP4</span> <span class="fmt fmt-vid">MOV</span> <span class="fmt fmt-vid">MKV</span> <span class="fmt fmt-vid">AVI</span> <span class="fmt fmt-vid">WEBM</span></td>
               <td>Opcional. O overlay PIP fica no canto inferior direito (20% da largura).</td>
             </tr>
             <tr>
-              <td>Áudio AD</td>
+              <td>Ãudio AD</td>
               <td><span class="fmt fmt-aud">MP3</span> <span class="fmt fmt-aud">AAC</span> <span class="fmt fmt-aud">WAV</span> <span class="fmt fmt-aud">OGG</span></td>
-              <td>Opcional. Mixado com o áudio original via FFmpeg amix.</td>
+              <td>Opcional. Mixado com o Ã¡udio original via FFmpeg amix.</td>
             </tr>
             <tr>
               <td>Legenda</td>
               <td><span class="fmt fmt-sub">SRT</span> <span class="fmt fmt-sub">VTT</span></td>
-              <td>Opcional. SRT é convertido para WebVTT automaticamente.</td>
+              <td>Opcional. SRT Ã© convertido para WebVTT automaticamente.</td>
             </tr>
             <tr>
               <td>Capa (thumbnail)</td>
               <td><span class="fmt fmt-vid">JPG</span> <span class="fmt fmt-vid">PNG</span> <span class="fmt fmt-vid">WEBP</span></td>
-              <td>Opcional. Exibida no catálogo. Proporção 16:9 recomendada.</td>
+              <td>Opcional. Exibida no catÃ¡logo. ProporÃ§Ã£o 16:9 recomendada.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- ── Acessibilidade ── -->
+    <!-- â”€â”€ Acessibilidade â”€â”€ -->
     <section class="doc-section" id="acessibilidade">
       <h2>
-        <span class="sec-icon" style="background:rgba(52,211,153,0.1);">♿</span>
+        <span class="sec-icon" style="background:rgba(52,211,153,0.1);">â™¿</span>
         Recursos de acessibilidade
       </h2>
-      <p>O WePlayer implementa a <strong style="color:var(--text);">WCAG 2.2 nível AA</strong> tanto na interface administrativa quanto no player público:</p>
+      <p>O WePlayer implementa a <strong style="color:var(--text);">WCAG 2.2 nÃ­vel AA</strong> tanto na interface administrativa quanto no player pÃºblico:</p>
 
-      <h3>🤟 Libras (Língua Brasileira de Sinais)</h3>
-      <p>Quando um vídeo Libras é fornecido, o FFmpeg gera uma variante HLS com <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;">filter_complex overlay</code> que posiciona o intérprete num PIP de 20% da largura no canto inferior direito. O espectador pode ativar/desativar no player.</p>
+      <h3>ðŸ¤Ÿ Libras (LÃ­ngua Brasileira de Sinais)</h3>
+      <p>Quando um vÃ­deo Libras Ã© fornecido, o FFmpeg gera uma variante HLS com <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;">filter_complex overlay</code> que posiciona o intÃ©rprete num PIP de 20% da largura no canto inferior direito. O espectador pode ativar/desativar no player.</p>
 
-      <h3>🎙️ Audiodescrição (AD)</h3>
-      <p>O áudio de audiodescrição é mixado com o áudio original usando <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;">amix=inputs=2:duration=first</code>. O resultado é uma variante HLS separada que preserva o visual original.</p>
+      <h3>ðŸŽ™ï¸ AudiodescriÃ§Ã£o (AD)</h3>
+      <p>O Ã¡udio de audiodescriÃ§Ã£o Ã© mixado com o Ã¡udio original usando <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;">amix=inputs=2:duration=first</code>. O resultado Ã© uma variante HLS separada que preserva o visual original.</p>
 
-      <h3>💬 Legendas (WebVTT / CC)</h3>
-      <p>Arquivos SRT são convertidos para WebVTT. O player usa a API nativa de <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;">&lt;track&gt;</code> do HTML5 com suporte ao Shaka Player, garantindo compatibilidade com leitores de tela e legendas do sistema operacional.</p>
+      <h3>ðŸ’¬ Legendas (WebVTT / CC)</h3>
+      <p>Arquivos SRT sÃ£o convertidos para WebVTT. O player usa a API nativa de <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;">&lt;track&gt;</code> do HTML5 com suporte ao Shaka Player, garantindo compatibilidade com leitores de tela e legendas do sistema operacional.</p>
 
       <div class="callout callout-info">
-        <span class="callout-icon">♿</span>
-        <div>A interface do painel administrativo também é totalmente acessível: skip link, focus-visible rings, reduced-motion, ARIA labels, roles semânticos e contrastes WCAG AA em todos os elementos interativos.</div>
+        <span class="callout-icon">â™¿</span>
+        <div>A interface do painel administrativo tambÃ©m Ã© totalmente acessÃ­vel: skip link, focus-visible rings, reduced-motion, ARIA labels, roles semÃ¢nticos e contrastes WCAG AA em todos os elementos interativos.</div>
       </div>
     </section>
 
-    <!-- ── Status ── -->
+    <!-- â”€â”€ Status â”€â”€ -->
     <section class="doc-section" id="status">
       <h2>
-        <span class="sec-icon" style="background:var(--cyan-dim);">📊</span>
-        Status do vídeo
+        <span class="sec-icon" style="background:var(--cyan-dim);">ðŸ“Š</span>
+        Status do vÃ­deo
       </h2>
       <div class="card" style="overflow:hidden;">
-        <table class="feat-table" role="table" aria-label="Estados possíveis de um vídeo">
+        <table class="feat-table" role="table" aria-label="Estados possÃ­veis de um vÃ­deo">
           <thead>
             <tr>
               <th scope="col">Status</th>
               <th scope="col">Significado</th>
-              <th scope="col">Ação recomendada</th>
+              <th scope="col">AÃ§Ã£o recomendada</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><span class="badge badge-pending">Pendente</span></td>
-              <td>Upload concluído, processamento ainda não iniciou.</td>
+              <td>Upload concluÃ­do, processamento ainda nÃ£o iniciou.</td>
               <td>Aguardar. O processamento inicia automaticamente.</td>
             </tr>
             <tr>
               <td><span class="badge badge-processing">Processando</span></td>
-              <td>FFmpeg está gerando as variantes HLS e/ou VTT.</td>
+              <td>FFmpeg estÃ¡ gerando as variantes HLS e/ou VTT.</td>
               <td>Aguardar. Pode levar de segundos a minutos conforme o tamanho.</td>
             </tr>
             <tr>
               <td><span class="badge badge-ready">Pronto</span></td>
               <td>Todas as variantes foram geradas com sucesso.</td>
-              <td>O vídeo já está disponível no catálogo público.</td>
+              <td>O vÃ­deo jÃ¡ estÃ¡ disponÃ­vel no catÃ¡logo pÃºblico.</td>
             </tr>
             <tr>
               <td><span class="badge badge-error">Erro</span></td>
@@ -473,54 +473,54 @@
       </div>
     </section>
 
-    <!-- ── Player público ── -->
+    <!-- â”€â”€ Player pÃºblico â”€â”€ -->
     <section class="doc-section" id="player">
       <h2>
-        <span class="sec-icon" style="background:var(--violet-dim);">▶️</span>
-        Player público
+        <span class="sec-icon" style="background:var(--violet-dim);">â–¶ï¸</span>
+        Player pÃºblico
       </h2>
-      <p>O player usa o <strong style="color:var(--text);">Shaka Player 4.x</strong> (engine HLS) com uma interface customizada. As preferências do espectador (modo ativo, legendas ligadas) são salvas no <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;">localStorage</code> por ID de vídeo.</p>
+      <p>O player usa o <strong style="color:var(--text);">Shaka Player 4.x</strong> (engine HLS) com uma interface customizada. As preferÃªncias do espectador (modo ativo, legendas ligadas) sÃ£o salvas no <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;">localStorage</code> por ID de vÃ­deo.</p>
 
-      <h3>Modos de reprodução</h3>
+      <h3>Modos de reproduÃ§Ã£o</h3>
       <div style="display:flex; flex-direction:column; gap:8px; margin:12px 0;">
         <div style="display:flex; gap:12px; align-items:center; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);">
-          <span style="font-size:18px;">🎬</span>
-          <div><p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 2px;">Original</p><p style="font-size:12px; color:var(--muted-2); margin:0;">Vídeo sem overlay, áudio original. Sempre disponível.</p></div>
+          <span style="font-size:18px;">ðŸŽ¬</span>
+          <div><p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 2px;">Original</p><p style="font-size:12px; color:var(--muted-2); margin:0;">VÃ­deo sem overlay, Ã¡udio original. Sempre disponÃ­vel.</p></div>
         </div>
         <div style="display:flex; gap:12px; align-items:center; padding:12px 16px; background:var(--surface); border:1px solid rgba(34,211,238,0.2); border-radius:var(--radius-sm);">
-          <span style="font-size:18px;">🤟</span>
-          <div><p style="font-size:13px; font-weight:600; color:var(--cyan); margin:0 0 2px;">Libras</p><p style="font-size:12px; color:var(--muted-2); margin:0;">Variante com PIP do intérprete. Disponível se o vídeo foi processado com Libras.</p></div>
+          <span style="font-size:18px;">ðŸ¤Ÿ</span>
+          <div><p style="font-size:13px; font-weight:600; color:var(--cyan); margin:0 0 2px;">Libras</p><p style="font-size:12px; color:var(--muted-2); margin:0;">Variante com PIP do intÃ©rprete. DisponÃ­vel se o vÃ­deo foi processado com Libras.</p></div>
         </div>
         <div style="display:flex; gap:12px; align-items:center; padding:12px 16px; background:var(--surface); border:1px solid rgba(167,139,250,0.2); border-radius:var(--radius-sm);">
-          <span style="font-size:18px;">🎙️</span>
-          <div><p style="font-size:13px; font-weight:600; color:var(--violet); margin:0 0 2px;">Audiodescrição</p><p style="font-size:12px; color:var(--muted-2); margin:0;">Variante com AD mixada. Disponível se o vídeo foi processado com AD.</p></div>
+          <span style="font-size:18px;">ðŸŽ™ï¸</span>
+          <div><p style="font-size:13px; font-weight:600; color:var(--violet); margin:0 0 2px;">AudiodescriÃ§Ã£o</p><p style="font-size:12px; color:var(--muted-2); margin:0;">Variante com AD mixada. DisponÃ­vel se o vÃ­deo foi processado com AD.</p></div>
         </div>
       </div>
     </section>
 
-    <!-- ── Atalhos de teclado ── -->
+    <!-- â”€â”€ Atalhos de teclado â”€â”€ -->
     <section class="doc-section" id="atalhos">
       <h2>
-        <span class="sec-icon" style="background:rgba(251,191,36,0.1);">⌨️</span>
+        <span class="sec-icon" style="background:rgba(251,191,36,0.1);">âŒ¨ï¸</span>
         Atalhos de teclado
       </h2>
-      <p>O player público suporta os seguintes atalhos de teclado quando o player está em foco:</p>
+      <p>O player pÃºblico suporta os seguintes atalhos de teclado quando o player estÃ¡ em foco:</p>
       <div class="shortcut-grid">
         <div class="shortcut-row"><span style="color:var(--muted-2);">Play / Pause</span><span class="kbd">Space</span></div>
         <div class="shortcut-row"><span style="color:var(--muted-2);">Tela cheia</span><span class="kbd">F</span></div>
-        <div class="shortcut-row"><span style="color:var(--muted-2);">Avançar 10s</span><span class="kbd">→</span></div>
-        <div class="shortcut-row"><span style="color:var(--muted-2);">Voltar 10s</span><span class="kbd">←</span></div>
-        <div class="shortcut-row"><span style="color:var(--muted-2);">Volume +10%</span><span class="kbd">↑</span></div>
-        <div class="shortcut-row"><span style="color:var(--muted-2);">Volume -10%</span><span class="kbd">↓</span></div>
+        <div class="shortcut-row"><span style="color:var(--muted-2);">AvanÃ§ar 10s</span><span class="kbd">â†’</span></div>
+        <div class="shortcut-row"><span style="color:var(--muted-2);">Voltar 10s</span><span class="kbd">â†</span></div>
+        <div class="shortcut-row"><span style="color:var(--muted-2);">Volume +10%</span><span class="kbd">â†‘</span></div>
+        <div class="shortcut-row"><span style="color:var(--muted-2);">Volume -10%</span><span class="kbd">â†“</span></div>
         <div class="shortcut-row"><span style="color:var(--muted-2);">Mudo / Desmudo</span><span class="kbd">M</span></div>
         <div class="shortcut-row"><span style="color:var(--muted-2);">Legenda on/off</span><span class="kbd">C</span></div>
       </div>
     </section>
 
-    <!-- ── FAQ ── -->
+    <!-- â”€â”€ FAQ â”€â”€ -->
     <section class="doc-section" id="faq">
       <h2>
-        <span class="sec-icon" style="background:var(--cyan-dim);">❓</span>
+        <span class="sec-icon" style="background:var(--cyan-dim);">â“</span>
         Perguntas frequentes
       </h2>
 
@@ -530,47 +530,47 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
         </summary>
         <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius-sm) var(--radius-sm);">
-          <p style="font-size:13px; color:var(--muted-2); margin:0;">Depende do tamanho e das variantes solicitadas. Um vídeo de 5 min com todos os recursos leva entre 1–3 minutos num servidor moderno. Vídeos mais longos ou em HD podem levar mais tempo.</p>
+          <p style="font-size:13px; color:var(--muted-2); margin:0;">Depende do tamanho e das variantes solicitadas. Um vÃ­deo de 5 min com todos os recursos leva entre 1â€“3 minutos num servidor moderno. VÃ­deos mais longos ou em HD podem levar mais tempo.</p>
         </div>
       </details>
 
       <details style="margin-bottom:12px;">
         <summary style="cursor:pointer; font-size:14px; font-weight:600; color:var(--text); padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
-          O catálogo é público? Qualquer pessoa pode acessar?
+          O catÃ¡logo Ã© pÃºblico? Qualquer pessoa pode acessar?
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
         </summary>
         <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius-sm) var(--radius-sm);">
-          <p style="font-size:13px; color:var(--muted-2); margin:0;">Sim. As rotas <code style="background:var(--surface);padding:2px 4px;border-radius:4px;">/catalog</code> e <code style="background:var(--surface);padding:2px 4px;border-radius:4px;">/watch/&lt;id&gt;</code> são públicas e não exigem autenticação. Apenas o painel administrativo (<code style="background:var(--surface);padding:2px 4px;border-radius:4px;">/admin/*</code>) é protegido por login.</p>
+          <p style="font-size:13px; color:var(--muted-2); margin:0;">Sim. As rotas <code style="background:var(--surface);padding:2px 4px;border-radius:4px;">/catalog</code> e <code style="background:var(--surface);padding:2px 4px;border-radius:4px;">/watch/&lt;id&gt;</code> sÃ£o pÃºblicas e nÃ£o exigem autenticaÃ§Ã£o. Apenas o painel administrativo (<code style="background:var(--surface);padding:2px 4px;border-radius:4px;">/admin/*</code>) Ã© protegido por login.</p>
         </div>
       </details>
 
       <details style="margin-bottom:12px;">
         <summary style="cursor:pointer; font-size:14px; font-weight:600; color:var(--text); padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
-          Posso reprocessar um vídeo sem fazer upload novamente?
+          Posso reprocessar um vÃ­deo sem fazer upload novamente?
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
         </summary>
         <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius-sm) var(--radius-sm);">
-          <p style="font-size:13px; color:var(--muted-2); margin:0;">Sim. Na página de detalhes do vídeo, o botão <strong style="color:var(--text);">Reprocessar</strong> usa os arquivos já enviados para rodar o pipeline novamente. Útil após uma falha de processamento.</p>
+          <p style="font-size:13px; color:var(--muted-2); margin:0;">Sim. Na pÃ¡gina de detalhes do vÃ­deo, o botÃ£o <strong style="color:var(--text);">Reprocessar</strong> usa os arquivos jÃ¡ enviados para rodar o pipeline novamente. Ãštil apÃ³s uma falha de processamento.</p>
         </div>
       </details>
 
       <details style="margin-bottom:12px;">
         <summary style="cursor:pointer; font-size:14px; font-weight:600; color:var(--text); padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
-          Como faço para excluir um vídeo?
+          Como faÃ§o para excluir um vÃ­deo?
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
         </summary>
         <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius-sm) var(--radius-sm);">
-          <p style="font-size:13px; color:var(--muted-2); margin:0;">Na página de detalhes do vídeo, clique em <strong style="color:var(--red);">Excluir vídeo</strong>. Uma confirmação será solicitada. A exclusão remove o registro do banco de dados e todos os arquivos de storage associados.</p>
+          <p style="font-size:13px; color:var(--muted-2); margin:0;">Na pÃ¡gina de detalhes do vÃ­deo, clique em <strong style="color:var(--red);">Excluir vÃ­deo</strong>. Uma confirmaÃ§Ã£o serÃ¡ solicitada. A exclusÃ£o remove o registro do banco de dados e todos os arquivos de storage associados.</p>
         </div>
       </details>
 
       <details>
         <summary style="cursor:pointer; font-size:14px; font-weight:600; color:var(--text); padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
-          O WePlayer funciona em dispositivos móveis?
+          O WePlayer funciona em dispositivos mÃ³veis?
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
         </summary>
         <div style="padding:14px 18px; background:var(--surface-2); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius-sm) var(--radius-sm);">
-          <p style="font-size:13px; color:var(--muted-2); margin:0;">Sim. O player e o catálogo são totalmente responsivos e testados em Android e iOS. O atributo <code style="background:var(--surface);padding:2px 4px;border-radius:4px;">playsinline</code> garante reprodução inline no Safari/iOS sem forçar tela cheia.</p>
+          <p style="font-size:13px; color:var(--muted-2); margin:0;">Sim. O player e o catÃ¡logo sÃ£o totalmente responsivos e testados em Android e iOS. O atributo <code style="background:var(--surface);padding:2px 4px;border-radius:4px;">playsinline</code> garante reproduÃ§Ã£o inline no Safari/iOS sem forÃ§ar tela cheia.</p>
         </div>
       </details>
     </section>

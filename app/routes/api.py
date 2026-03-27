@@ -25,7 +25,7 @@ def get_video(
 ):
     video = db.query(Video).get(video_id)
     if not video:
-        raise HTTPException(status_code=404, detail="Vídeo não encontrado.")
+        raise HTTPException(status_code=404, detail="VÃ­deo nÃ£o encontrado.")
     return video
 
 

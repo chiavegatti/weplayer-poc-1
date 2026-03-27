@@ -9,7 +9,7 @@ from app.auth import (
 from app.config import settings
 
 
-# ── Token ──────────────────────────────────────────────────────────────────────
+# â”€â”€ Token â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_create_and_verify_token():
     token = create_session_token("admin")
@@ -27,7 +27,7 @@ def test_verify_tampered_token():
     assert verify_session_token(tampered) is None
 
 
-# ── Password hashing ───────────────────────────────────────────────────────────
+# â”€â”€ Password hashing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_hash_password_returns_string():
     h = hash_password("secret")
@@ -45,7 +45,7 @@ def test_verify_password_wrong():
     assert verify_password("wrong", h) is False
 
 
-# ── check_credentials: env-var fallback (no db) ───────────────────────────────
+# â”€â”€ check_credentials: env-var fallback (no db) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_check_credentials_valid():
     assert check_credentials(settings.admin_username, settings.admin_password) is True
@@ -63,7 +63,7 @@ def test_check_credentials_both_wrong():
     assert check_credentials("x", "y") is False
 
 
-# ── check_credentials: DB-based lookup ────────────────────────────────────────
+# â”€â”€ check_credentials: DB-based lookup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_check_credentials_db_user(db_session):
     from app.models.models import AdminUser

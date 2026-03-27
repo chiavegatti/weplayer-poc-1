@@ -36,7 +36,7 @@ def catalog(request: Request, db: Session = Depends(get_db)):
 def watch(video_id: str, request: Request, db: Session = Depends(get_db)):
     video = db.query(Video).get(video_id)
     if not video or video.status != VideoStatus.ready:
-        raise HTTPException(status_code=404, detail="Vídeo não encontrado.")
+        raise HTTPException(status_code=404, detail="VÃ­deo nÃ£o encontrado.")
 
     manifests = {
         "original": video.get_hls_manifest("original"),

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — WePlayer Admin{% endblock %}
+{% block title %}Dashboard â€” WePlayer Admin{% endblock %}
 
 {% block head %}
 <style>
@@ -124,7 +124,7 @@
   }
   .elapsed-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
-  /* ── Mobile ─────────────────────────────────────────── */
+  /* â”€â”€ Mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   @media (max-width: 640px) {
     /* Scrollable table container */
     .card { overflow-x: auto; }
@@ -143,17 +143,17 @@
 {% endblock %}
 
 {% block nav_links %}
-  <a href="/catalog" class="nav-link-muted" aria-label="Ver catálogo público de vídeos">
-    Ver catálogo
+  <a href="/catalog" class="nav-link-muted" aria-label="Ver catÃ¡logo pÃºblico de vÃ­deos">
+    Ver catÃ¡logo
   </a>
-  <a href="/admin/docs" class="nav-link-muted" aria-label="Ver documentação e tutorial">
-    Documentação
+  <a href="/admin/docs" class="nav-link-muted" aria-label="Ver documentaÃ§Ã£o e tutorial">
+    DocumentaÃ§Ã£o
   </a>
-  <a href="/admin/videos/new" class="btn btn-primary btn-sm" aria-label="Adicionar novo vídeo">
+  <a href="/admin/videos/new" class="btn btn-primary btn-sm" aria-label="Adicionar novo vÃ­deo">
     <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
     </svg>
-    Novo vídeo
+    Novo vÃ­deo
   </a>
   <a href="/admin/logout" class="btn btn-ghost btn-sm" aria-label="Sair do painel administrativo">
     <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -174,8 +174,8 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
     </div>
     <div style="flex:1;">
-      <p style="font-size:14px; font-weight:600; color:#34D399; margin-bottom:2px;">Upload concluído com sucesso!</p>
-      <p style="font-size:12px; color:var(--muted);">O vídeo está sendo processado em background. O status atualiza automaticamente.</p>
+      <p style="font-size:14px; font-weight:600; color:#34D399; margin-bottom:2px;">Upload concluÃ­do com sucesso!</p>
+      <p style="font-size:12px; color:var(--muted);">O vÃ­deo estÃ¡ sendo processado em background. O status atualiza automaticamente.</p>
     </div>
     <button onclick="this.closest('.upload-banner').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;" aria-label="Fechar aviso">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -186,56 +186,56 @@
   <div class="animate-fade-up" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; gap: 16px; flex-wrap: wrap;">
     <div>
       <h1 style="font-size: 26px; font-weight: 800; font-family: var(--font-display); letter-spacing: -0.02em;">
-        Vídeos
+        VÃ­deos
       </h1>
       <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
         {% if videos %}
-          {{ videos | length }} vídeo{% if videos | length != 1 %}s{% endif %} cadastrado{% if videos | length != 1 %}s{% endif %}
+          {{ videos | length }} vÃ­deo{% if videos | length != 1 %}s{% endif %} cadastrado{% if videos | length != 1 %}s{% endif %}
         {% else %}
-          Nenhum vídeo cadastrado
+          Nenhum vÃ­deo cadastrado
         {% endif %}
       </p>
     </div>
     <a
       href="/admin/videos/new"
       class="btn btn-primary"
-      aria-label="Adicionar novo vídeo ao catálogo"
+      aria-label="Adicionar novo vÃ­deo ao catÃ¡logo"
     >
       <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
-      Novo vídeo
+      Novo vÃ­deo
     </a>
   </div>
 
-  <!-- Tabela de vídeos -->
+  <!-- Tabela de vÃ­deos -->
   {% if videos %}
   <div class="card animate-fade-up delay-1" style="overflow: hidden;">
     <table
       class="data-table"
       role="table"
-      aria-label="Lista de vídeos cadastrados no WePlayer"
+      aria-label="Lista de vÃ­deos cadastrados no WePlayer"
     >
-      <caption style="display: none;">Lista de vídeos cadastrados — WePlayer Admin</caption>
+      <caption style="display: none;">Lista de vÃ­deos cadastrados â€” WePlayer Admin</caption>
       <thead>
         <tr role="row">
-          <th scope="col" role="columnheader">Título</th>
+          <th scope="col" role="columnheader">TÃ­tulo</th>
           <th scope="col" role="columnheader">Status</th>
           <th scope="col" role="columnheader">Recursos</th>
           <th scope="col" role="columnheader">Criado em</th>
-          <th scope="col" role="columnheader"><span class="sr-only">Ações</span></th>
+          <th scope="col" role="columnheader"><span class="sr-only">AÃ§Ãµes</span></th>
         </tr>
       </thead>
       <tbody>
         {% for v in videos %}
         <tr role="row" data-video-id="{{ v.id }}" data-status="{{ v.status.value }}" data-created="{{ v.created_at.strftime('%Y-%m-%dT%H:%M:%S') }}">
 
-          <!-- Título -->
+          <!-- TÃ­tulo -->
           <td role="cell">
             <a
               href="/admin/videos/{{ v.id }}"
               style="color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px;"
-              aria-label="Ver detalhes do vídeo: {{ v.title }}"
+              aria-label="Ver detalhes do vÃ­deo: {{ v.title }}"
             >
               {{ v.title }}
             </a>
@@ -246,7 +246,7 @@
             {% if v.status.value == 'ready' %}
               <span
                 class="badge badge-ready"
-                aria-label="Status: Pronto para reprodução"
+                aria-label="Status: Pronto para reproduÃ§Ã£o"
               >
                 <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
                   <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -255,12 +255,12 @@
               </span>
             {% elif v.status.value == 'processing' %}
               <div>
-                <span class="badge badge-processing" aria-label="Status: Processando vídeo">
+                <span class="badge badge-processing" aria-label="Status: Processando vÃ­deo">
                   <span class="spinner" aria-hidden="true"></span>
                   Processando
                 </span>
                 <div class="proc-bar-wrap" aria-hidden="true"><div class="proc-bar-fill"></div></div>
-                <div class="elapsed-time" aria-live="polite">calculando…</div>
+                <div class="elapsed-time" aria-live="polite">calculandoâ€¦</div>
               </div>
             {% elif v.status.value == 'error' %}
               <span
@@ -287,23 +287,23 @@
 
           <!-- Recursos de acessibilidade -->
           <td role="cell">
-            <div class="recursos-cell" aria-label="Recursos disponíveis">
+            <div class="recursos-cell" aria-label="Recursos disponÃ­veis">
               {% if v.libras_available %}
                 <span class="badge badge-libras" aria-label="Possui Libras">Libras</span>
               {% endif %}
               {% if v.ad_available %}
-                <span class="badge badge-ad" aria-label="Possui Audiodescrição">AD</span>
+                <span class="badge badge-ad" aria-label="Possui AudiodescriÃ§Ã£o">AD</span>
               {% endif %}
               {% if v.subtitle_available %}
                 <span class="badge badge-sub" aria-label="Possui Legenda">Legenda</span>
               {% endif %}
               {% if not v.libras_available and not v.ad_available and not v.subtitle_available %}
-                <span style="font-size: 12px; color: var(--muted);" aria-label="Nenhum recurso de acessibilidade disponível">—</span>
+                <span style="font-size: 12px; color: var(--muted);" aria-label="Nenhum recurso de acessibilidade disponÃ­vel">â€”</span>
               {% endif %}
             </div>
           </td>
 
-          <!-- Data de criação -->
+          <!-- Data de criaÃ§Ã£o -->
           <td role="cell">
             <time
               datetime="{{ v.created_at.strftime('%Y-%m-%dT%H:%M') }}"
@@ -316,12 +316,12 @@
             </time>
           </td>
 
-          <!-- Ações -->
+          <!-- AÃ§Ãµes -->
           <td role="cell" style="text-align: right;">
             <a
               href="/admin/videos/{{ v.id }}"
               class="btn btn-secondary btn-sm"
-              aria-label="Ver detalhes do vídeo {{ v.title }}"
+              aria-label="Ver detalhes do vÃ­deo {{ v.title }}"
             >
               Detalhes
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -349,21 +349,21 @@
       </div>
       <div>
         <p style="font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px;">
-          Nenhum vídeo cadastrado
+          Nenhum vÃ­deo cadastrado
         </p>
         <p style="font-size: 13px; color: var(--muted);">
-          Adicione o primeiro vídeo para começar a construir o catálogo.
+          Adicione o primeiro vÃ­deo para comeÃ§ar a construir o catÃ¡logo.
         </p>
       </div>
       <a
         href="/admin/videos/new"
         class="btn btn-primary"
-        aria-label="Adicionar o primeiro vídeo ao catálogo"
+        aria-label="Adicionar o primeiro vÃ­deo ao catÃ¡logo"
       >
         <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Adicionar primeiro vídeo
+        Adicionar primeiro vÃ­deo
       </a>
     </div>
   </div>
@@ -372,13 +372,13 @@
 </main>
 
 <script>
-// ── Upload banner ─────────────────────────────────────────────────────
+// â”€â”€ Upload banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (new URLSearchParams(location.search).get('uploaded') === '1') {
   document.getElementById('upload-banner').style.display = 'flex';
   history.replaceState({}, '', '/admin/dashboard');
 }
 
-// ── Elapsed time display ──────────────────────────────────────────────
+// â”€â”€ Elapsed time display â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function fmtDuration(secs) {
   secs = Math.floor(secs);
   if (secs < 60)  return secs + ' segundo' + (secs !== 1 ? 's' : '');
@@ -407,23 +407,23 @@ function updateElapsed() {
 
     if (status === 'pending') {
       if (queuePos !== null) {
-        text = 'Na fila — posição ' + queuePos + ' · aguardando encode…';
+        text = 'Na fila â€” posiÃ§Ã£o ' + queuePos + ' Â· aguardando encodeâ€¦';
       } else {
-        text = 'Na fila · aguardando encode…';
+        text = 'Na fila Â· aguardando encodeâ€¦';
       }
     } else {
       // processing
-      text = 'Há ' + fmtDuration(elapsed);
+      text = 'HÃ¡ ' + fmtDuration(elapsed);
       if (stagesDone > 0 && stagesDone < stagesTotal) {
         const progress  = stagesDone / stagesTotal;
         const remaining = (elapsed / progress) - elapsed;
         if (remaining > 30) {
-          text += ' · ' + stagesDone + '/' + stagesTotal + ' etapas · ~' + fmtDuration(remaining) + ' restantes';
+          text += ' Â· ' + stagesDone + '/' + stagesTotal + ' etapas Â· ~' + fmtDuration(remaining) + ' restantes';
         } else {
-          text += ' · ' + stagesDone + '/' + stagesTotal + ' etapas · finalizando…';
+          text += ' Â· ' + stagesDone + '/' + stagesTotal + ' etapas Â· finalizandoâ€¦';
         }
       } else if (stagesDone === 0) {
-        text += ' · iniciando…';
+        text += ' Â· iniciandoâ€¦';
       }
     }
 
@@ -433,7 +433,7 @@ function updateElapsed() {
 updateElapsed();
 setInterval(updateElapsed, 5000);
 
-// ── Status polling ────────────────────────────────────────────────────
+// â”€â”€ Status polling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getProcessingRows() {
   return [...document.querySelectorAll('tr[data-status="processing"], tr[data-status="pending"]')];
 }

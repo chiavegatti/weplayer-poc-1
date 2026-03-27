@@ -22,7 +22,7 @@ def make_video(db, status=VideoStatus.ready, **kwargs) -> Video:
     return v
 
 
-# ── Auth ──────────────────────────────────────────────────────────────────────
+# â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_login_page(client):
     r = client.get("/admin/login")
@@ -39,7 +39,7 @@ def test_login_success(client):
 def test_login_invalid_credentials(client):
     r = client.post("/admin/login", data={"username": "admin", "password": "wrong"})
     assert r.status_code == 401
-    assert "inválidos" in r.text
+    assert "invÃ¡lidos" in r.text
 
 
 def test_logout(auth_client):
@@ -53,31 +53,31 @@ def test_dashboard_requires_auth(client):
     assert r.status_code == 401
 
 
-# ── Dashboard ─────────────────────────────────────────────────────────────────
+# â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_dashboard_empty(auth_client):
     r = auth_client.get("/admin/dashboard")
     assert r.status_code == 200
-    assert "Nenhum vídeo" in r.text
+    assert "Nenhum vÃ­deo" in r.text
 
 
 def test_dashboard_with_videos(auth_client):
     db = TestingSessionLocal()
-    make_video(db, title="Meu Vídeo", libras_available=True)
+    make_video(db, title="Meu VÃ­deo", libras_available=True)
     db.close()
 
     r = auth_client.get("/admin/dashboard")
     assert r.status_code == 200
-    assert "Meu Vídeo" in r.text
+    assert "Meu VÃ­deo" in r.text
     assert "Libras" in r.text
 
 
-# ── New Video Form ─────────────────────────────────────────────────────────────
+# â”€â”€ New Video Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_new_video_form(auth_client):
     r = auth_client.get("/admin/videos/new")
     assert r.status_code == 200
-    assert "Novo Vídeo" in r.text
+    assert "Novo VÃ­deo" in r.text
 
 
 def test_new_video_form_requires_auth(client):
@@ -115,7 +115,7 @@ def test_create_video_invalid_extension(auth_client):
         data={"title": "Bad Video"},
     )
     assert r.status_code == 422
-    assert "inválido" in r.text
+    assert "invÃ¡lido" in r.text
 
 
 def test_create_video_with_all_assets(auth_client, tmp_path, monkeypatch):
@@ -138,7 +138,7 @@ def test_create_video_with_all_assets(auth_client, tmp_path, monkeypatch):
     assert r.status_code == 200
 
 
-# ── Video Detail ──────────────────────────────────────────────────────────────
+# â”€â”€ Video Detail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_video_detail(auth_client):
     db = TestingSessionLocal()
@@ -199,7 +199,7 @@ def test_video_detail_with_error_status(auth_client):
     assert "FFmpeg crashed" in r.text
 
 
-# ── Reprocess ─────────────────────────────────────────────────────────────────
+# â”€â”€ Reprocess â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_reprocess_no_input_file(auth_client):
     db = TestingSessionLocal()
@@ -243,7 +243,7 @@ def test_reprocess_not_found(auth_client):
     assert r.status_code == 404
 
 
-# ── Delete ────────────────────────────────────────────────────────────────────
+# â”€â”€ Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_delete_video(auth_client):
     db = TestingSessionLocal()
@@ -264,12 +264,12 @@ def test_delete_video_not_found(auth_client):
     assert r.status_code == 404
 
 
-# ── Docs ──────────────────────────────────────────────────────────────────────
+# â”€â”€ Docs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_docs_page(auth_client):
     r = auth_client.get("/admin/docs")
     assert r.status_code == 200
-    assert "Documentação" in r.text
+    assert "DocumentaÃ§Ã£o" in r.text
     assert "Tutorial" in r.text
 
 
@@ -278,7 +278,7 @@ def test_docs_requires_auth(client):
     assert r.status_code == 401
 
 
-# ── DB-based login ─────────────────────────────────────────────────────────────
+# â”€â”€ DB-based login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_login_with_db_admin_user(client):
     from app.auth import hash_password
@@ -298,7 +298,7 @@ def test_login_with_db_admin_user(client):
     assert "weplayer_session" in client.cookies
 
 
-# ── Video Status API ──────────────────────────────────────────────────────────
+# â”€â”€ Video Status API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_video_status_api(auth_client):
     db = TestingSessionLocal()

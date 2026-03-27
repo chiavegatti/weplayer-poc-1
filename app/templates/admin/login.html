@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Login — WePlayer Admin{% endblock %}
+{% block title %}Login â€” WePlayer Admin{% endblock %}
 
 {% block navbar %}{% endblock %}
 
@@ -72,7 +72,7 @@
   .input-wrap input[type="password"],
   .input-wrap input[type="text"] { padding-right: 42px; }
 
-  /* ── Mobile ─────────────────────────────────────────── */
+  /* â”€â”€ Mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   @media (max-width: 480px) {
     .login-card { padding: 32px 20px !important; margin: 0 16px; }
     .login-wrap { padding: 32px 0 !important; }
@@ -85,7 +85,7 @@
 
 <div class="login-card w-full max-w-sm animate-fade-up">
 
-  <!-- Logo + título -->
+  <!-- Logo + tÃ­tulo -->
   <div class="flex flex-col items-center mb-8 gap-3">
     <img
       src="/static/assets/logo-weplayer.png"
@@ -136,10 +136,10 @@
       novalidate
       style="display: flex; flex-direction: column; gap: 20px;"
     >
-      <!-- Campo: usuário -->
+      <!-- Campo: usuÃ¡rio -->
       <div>
         <label for="username">
-          Usuário
+          UsuÃ¡rio
           <span aria-hidden="true" style="color: var(--red); margin-left: 2px;">*</span>
         </label>
         <input
@@ -170,7 +170,7 @@
             autocomplete="current-password"
             required
             aria-required="true"
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
           />
           <button
             type="button"
@@ -179,13 +179,13 @@
             onclick="togglePassword()"
             id="toggle-pw-btn"
           >
-            <!-- Ícone olho fechado (padrão) -->
+            <!-- Ãcone olho fechado (padrÃ£o) -->
             <svg id="icon-eye-off" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.94 17.94A10.06 10.06 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
               <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
               <line x1="1" y1="1" x2="23" y2="23"/>
             </svg>
-            <!-- Ícone olho aberto (oculto por padrão) -->
+            <!-- Ãcone olho aberto (oculto por padrÃ£o) -->
             <svg id="icon-eye-on" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
               <circle cx="12" cy="12" r="3"/>
@@ -211,9 +211,9 @@
     </form>
   </div>
 
-  <!-- Rodapé discreto -->
+  <!-- RodapÃ© discreto -->
   <p style="text-align: center; margin-top: 24px; font-size: 12px; color: var(--muted);">
-    WePlayer &copy; {{ 2025 }} — Acesso restrito
+    WePlayer &copy; {{ 2025 }} â€” Acesso restrito
   </p>
 </div>
 
