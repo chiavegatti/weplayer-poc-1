@@ -284,10 +284,10 @@
 
   <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:0; position:relative;">
     {% set steps = [
-      ('01', 'Upload', 'Envie o vídeo principal, Libras, AD e legenda pelo painel.'),
-      ('02', 'Processa', 'FFmpeg gera variants HLS: original, com Libras e com AD.'),
-      ('03', 'Publica', 'Vídeo disponível no catálogo com player acessível.'),
-      ('04', 'Embeda', 'Uma linha de código. Funciona em qualquer site ou LMS.'),
+      ('01', 'Upload', 'Envie o vídeo e os arquivos de acessibilidade pelo painel — sem configuração técnica.'),
+      ('02', 'Processa', 'Geramos automaticamente todas as variantes acessíveis em segundos.'),
+      ('03', 'Publica', 'Conteúdo disponível no catálogo, pronto para seus espectadores.'),
+      ('04', 'Embeda', 'Integre em qualquer site, LMS ou CMS com uma linha de código.'),
     ] %}
     {% for s in steps %}
     <div style="padding: 36px 28px; position:relative; {% if not loop.last %}border-right: 1px solid var(--border);{% endif %}">
