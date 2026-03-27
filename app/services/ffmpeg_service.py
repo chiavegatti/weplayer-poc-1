@@ -1,5 +1,6 @@
 ﻿import asyncio
 import functools
+import json
 import logging
 import shutil
 import subprocess
@@ -21,7 +22,7 @@ LIBRAS_MAX_HEIGHT = 480
 
 # Libras PIP defaults (bottom-right corner, 25% of video width)
 LIBRAS_SCALE = "iw*0.25"
-LIBRAS_POSITION = "W-w-20:H-h-20"  # 20px margin from bottom-right
+LIBRAS_POSITION = "W-w-20:H-h-20"
 
 
 @functools.lru_cache(maxsize=1)
@@ -125,6 +126,57 @@ def _hls_output_args(output_dir: Path, playlist_name: str = "index.m3u8") -> lis
     ]
 
 
+def _probe_streams(input_path: Path) -> list[dict]:
+    cmd = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-print_format",
+        "json",
+        "-show_streams",
+        str(input_path),
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        return []
+    try:
+        payload = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError:
+        return []
+    return payload.get("streams", [])
+
+
+def _pick_main_video_stream(streams: list[dict]) -> int:
+    candidates: list[tuple[int, int, int]] = []
+    for stream in streams:
+        if stream.get("codec_type") != "video":
+            continue
+        if (stream.get("disposition") or {}).get("attached_pic") == 1:
+            continue
+        width = int(stream.get("width") or 0)
+        height = int(stream.get("height") or 0)
+        is_default = 1 if (stream.get("disposition") or {}).get("default") == 1 else 0
+        candidates.append((is_default, width * height, int(stream.get("index") or 0)))
+    if not candidates:
+        return 0
+    candidates.sort(reverse=True)
+    return candidates[0][2]
+
+
+def _pick_main_audio_stream(streams: list[dict]) -> int | None:
+    candidates: list[tuple[int, int, int]] = []
+    for stream in streams:
+        if stream.get("codec_type") != "audio":
+            continue
+        idx = int(stream.get("index") or 0)
+        is_default = 1 if (stream.get("disposition") or {}).get("default") == 1 else 0
+        candidates.append((is_default, -idx, idx))
+    if not candidates:
+        return None
+    candidates.sort(reverse=True)
+    return candidates[0][2]
+
+
 def _normalize_mp4(
     input_path: Path,
     output_path: Path,
@@ -139,22 +191,56 @@ def _normalize_mp4(
         f"scale={max_width}:{max_height}:force_original_aspect_ratio=decrease,"
         "scale=trunc(iw/2)*2:trunc(ih/2)*2"
     )
+
+    streams = _probe_streams(input_path)
+    video_stream = _pick_main_video_stream(streams)
+    audio_stream = _pick_main_audio_stream(streams)
+
     cmd = [
         "ffmpeg",
         "-y",
         "-i",
         str(input_path),
-        *_video_encode_args(hw),
-        "-vf",
-        vf,
-        "-c:a",
-        "aac",
-        "-b:a",
-        audio_bitrate,
-        "-movflags",
-        "+faststart",
-        str(output_path),
+        "-map",
+        f"0:{video_stream}",
     ]
+
+    if audio_stream is not None:
+        cmd.extend(["-map", f"0:{audio_stream}"])
+    else:
+        # Keep consistent output even when source has no audio track.
+        cmd.extend(
+            [
+                "-f",
+                "lavfi",
+                "-i",
+                "anullsrc=channel_layout=stereo:sample_rate=48000",
+                "-map",
+                "1:a:0",
+                "-shortest",
+            ]
+        )
+
+    cmd.extend(
+        [
+            *_video_encode_args(hw),
+            "-vf",
+            vf,
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-ac",
+            "2",
+            "-ar",
+            "48000",
+            "-b:a",
+            audio_bitrate,
+            "-movflags",
+            "+faststart",
+            str(output_path),
+        ]
+    )
     _run(cmd, log_path)
 
 

@@ -1,4 +1,5 @@
-﻿import pytest
+﻿import json
+import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -290,3 +291,128 @@ async def test_run_processing_pipeline_with_all_progress(tmp_path, monkeypatch):
     assert "libras_done" in progress_calls
     assert "ad_done" in progress_calls
     assert "subtitle_done" in progress_calls
+
+def test_probe_streams_success(tmp_path):
+    sample = {"streams": [{"index": 0, "codec_type": "video"}]}
+    proc = make_fake_run(0, json.dumps(sample))
+    with patch("subprocess.run", return_value=proc):
+        streams = ffmpeg._probe_streams(tmp_path / "in.mkv")
+    assert streams == sample["streams"]
+
+
+def test_probe_streams_failure(tmp_path):
+    with patch("subprocess.run", return_value=make_fake_run(1, "err")):
+        streams = ffmpeg._probe_streams(tmp_path / "in.mkv")
+    assert streams == []
+
+
+def test_probe_streams_invalid_json(tmp_path):
+    with patch("subprocess.run", return_value=make_fake_run(0, "not-json")):
+        streams = ffmpeg._probe_streams(tmp_path / "in.mkv")
+    assert streams == []
+
+
+def test_pick_main_video_stream_prefers_non_attached_default():
+    streams = [
+        {"index": 0, "codec_type": "video", "width": 1920, "height": 1080, "disposition": {"attached_pic": 1}},
+        {"index": 1, "codec_type": "video", "width": 1280, "height": 720, "disposition": {"default": 1}},
+        {"index": 2, "codec_type": "video", "width": 1920, "height": 1080, "disposition": {}},
+    ]
+    assert ffmpeg._pick_main_video_stream(streams) == 1
+
+
+def test_pick_main_video_stream_fallback_zero_when_missing():
+    assert ffmpeg._pick_main_video_stream([]) == 0
+
+
+def test_pick_main_audio_stream_default_then_first():
+    streams = [
+        {"index": 2, "codec_type": "audio", "disposition": {}},
+        {"index": 1, "codec_type": "audio", "disposition": {"default": 1}},
+    ]
+    assert ffmpeg._pick_main_audio_stream(streams) == 1
+    assert ffmpeg._pick_main_audio_stream([]) is None
+
+
+def test_normalize_mp4_with_audio_stream(tmp_path):
+    src = tmp_path / "in.mp4"
+    out = tmp_path / "out.mp4"
+    src.write_bytes(b"x")
+
+    streams = [
+        {"index": 0, "codec_type": "video", "width": 1920, "height": 1080, "disposition": {"default": 1}},
+        {"index": 1, "codec_type": "audio", "disposition": {"default": 1}},
+    ]
+
+    with patch("app.services.ffmpeg_service._probe_streams", return_value=streams), \
+         patch("app.services.ffmpeg_service._run") as mock_run:
+        ffmpeg._normalize_mp4(src, out, 1980, 1080, "cpu", "128k")
+
+    cmd = mock_run.call_args[0][0]
+    assert "-map" in cmd
+    assert "0:0" in cmd
+    assert "0:1" in cmd
+    assert "anullsrc" not in " ".join(cmd)
+
+
+def test_normalize_mp4_without_audio_uses_silence(tmp_path):
+    src = tmp_path / "in.mp4"
+    out = tmp_path / "out.mp4"
+    src.write_bytes(b"x")
+
+    streams = [{"index": 0, "codec_type": "video", "width": 1920, "height": 1080, "disposition": {"default": 1}}]
+
+    with patch("app.services.ffmpeg_service._probe_streams", return_value=streams), \
+         patch("app.services.ffmpeg_service._run") as mock_run:
+        ffmpeg._normalize_mp4(src, out, 1980, 1080, "cpu", "128k")
+
+    cmd = mock_run.call_args[0][0]
+    assert "anullsrc=channel_layout=stereo:sample_rate=48000" in " ".join(cmd)
+    assert "-shortest" in cmd
+
+
+def test_process_original_hls_vaapi_branch(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+    src = tmp_path / "main.mp4"
+    src.write_bytes(b"x")
+
+    with patch("app.services.ffmpeg_service.detect_hwaccel", return_value="vaapi"), \
+         patch("app.services.ffmpeg_service._run") as mock_run:
+        ffmpeg.process_original_hls("vid1", src)
+
+    cmd = mock_run.call_args[0][0]
+    assert "-vaapi_device" in cmd
+
+
+def test_process_ad_hls_vaapi_branch(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+    main = tmp_path / "main.mp4"
+    ad = tmp_path / "ad.mp3"
+    main.write_bytes(b"x")
+    ad.write_bytes(b"x")
+
+    with patch("app.services.ffmpeg_service.detect_hwaccel", return_value="vaapi"), \
+         patch("app.services.ffmpeg_service._run") as mock_run:
+        ffmpeg.process_ad_hls("vid1", main, ad)
+
+    cmd = mock_run.call_args[0][0]
+    assert "-vaapi_device" in cmd
+
+
+def test_process_libras_hls_pre_normalized_skips_internal_normalize(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "storage_dir", tmp_path / "weplayer")
+    main = tmp_path / "main.mp4"
+    libras = tmp_path / "libras.mp4"
+    main.write_bytes(b"x")
+    libras.write_bytes(b"x")
+
+    with patch("app.services.ffmpeg_service._normalize_mp4") as mock_norm, \
+         patch("app.services.ffmpeg_service._run") as mock_run:
+        ffmpeg.process_libras_hls("vid1", main, libras, pre_normalized=True)
+
+    mock_norm.assert_not_called()
+    assert mock_run.call_count == 1
+
+
+
+
