@@ -49,7 +49,7 @@ def test_index_has_catalog_link(client):
 def test_catalog_empty(client):
     r = client.get("/catalog")
     assert r.status_code == 200
-    assert "Nenhum vÃ­deo" in r.text
+    assert "Nenhum vídeo" in r.text
 
 
 def test_catalog_shows_ready_videos(client):

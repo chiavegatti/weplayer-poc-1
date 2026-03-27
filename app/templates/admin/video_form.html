@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Novo VÃ­deo â€” WePlayer Admin{% endblock %}
+{% block title %}Novo Vídeo — WePlayer Admin{% endblock %}
 
 {% block head %}
 <style>
@@ -120,7 +120,7 @@
     flex-shrink: 0;
   }
 
-  /* Checkbox acessÃ­vel */
+  /* Checkbox acessível */
   .check-row {
     display: flex;
     align-items: flex-start;
@@ -205,7 +205,7 @@
     transition: width 0.4s ease;
   }
 
-  /* â”€â”€ Mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* ── Mobile ─────────────────────────────────────────── */
   @media (max-width: 640px) {
     /* Accessibility grid: 1 column */
     [style*="grid-template-columns: repeat(3"] {
@@ -246,10 +246,10 @@
   <!-- Page header -->
   <div class="animate-fade-up" style="margin-bottom: 32px;">
     <h1 style="font-size: 26px; font-weight: 800; font-family: var(--font-display); letter-spacing: -0.02em;">
-      Novo VÃ­deo
+      Novo Vídeo
     </h1>
     <p style="font-size: 13px; color: var(--muted); margin-top: 6px;">
-      Preencha as informaÃ§Ãµes e faÃ§a o upload dos arquivos para processar o vÃ­deo.
+      Preencha as informações e faça o upload dos arquivos para processar o vídeo.
     </p>
   </div>
 
@@ -287,11 +287,11 @@
     action="/admin/videos/new"
     enctype="multipart/form-data"
     novalidate
-    aria-label="FormulÃ¡rio de cadastro de novo vÃ­deo"
+    aria-label="Formulário de cadastro de novo vídeo"
     style="display: flex; flex-direction: column; gap: 20px;"
   >
 
-    <!-- â”€â”€ 1. INFORMAÃ‡Ã•ES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- ── 1. INFORMAÇÕES ──────────────────────────────── -->
     <section class="card animate-fade-up delay-1" style="padding: 28px;" aria-labelledby="section-info">
       <div class="section-label">
         <span class="section-label-icon" style="background: rgba(34,211,238,0.10); color: var(--cyan);" aria-hidden="true">
@@ -300,16 +300,16 @@
             <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
         </span>
-        <span id="section-info">InformaÃ§Ãµes</span>
+        <span id="section-info">Informações</span>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 18px;">
-        <!-- TÃ­tulo -->
+        <!-- Título -->
         <div>
           <label for="title">
-            TÃ­tulo
+            Título
             <span aria-hidden="true" style="color: var(--red); margin-left: 2px;">*</span>
-            <span class="sr-only">(obrigatÃ³rio)</span>
+            <span class="sr-only">(obrigatório)</span>
           </label>
           <input
             class="input"
@@ -318,28 +318,28 @@
             type="text"
             required
             aria-required="true"
-            placeholder="Ex: DocumentÃ¡rio AcessÃ­vel"
+            placeholder="Ex: Documentário Acessível"
             style="margin-top: 6px;"
           />
         </div>
 
-        <!-- DescriÃ§Ã£o -->
+        <!-- Descrição -->
         <div>
-          <label for="description">DescriÃ§Ã£o</label>
+          <label for="description">Descrição</label>
           <textarea
             class="input"
             id="description"
             name="description"
             rows="3"
-            placeholder="Sinopse ou descriÃ§Ã£o do conteÃºdo..."
+            placeholder="Sinopse ou descrição do conteúdo..."
             style="margin-top: 6px;"
           ></textarea>
-          <p class="field-hint">Opcional. SerÃ¡ exibida no catÃ¡logo pÃºblico e no player.</p>
+          <p class="field-hint">Opcional. Será exibida no catálogo público e no player.</p>
         </div>
       </div>
     </section>
 
-    <!-- â”€â”€ 2. ARQUIVO PRINCIPAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- ── 2. ARQUIVO PRINCIPAL ───────────────────────── -->
     <section class="card animate-fade-up delay-2" style="padding: 28px;" aria-labelledby="section-files">
       <div class="section-label">
         <span class="section-label-icon" style="background: rgba(167,139,250,0.10); color: var(--violet);" aria-hidden="true">
@@ -352,12 +352,12 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 18px;">
-        <!-- VÃ­deo principal -->
+        <!-- Vídeo principal -->
         <div class="file-field">
           <label for="video_file" style="margin-bottom: 8px;">
-            VÃ­deo principal
+            Vídeo principal
             <span aria-hidden="true" style="color: var(--red); margin-left: 2px;">*</span>
-            <span class="sr-only">(obrigatÃ³rio)</span>
+            <span class="sr-only">(obrigatório)</span>
           </label>
           <div class="file-drop" aria-hidden="true">
             <input
@@ -378,10 +378,10 @@
               </svg>
             </div>
             <div class="file-drop-text">
-              <strong>Escolher arquivo de vÃ­deo</strong>
+              <strong>Escolher arquivo de vídeo</strong>
               <span id="video-file-hint">MP4, MOV, AVI, MKV ou WEBM</span>
             </div>
-            <span class="file-required-badge">ObrigatÃ³rio</span>
+            <span class="file-required-badge">Obrigatório</span>
           </div>
         </div>
 
@@ -408,14 +408,14 @@
             </div>
             <div class="file-drop-text">
               <strong>Escolher imagem de capa</strong>
-              <span id="cover-file-hint">JPG, PNG ou WEBP â€” recomendado proporÃ§Ã£o 16:9</span>
+              <span id="cover-file-hint">JPG, PNG ou WEBP — recomendado proporção 16:9</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- â”€â”€ 3. ACESSIBILIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- ── 3. ACESSIBILIDADE ───────────────────────────── -->
     <section class="card animate-fade-up delay-3" style="padding: 28px;" aria-labelledby="section-a11y">
       <div class="section-label">
         <span class="section-label-icon" style="background: rgba(251,191,36,0.10); color: var(--gold);" aria-hidden="true">
@@ -427,7 +427,7 @@
         <span id="section-a11y">Acessibilidade</span>
       </div>
       <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px; margin-top: -8px;">
-        Todos os arquivos sÃ£o opcionais. Quanto mais recursos, maior a acessibilidade do conteÃºdo.
+        Todos os arquivos são opcionais. Quanto mais recursos, maior a acessibilidade do conteúdo.
       </p>
 
       <div style="display: flex; flex-direction: column; gap: 18px;">
@@ -436,7 +436,7 @@
         <div class="file-field">
           <label for="libras_file" style="margin-bottom: 8px;">
             <span class="badge badge-libras" aria-hidden="true" style="vertical-align: middle; margin-right: 6px;">Libras</span>
-            VÃ­deo de Libras
+            Vídeo de Libras
           </label>
           <div class="file-drop" aria-hidden="true">
             <input
@@ -457,8 +457,8 @@
               </svg>
             </div>
             <div class="file-drop-text">
-              <strong>Escolher vÃ­deo de Libras</strong>
-              <span id="libras-file-hint">MP4, MOV, AVI, MKV ou WEBM â€” sobreposto em PIP no canto inferior direito</span>
+              <strong>Escolher vídeo de Libras</strong>
+              <span id="libras-file-hint">MP4, MOV, AVI, MKV ou WEBM — sobreposto em PIP no canto inferior direito</span>
             </div>
           </div>
         </div>
@@ -467,7 +467,7 @@
         <div class="file-field">
           <label for="ad_file" style="margin-bottom: 8px;">
             <span class="badge badge-ad" aria-hidden="true" style="vertical-align: middle; margin-right: 6px;">AD</span>
-            AudiodescriÃ§Ã£o (AD)
+            Audiodescrição (AD)
           </label>
           <div class="file-drop" aria-hidden="true">
             <input
@@ -486,7 +486,7 @@
               </svg>
             </div>
             <div class="file-drop-text">
-              <strong>Escolher Ã¡udio de audiodescriÃ§Ã£o</strong>
+              <strong>Escolher áudio de audiodescrição</strong>
               <span id="ad-file-hint">MP3, AAC, WAV, OGG ou M4A</span>
             </div>
           </div>
@@ -517,7 +517,7 @@
             </div>
             <div class="file-drop-text">
               <strong>Escolher arquivo de legenda</strong>
-              <span id="subtitle-file-hint">SRT ou WebVTT â€” serÃ¡ convertido automaticamente</span>
+              <span id="subtitle-file-hint">SRT ou WebVTT — será convertido automaticamente</span>
             </div>
           </div>
         </div>
@@ -525,7 +525,7 @@
       </div>
     </section>
 
-    <!-- â”€â”€ AÃ§Ãµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- ── Ações ──────────────────────────────────────── -->
     <div class="animate-fade-up delay-4" style="display: flex; gap: 12px; justify-content: flex-end; padding-bottom: 8px;">
       <a
         href="/admin/dashboard"
@@ -537,7 +537,7 @@
       <button
         type="submit"
         class="btn btn-primary btn-lg"
-        aria-label="Salvar vÃ­deo e iniciar processamento"
+        aria-label="Salvar vídeo e iniciar processamento"
       >
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -552,7 +552,7 @@
 </div>
 </main>
 
-<!-- â”€â”€ Upload Overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── Upload Overlay ──────────────────────────────────────────── -->
 <div id="upload-overlay" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
   <div class="upload-card">
 
@@ -564,7 +564,7 @@
           <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
         </svg>
       </div>
-      <h2 id="overlay-title" style="font-size:18px; font-weight:700; margin-bottom:6px;">Enviando arquivosâ€¦</h2>
+      <h2 id="overlay-title" style="font-size:18px; font-weight:700; margin-bottom:6px;">Enviando arquivos…</h2>
       <p id="ov-filename" style="font-size:13px; color:var(--muted); margin-bottom:4px; word-break:break-all;"></p>
       <div class="upload-progress-track">
         <div id="ov-bar" class="upload-progress-fill"></div>
@@ -574,8 +574,8 @@
         <span id="ov-pct">0%</span>
       </div>
       <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted-2);">
-        <span>Velocidade: <strong id="ov-speed" style="color:var(--text);">â€”</strong></span>
-        <span>Restante: <strong id="ov-eta" style="color:var(--text);">â€”</strong></span>
+        <span>Velocidade: <strong id="ov-speed" style="color:var(--text);">—</strong></span>
+        <span>Restante: <strong id="ov-eta" style="color:var(--text);">—</strong></span>
       </div>
     </div>
 
@@ -586,8 +586,8 @@
           <path d="M20 6L9 17l-5-5"/>
         </svg>
       </div>
-      <h2 style="font-size:18px; font-weight:700; margin-bottom:8px;">Upload concluÃ­do!</h2>
-      <p style="font-size:13px; color:var(--muted);">Redirecionando para o dashboardâ€¦</p>
+      <h2 style="font-size:18px; font-weight:700; margin-bottom:8px;">Upload concluído!</h2>
+      <p style="font-size:13px; color:var(--muted);">Redirecionando para o dashboard…</p>
     </div>
 
     <!-- Error state -->
@@ -606,7 +606,7 @@
 </div>
 
 <script>
-// â”€â”€ File preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── File preview ────────────────────────────────────────────────────────
 function fmtBytes(b) {
   if (b >= 1073741824) return (b/1073741824).toFixed(1)+' GB';
   if (b >= 1048576)    return (b/1048576).toFixed(1)+' MB';
@@ -614,7 +614,7 @@ function fmtBytes(b) {
   return b+' B';
 }
 function fmtTime(s) {
-  if (!isFinite(s) || s < 0) return 'â€”';
+  if (!isFinite(s) || s < 0) return '—';
   if (s < 60) return Math.ceil(s)+'s';
   return Math.floor(s/60)+'m '+Math.ceil(s%60)+'s';
 }
@@ -645,7 +645,7 @@ function setupPicker(inputId, nameKey) {
 
 ['video_file','cover_file','libras_file','ad_file','subtitle_file'].forEach(setupPicker);
 
-// â”€â”€ XHR Upload with progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── XHR Upload with progress ────────────────────────────────────────────
 const form = document.querySelector('form[action="/admin/videos/new"]');
 const overlay = document.getElementById('upload-overlay');
 
@@ -663,8 +663,8 @@ form.addEventListener('submit', function(e) {
   document.getElementById('ov-bar').style.width = '0%';
   document.getElementById('ov-pct').textContent  = '0%';
   document.getElementById('ov-bytes').textContent = '0 B';
-  document.getElementById('ov-speed').textContent = 'â€”';
-  document.getElementById('ov-eta').textContent   = 'â€”';
+  document.getElementById('ov-speed').textContent = '—';
+  document.getElementById('ov-eta').textContent   = '—';
   overlay.classList.add('active');
 
   const xhr = new XMLHttpRequest();
@@ -685,15 +685,15 @@ form.addEventListener('submit', function(e) {
 
   xhr.addEventListener('load', function() {
     if (xhr.status === 422) {
-      // Validation error â€” extract message from response HTML
+      // Validation error — extract message from response HTML
       const parser = new DOMParser();
       const doc = parser.parseFromString(xhr.responseText, 'text/html');
       const errEl = doc.querySelector('[role="alert"] span');
-      showOverlayError(errEl ? errEl.textContent : 'Arquivo invÃ¡lido. Verifique os formatos aceitos.');
+      showOverlayError(errEl ? errEl.textContent : 'Arquivo inválido. Verifique os formatos aceitos.');
     } else if (xhr.status >= 500) {
       showOverlayError('Erro interno no servidor. Tente novamente.');
     } else {
-      // Success â€” show done state and redirect
+      // Success — show done state and redirect
       document.getElementById('state-upload').style.display = 'none';
       document.getElementById('state-done').style.display   = '';
       setTimeout(() => { window.location.href = '/admin/dashboard?uploaded=1'; }, 900);
@@ -701,7 +701,7 @@ form.addEventListener('submit', function(e) {
   });
 
   xhr.addEventListener('error', function() {
-    showOverlayError('Falha na conexÃ£o. Verifique sua internet e tente novamente.');
+    showOverlayError('Falha na conexão. Verifique sua internet e tente novamente.');
   });
 
   xhr.open('POST', form.action);

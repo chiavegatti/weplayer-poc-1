@@ -58,7 +58,7 @@ def test_dashboard_requires_auth(client):
 def test_dashboard_empty(auth_client):
     r = auth_client.get("/admin/dashboard")
     assert r.status_code == 200
-    assert "Nenhum vÃ­deo" in r.text
+    assert "Nenhum vídeo" in r.text
 
 
 def test_dashboard_with_videos(auth_client):
@@ -77,7 +77,7 @@ def test_dashboard_with_videos(auth_client):
 def test_new_video_form(auth_client):
     r = auth_client.get("/admin/videos/new")
     assert r.status_code == 200
-    assert "Novo VÃ­deo" in r.text
+    assert "Novo Vídeo" in r.text
 
 
 def test_new_video_form_requires_auth(client):
@@ -269,7 +269,7 @@ def test_delete_video_not_found(auth_client):
 def test_docs_page(auth_client):
     r = auth_client.get("/admin/docs")
     assert r.status_code == 200
-    assert "DocumentaÃ§Ã£o" in r.text
+    assert "Documentação" in r.text
     assert "Tutorial" in r.text
 
 
