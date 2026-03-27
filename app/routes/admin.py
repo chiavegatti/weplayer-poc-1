@@ -154,10 +154,13 @@ async def create_video(
     ad_file: UploadFile | None = File(None),
     subtitle_file: UploadFile | None = File(None),
     cover_file: UploadFile | None = File(None),
+    libras_scale: str = Form("25"),
     db: Session = Depends(get_db),
     _admin: str = Depends(get_current_admin),
 ):
     video_id = str(uuid.uuid4())
+    if libras_scale not in ("25", "35", "40"):
+        libras_scale = "25"
     try:
         main_filename = (video_file.filename if video_file else video_chunk_filename) or ""
         if not main_filename:
@@ -228,6 +231,7 @@ async def create_video(
         description=description or None,
         cover_path=cover_rel,
         status=VideoStatus.pending,
+        libras_scale=libras_scale,
     )
     db.add(video)
 
@@ -250,6 +254,7 @@ async def create_video(
         libras_input=libras_path,
         ad_input=ad_path,
         subtitle_input=subtitle_path,
+        libras_scale=libras_scale,
     )
 
     return RedirectResponse(url="/admin/dashboard?uploaded=1", status_code=302)
@@ -410,9 +415,12 @@ async def update_video(
     ad_file: UploadFile | None = File(None),
     subtitle_file: UploadFile | None = File(None),
     cover_file: UploadFile | None = File(None),
+    libras_scale: str = Form("25"),
     db: Session = Depends(get_db),
     _admin: str = Depends(get_current_admin),
 ):
+    if libras_scale not in ("25", "35", "40"):
+        libras_scale = "25"
     video = _get_video_or_404(db, video_id)
 
     def _invalid_file(upload: UploadFile | None, allowed: set[str]) -> bool:
@@ -441,6 +449,10 @@ async def update_video(
 
     video.title = title.strip()
     video.description = description.strip() or None
+
+    # Detect scale change — triggers reprocess if libras exists
+    old_scale = video.libras_scale or "25"
+    video.libras_scale = libras_scale
 
     main_input = _get_input_path_from_assets(video, AssetType.original_input)
     libras_input = _get_input_path_from_assets(video, AssetType.libras_input)
@@ -477,6 +489,10 @@ async def update_video(
         await save_upload(cover_file, cover_path)
         video.cover_path = storage.get_relative_media_path(cover_path)
 
+    # Scale change triggers reprocess only if libras input exists
+    if old_scale != libras_scale and libras_input:
+        needs_reprocess = True
+
     if needs_reprocess:
         if not main_input or not main_input.exists():
             return _video_detail_with_error(
@@ -496,6 +512,7 @@ async def update_video(
             libras_input=libras_input,
             ad_input=ad_input,
             subtitle_input=subtitle_input,
+            libras_scale=libras_scale,
         )
         return RedirectResponse(url=f"/admin/videos/{video_id}?updated=1&reprocess=1", status_code=302)
 
@@ -511,6 +528,7 @@ def _process_video(
     libras_input: Path | None,
     ad_input: Path | None,
     subtitle_input: Path | None,
+    libras_scale: str = "25",
     _session_factory=None,
 ) -> None:
     """Synchronous processing job â€” runs in BackgroundTasks thread."""
@@ -567,10 +585,12 @@ def _process_video(
             # Libras HLS
             if normalized_libras:
                 try:
+                    scale_expr = ffmpeg.LIBRAS_SCALE_OPTIONS.get(libras_scale, ffmpeg.LIBRAS_SCALE)
                     manifest = ffmpeg.process_libras_hls(
                         video_id,
                         normalized_main,
                         normalized_libras,
+                        scale=scale_expr,
                         pre_normalized=True,
                     )
                     _upsert_asset(db, video_id, AssetType.hls_libras, manifest)

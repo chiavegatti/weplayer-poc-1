@@ -44,6 +44,7 @@ class Video(Base):
     cover_path = Column(String(512), nullable=True)
     status = Column(Enum(VideoStatus), nullable=False, default=VideoStatus.pending)
     libras_available = Column(Boolean, nullable=False, default=False)
+    libras_scale = Column(String(10), nullable=False, default="25")
     ad_available = Column(Boolean, nullable=False, default=False)
     subtitle_available = Column(Boolean, nullable=False, default=False)
     error_message = Column(Text, nullable=True)

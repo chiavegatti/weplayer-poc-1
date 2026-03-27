@@ -20,9 +20,10 @@ MAIN_MAX_HEIGHT = 1080
 LIBRAS_MAX_WIDTH = 854
 LIBRAS_MAX_HEIGHT = 480
 
-# Libras PIP defaults (bottom-right corner, 25% of video width)
+# Libras PIP defaults (bottom-right corner)
 LIBRAS_SCALE = "iw*0.25"
 LIBRAS_POSITION = "W-w-20:H-h-20"
+LIBRAS_SCALE_OPTIONS = {"25": "iw*0.25", "35": "iw*0.35", "40": "iw*0.40"}
 
 
 @functools.lru_cache(maxsize=1)
@@ -146,6 +147,21 @@ def _probe_streams(input_path: Path) -> list[dict]:
     return payload.get("streams", [])
 
 
+def _has_alpha_channel(streams: list[dict]) -> bool:
+    """Check if any video stream uses a pixel format with alpha."""
+    alpha_fmts = {"yuva420p", "yuva444p", "yuva422p", "yuva444p10le", "rgba", "bgra", "argb", "abgr", "ya8"}
+    for s in streams:
+        if s.get("codec_type") == "video":
+            pix_fmt = s.get("pix_fmt", "")
+            if pix_fmt in alpha_fmts:
+                return True
+            # VP8/VP9 alpha is sometimes reported as yuv420p but with alpha side data
+            codec = s.get("codec_name", "")
+            if codec in ("vp8", "vp9") and "alpha" in s.get("codec_tag_string", "").lower():
+                return True
+    return False
+
+
 def _pick_main_video_stream(streams: list[dict]) -> int:
     candidates: list[tuple[int, int, int]] = []
     for stream in streams:
@@ -185,6 +201,7 @@ def _normalize_mp4(
     hw: str,
     audio_bitrate: str,
     log_path: Path | None = None,
+    preserve_alpha: bool = False,
 ) -> None:
     # Cap dimensions, preserve aspect ratio, and force even output dimensions.
     vf = (
@@ -227,7 +244,7 @@ def _normalize_mp4(
             "-vf",
             vf,
             "-pix_fmt",
-            "yuv420p",
+            "yuva420p" if preserve_alpha else "yuv420p",
             "-c:a",
             "aac",
             "-ac",
@@ -269,12 +286,15 @@ def preprocess_main_input(video_id: str, input_path: Path) -> Path:
 def preprocess_libras_input(video_id: str, input_path: Path) -> Path:
     """
     Normalize Libras source before overlay to reduce processing cost.
+    Preserves alpha channel if the input has one (e.g. VP9 alpha, ProRes 4444).
     """
     output_dir = settings.video_processed_dir(video_id, "source")
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "libras_480p.mp4"
     log_path = settings.video_logs_dir(video_id) / "libras_norm.log"
     hw = detect_hwaccel()
+    streams = _probe_streams(input_path)
+    has_alpha = _has_alpha_channel(streams)
     _normalize_mp4(
         input_path=input_path,
         output_path=output_path,
@@ -283,6 +303,7 @@ def preprocess_libras_input(video_id: str, input_path: Path) -> Path:
         hw=hw,
         audio_bitrate="96k",
         log_path=log_path,
+        preserve_alpha=has_alpha,
     )
     return output_path
 
@@ -384,7 +405,8 @@ def process_libras_hls(
                 log_path=settings.video_logs_dir(video_id) / "libras_norm.log",
             )
 
-    filter_complex = f"[1:v]scale={scale}:-2[libras];[0:v][libras]overlay={position}[out]"
+    # format=auto preserves alpha channel if present in Libras input (e.g. VP9/VP8 alpha, ProRes 4444)
+    filter_complex = f"[1:v]scale={scale}:-2,format=yuva420p[libras];[0:v][libras]overlay={position}:format=auto[out]"
     cmd = [
         "ffmpeg",
         "-y",

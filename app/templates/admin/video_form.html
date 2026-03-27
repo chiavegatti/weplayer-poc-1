@@ -3,6 +3,112 @@
 
 {% block head %}
 <style>
+  /* ── Libras scale picker ─────────────────────── */
+  .scale-picker {
+    margin-top: 12px;
+    padding: 14px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .scale-picker-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-family: var(--font-display);
+  }
+  .scale-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .scale-option {
+    position: relative;
+    cursor: pointer;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 8px 8px;
+    background: rgba(255,255,255,0.02);
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .scale-option:hover {
+    border-color: rgba(34,211,238,0.25);
+    background: rgba(34,211,238,0.03);
+  }
+  .scale-option.active {
+    border-color: var(--cyan);
+    background: rgba(34,211,238,0.06);
+    box-shadow: 0 0 16px rgba(34,211,238,0.1);
+  }
+  .scale-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0; height: 0;
+  }
+  .scale-option:focus-within {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+  /* Preview mockup — 16:9 box with PIP overlay */
+  .scale-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .scale-preview-main {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.1);
+    font-size: 10px;
+    font-family: var(--font-display);
+  }
+  .scale-preview-pip {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: rgba(34,211,238,0.2);
+    border: 1px solid rgba(34,211,238,0.4);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(34,211,238,0.7);
+    font-size: 8px;
+    transition: all 0.3s ease;
+  }
+  .scale-option.active .scale-preview-pip {
+    background: rgba(34,211,238,0.3);
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .scale-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    font-family: var(--font-display);
+    transition: color 0.2s;
+  }
+  .scale-option.active .scale-value {
+    color: var(--cyan);
+  }
+  .scale-desc {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
   /* Focus rings WCAG 2.2 AA */
   a:focus-visible,
   button:focus-visible,
@@ -461,6 +567,56 @@
               <span id="libras-file-hint">MP4, MOV, AVI, MKV ou WEBM — sobreposto em PIP no canto inferior direito</span>
             </div>
           </div>
+
+          <!-- Libras scale picker -->
+          <div class="scale-picker" id="scale-picker">
+            <div style="background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; display: flex; gap: 8px; align-items: flex-start;">
+              <span style="font-size: 16px; flex-shrink: 0; line-height: 1.2;">⚠️</span>
+              <div style="font-size: 11px; color: rgba(255,255,255,0.7); line-height: 1.5;">
+                <strong style="color: var(--gold);">ABNT NBR 15290:2005</strong> — A norma de acessibilidade em televisão recomenda que a janela de Libras ocupe no mínimo <strong>1/4 da altura da tela</strong>, posicionada no canto inferior direito. O padrão de 25% da largura atende a essa recomendação. Escalas maiores melhoram a legibilidade dos sinais.
+              </div>
+            </div>
+            <div class="scale-picker-label">Proporção do PIP de Libras</div>
+            <div class="scale-options" role="radiogroup" aria-label="Tamanho da janela de Libras">
+
+              <label class="scale-option active" data-scale="25">
+                <input type="radio" name="libras_scale" value="25" checked />
+                <div class="scale-preview">
+                  <div class="scale-preview-main">
+                    <svg width="20" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.3"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM10 8l6 4-6 4V8z"/></svg>
+                  </div>
+                  <div class="scale-preview-pip" style="width:25%; aspect-ratio:16/9;">🤟</div>
+                </div>
+                <div class="scale-value">25%</div>
+                <div class="scale-desc">Compacto</div>
+              </label>
+
+              <label class="scale-option" data-scale="35">
+                <input type="radio" name="libras_scale" value="35" />
+                <div class="scale-preview">
+                  <div class="scale-preview-main">
+                    <svg width="20" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.3"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM10 8l6 4-6 4V8z"/></svg>
+                  </div>
+                  <div class="scale-preview-pip" style="width:35%; aspect-ratio:16/9;">🤟</div>
+                </div>
+                <div class="scale-value">35%</div>
+                <div class="scale-desc">Médio</div>
+              </label>
+
+              <label class="scale-option" data-scale="40">
+                <input type="radio" name="libras_scale" value="40" />
+                <div class="scale-preview">
+                  <div class="scale-preview-main">
+                    <svg width="20" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.3"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM10 8l6 4-6 4V8z"/></svg>
+                  </div>
+                  <div class="scale-preview-pip" style="width:40%; aspect-ratio:16/9;">🤟</div>
+                </div>
+                <div class="scale-value">40%</div>
+                <div class="scale-desc">Grande</div>
+              </label>
+
+            </div>
+          </div>
         </div>
 
         <!-- AD -->
@@ -646,6 +802,15 @@ function setupPicker(inputId, nameKey) {
 }
 
 ['video_file','cover_file','libras_file','ad_file','subtitle_file'].forEach(setupPicker);
+
+// ── Scale picker ────────────────────────────────────────────────────────
+document.querySelectorAll('.scale-option').forEach(function(opt) {
+  opt.addEventListener('click', function() {
+    document.querySelectorAll('.scale-option').forEach(function(o) { o.classList.remove('active'); });
+    opt.classList.add('active');
+    opt.querySelector('input[type="radio"]').checked = true;
+  });
+});
 
 // ── Chunked upload (64 MB) ──────────────────────────────────────────────
 const form = document.querySelector('form[action="/admin/videos/new"]');
