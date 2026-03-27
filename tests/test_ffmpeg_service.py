@@ -84,10 +84,14 @@ def test_process_libras_hls(tmp_path, monkeypatch):
 
     assert result.name == "index.m3u8"
     assert "libras" in str(result)
-    cmd = mock_run.call_args[0][0]
-    assert str(main) in cmd
-    assert str(libras) in cmd
-    assert "-filter_complex" in cmd
+    # Two _run calls: first normalizes libras to 480p, second does the overlay
+    assert mock_run.call_count == 2
+    norm_cmd, overlay_cmd = mock_run.call_args_list[0][0][0], mock_run.call_args_list[1][0][0]
+    assert str(libras) in norm_cmd          # normalization uses original libras
+    assert "480p" in norm_cmd[-1]           # output is the _480p.mp4 file
+    assert str(main) in overlay_cmd         # overlay uses main + normalized libras
+    assert "480p" in " ".join(overlay_cmd)  # overlay uses the 480p version
+    assert "-filter_complex" in overlay_cmd
 
 
 def test_process_libras_hls_custom_position(tmp_path, monkeypatch):
@@ -101,9 +105,10 @@ def test_process_libras_hls_custom_position(tmp_path, monkeypatch):
         mock_run.return_value = make_fake_run()
         result = ffmpeg.process_libras_hls("vid1", main, libras, position="0:0", scale="iw*0.3")
 
-    cmd = mock_run.call_args[0][0]
-    assert "0:0" in " ".join(cmd)
-    assert "iw*0.3" in " ".join(cmd)
+    # call_args is the last call (overlay); check it contains position/scale
+    overlay_cmd = mock_run.call_args_list[-1][0][0]
+    assert "0:0" in " ".join(overlay_cmd)
+    assert "iw*0.3" in " ".join(overlay_cmd)
 
 
 # ── process_ad_hls ────────────────────────────────────────────────────────────

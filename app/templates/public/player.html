@@ -555,11 +555,11 @@
 <!-- ═══════════════════════════════════ SCRIPT ═══ -->
 <script>
 const MANIFESTS = {
-  original: {{ ('"' ~ manifests.original ~ '"') if manifests.original else 'null' }},
-  libras:   {{ ('"' ~ manifests.libras   ~ '"') if manifests.libras   else 'null' }},
-  ad:       {{ ('"' ~ manifests.ad       ~ '"') if manifests.ad       else 'null' }},
+  original: {{ manifests.original | tojson }},
+  libras:   {{ manifests.libras   | tojson }},
+  ad:       {{ manifests.ad       | tojson }},
 };
-const SUBTITLE = {{ ('"' ~ subtitle_path ~ '"') if subtitle_path else 'null' }};
+const SUBTITLE = {{ subtitle_path | tojson }};
 const VIDEO_ID = '{{ video.id }}';
 
 let player       = null;

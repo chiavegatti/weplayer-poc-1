@@ -96,17 +96,45 @@ def _hls_output_args(output_dir: Path, playlist_name: str = "index.m3u8") -> lis
     ]
 
 
+def _normalize_mp4(
+    input_path: Path,
+    output_path: Path,
+    max_height: int,
+    hw: str,
+    log_path: Path | None = None,
+) -> None:
+    """
+    Pre-encode input to a compressed MP4 capped at max_height.
+    Preserves aspect ratio; never upscales. Used as a pre-processing step
+    to bring oversized sources (e.g. 4K Libras recordings) to a manageable
+    size before the main encode / overlay.
+    """
+    # scale=-2:min(ih\,MAX) — keeps width even, caps height, never upscales
+    vf = f"scale=-2:min(ih\\,{max_height})"
+    cmd = [
+        "ffmpeg", "-y", "-i", str(input_path),
+        *_video_encode_args(hw),
+        "-vf", vf,
+        "-c:a", "aac", "-b:a", "96k",
+        "-movflags", "+faststart",
+        str(output_path),
+    ]
+    _run(cmd, log_path)
+
+
 def process_original_hls(video_id: str, input_path: Path) -> Path:
-    """Transcode main video to HLS."""
+    """Transcode main video to HLS, capped at 1080p."""
     output_dir = settings.video_processed_dir(video_id, "original")
     log_path = settings.video_logs_dir(video_id) / "original.log"
     hw = detect_hwaccel()
 
+    # scale=-2:min(ih\,1080) — respects source if already ≤ 1080p, never upscales
+    vf_scale = "scale=-2:min(ih\\,1080)"
     if hw == "vaapi":
         cmd = [
             "ffmpeg", "-y", "-vaapi_device", "/dev/dri/renderD128",
             "-i", str(input_path),
-            "-vf", "scale=-2:720,format=nv12,hwupload",
+            "-vf", f"{vf_scale},format=nv12,hwupload",
             *_video_encode_args(hw),
             "-c:a", "aac", "-b:a", "128k",
             *_hls_output_args(output_dir),
@@ -116,7 +144,7 @@ def process_original_hls(video_id: str, input_path: Path) -> Path:
             "ffmpeg", "-y", "-i", str(input_path),
             *_video_encode_args(hw),
             "-c:a", "aac", "-b:a", "128k",
-            "-vf", "scale=-2:720",
+            "-vf", vf_scale,
             *_hls_output_args(output_dir),
         ]
     _run(cmd, log_path)
@@ -130,21 +158,35 @@ def process_libras_hls(
     position: str = LIBRAS_POSITION,
     scale: str = LIBRAS_SCALE,
 ) -> Path:
-    """Overlay Libras video (PIP) on main video and transcode to HLS."""
+    """
+    Overlay Libras video (PIP) on main video and transcode to HLS.
+    Pre-normalizes the Libras input to 480p to avoid processing huge source
+    files (interpreters often upload 1080p/4K recordings that are larger
+    than the main video itself).
+    """
     output_dir = settings.video_processed_dir(video_id, "libras")
-    log_path = settings.video_logs_dir(video_id) / "libras.log"
+    log_path   = settings.video_logs_dir(video_id) / "libras.log"
+    hw = detect_hwaccel()
 
-    # Scale libras to 25% width of main, then overlay bottom-right
+    # ── Pre-normalize Libras to 480p ─────────────────────────────────────
+    # Libras is displayed as ~25% PIP — 480p is more than enough and
+    # can reduce a 800 MB+ source to ~60 MB, cutting overlay time by 80%.
+    libras_norm = libras_input.parent / (libras_input.stem + "_480p.mp4")
+    if not libras_norm.exists():
+        _normalize_mp4(
+            libras_input, libras_norm, max_height=480, hw=hw,
+            log_path=settings.video_logs_dir(video_id) / "libras_norm.log",
+        )
+
+    # ── Overlay (PIP) ────────────────────────────────────────────────────
     filter_complex = (
         f"[1:v]scale={scale}:-2[libras];"
         f"[0:v][libras]overlay={position}[out]"
     )
-
-    hw = detect_hwaccel()
     cmd = [
         "ffmpeg", "-y",
         "-i", str(main_input),
-        "-i", str(libras_input),
+        "-i", str(libras_norm),
         "-filter_complex", filter_complex,
         "-map", "[out]", "-map", "0:a",
         *_video_encode_args(hw),
@@ -156,11 +198,10 @@ def process_libras_hls(
 
 
 def process_ad_hls(video_id: str, main_input: Path, ad_input: Path) -> Path:
-    """Mix original audio with AD audio track and transcode to HLS."""
+    """Mix original audio with AD audio track and transcode to HLS, capped at 1080p."""
     output_dir = settings.video_processed_dir(video_id, "ad")
     log_path = settings.video_logs_dir(video_id) / "ad.log"
 
-    # Mix: original audio at 100% + AD at 80%
     filter_complex = (
         "[0:a]volume=1.0[orig];"
         "[1:a]volume=0.8[ad];"
@@ -168,6 +209,7 @@ def process_ad_hls(video_id: str, main_input: Path, ad_input: Path) -> Path:
     )
 
     hw = detect_hwaccel()
+    vf_scale = "scale=-2:min(ih\\,1080)"
     if hw == "vaapi":
         cmd = [
             "ffmpeg", "-y", "-vaapi_device", "/dev/dri/renderD128",
@@ -175,7 +217,7 @@ def process_ad_hls(video_id: str, main_input: Path, ad_input: Path) -> Path:
             "-i", str(ad_input),
             "-filter_complex", filter_complex,
             "-map", "0:v", "-map", "[aout]",
-            "-vf", "scale=-2:720,format=nv12,hwupload",
+            "-vf", f"{vf_scale},format=nv12,hwupload",
             *_video_encode_args(hw),
             "-c:a", "aac", "-b:a", "128k",
             *_hls_output_args(output_dir),
@@ -189,7 +231,7 @@ def process_ad_hls(video_id: str, main_input: Path, ad_input: Path) -> Path:
             "-map", "0:v", "-map", "[aout]",
             *_video_encode_args(hw),
             "-c:a", "aac", "-b:a", "128k",
-            "-vf", "scale=-2:720",
+            "-vf", vf_scale,
             *_hls_output_args(output_dir),
         ]
     _run(cmd, log_path)
